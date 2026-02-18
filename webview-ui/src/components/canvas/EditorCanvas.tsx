@@ -1,9 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Frame, Element } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
 import { CraftContainer } from "../../crafts/layout/CraftContainer";
-import { MemoOverlay } from "../memo/MemoOverlay";
+import { MemoAddButton, MemoStickers } from "../memo/MemoOverlay";
 import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 
 const VIEWPORT_WIDTHS: Record<string, number> = {
@@ -32,6 +32,8 @@ export function EditorCanvas() {
     zoom,
     setZoom,
   } = useEditorStore();
+
+  const scrollContentRef = useRef<HTMLDivElement>(null);
 
   const viewportWidth =
     viewportMode === "custom"
@@ -75,6 +77,8 @@ export function EditorCanvas() {
         onWheel={handleWheel}
       >
         <div
+          ref={scrollContentRef}
+          className="relative"
           style={{
             display: "flex",
             justifyContent: "center",
@@ -84,7 +88,10 @@ export function EditorCanvas() {
             minWidth: "100%",
           }}
         >
-          {/* Zoom wrapper - outer div matches scaled layout size for proper scroll */}
+          {/* Memo stickers - scroll with canvas */}
+          <MemoStickers scrollContentRef={scrollContentRef} />
+
+          {/* Zoom wrapper */}
           <div
             style={{
               width: viewportWidth * zoom,
@@ -125,10 +132,10 @@ export function EditorCanvas() {
       </div>
 
       {/* Fixed overlays (outside scroll container) */}
-      <MemoOverlay />
+      <MemoAddButton />
 
-      {/* Zoom controls - fixed bottom-right */}
-      <div className="pointer-events-none absolute bottom-3 right-3 z-50">
+      {/* Zoom controls - fixed bottom-right, inset to avoid scrollbar overlap */}
+      <div className="pointer-events-none absolute bottom-4 right-5 z-50">
         <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-[var(--vscode-panel-border,#454545)] bg-[var(--vscode-editor-background,#1e1e1e)] p-1 shadow-lg">
           <button
             type="button"

@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, type RefObject } from "react";
+import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
-import { StickyNote, Plus, X, ChevronDown, ChevronRight } from "lucide-react";
+import { StickyNote, Plus, X, ChevronDown, ChevronRight, Link2, Unlink } from "lucide-react";
 import { useEditorStore, type Memo, type MemoColor } from "../../stores/editorStore";
 
 const MEMO_COLORS = [
@@ -16,9 +17,10 @@ function getColorScheme(color: MemoColor) {
   return MEMO_COLORS.find((c) => c.name === color) || MEMO_COLORS[0];
 }
 
-export function MemoOverlay() {
+/** Fixed "Add memo" button - render outside scroll container */
+export function MemoAddButton() {
   const { t } = useTranslation();
-  const { memos, addMemo, updateMemo, removeMemo } = useEditorStore();
+  const { memos, addMemo } = useEditorStore();
 
   const handleAddMemo = () => {
     const newMemo: Memo = {
@@ -34,25 +36,35 @@ export function MemoOverlay() {
   };
 
   return (
-    <>
-      {/* Add memo button */}
-      <div className="absolute right-2 top-2 z-50">
-        <button
-          type="button"
-          onClick={handleAddMemo}
-          className="flex items-center gap-1 rounded bg-yellow-500/80 px-2 py-1 text-xs text-black hover:bg-yellow-500"
-          title={t("memo.addNew")}
-        >
-          <Plus size={14} />
-          <StickyNote size={14} />
-        </button>
-      </div>
+    <div className="pointer-events-none absolute right-4 top-2 z-50">
+      <button
+        type="button"
+        onClick={handleAddMemo}
+        className="pointer-events-auto flex items-center gap-1 rounded bg-yellow-500/80 px-2 py-1 text-xs text-black hover:bg-yellow-500"
+        title={t("memo.addNew")}
+      >
+        <Plus size={14} />
+        <StickyNote size={14} />
+      </button>
+    </div>
+  );
+}
 
-      {/* Memo stickers */}
+/** Scrollable memo stickers - render inside scroll container */
+export function MemoStickers({
+  scrollContentRef,
+}: {
+  scrollContentRef: RefObject<HTMLDivElement | null>;
+}) {
+  const { memos, updateMemo, removeMemo } = useEditorStore();
+
+  return (
+    <>
       {memos.map((memo) => (
         <MemoSticker
           key={memo.id}
           memo={memo}
+          scrollContentRef={scrollContentRef}
           onUpdate={(updates) => updateMemo(memo.id, updates)}
           onRemove={() => removeMemo(memo.id)}
         />
@@ -63,14 +75,18 @@ export function MemoOverlay() {
 
 function MemoSticker({
   memo,
+  scrollContentRef,
   onUpdate,
   onRemove,
 }: {
   memo: Memo;
+  scrollContentRef: RefObject<HTMLDivElement | null>;
   onUpdate: (updates: Partial<Memo>) => void;
   onRemove: () => void;
 }) {
   const { t } = useTranslation();
+  const { query } = useEditor();
+  const selectedNodeId = useEditorStore((s) => s.selectedNodeId);
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState({ x: memo.x, y: memo.y });
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -78,23 +94,46 @@ function MemoSticker({
 
   const colors = getColorScheme(memo.color);
 
+  // Get linked node display name
+  const linkedNodeName = (() => {
+    if (!memo.targetNodeId) return null;
+    try {
+      const node = query.node(memo.targetNodeId).get();
+      if (!node) return null;
+      const displayName =
+        node.data.custom?.displayName ||
+        node.data.displayName ||
+        (typeof node.data.type === "string"
+          ? node.data.type
+          : node.data.type?.name) ||
+        memo.targetNodeId;
+      return String(displayName);
+    } catch {
+      return null;
+    }
+  })();
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, input, textarea")) return;
+    const container = scrollContentRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
     setIsDragging(true);
     dragOffsetRef.current = {
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
+      x: e.clientX - rect.left - position.x,
+      y: e.clientY - rect.top - position.y,
     };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging) {
-      const newPos = {
-        x: e.clientX - dragOffsetRef.current.x,
-        y: e.clientY - dragOffsetRef.current.y,
-      };
-      setPosition(newPos);
-    }
+    if (!isDragging) return;
+    const container = scrollContentRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    setPosition({
+      x: e.clientX - rect.left - dragOffsetRef.current.x,
+      y: e.clientY - rect.top - dragOffsetRef.current.y,
+    });
   };
 
   const handleMouseUp = () => {
@@ -108,6 +147,16 @@ function MemoSticker({
     onUpdate({ collapsed: !memo.collapsed });
   };
 
+  const handleLinkNode = () => {
+    if (memo.targetNodeId) {
+      // Unlink
+      onUpdate({ targetNodeId: undefined });
+    } else if (selectedNodeId) {
+      // Link to currently selected node
+      onUpdate({ targetNodeId: selectedNodeId });
+    }
+  };
+
   return (
     <div
       className={`absolute z-40 rounded shadow-lg ${colors.bg} ${memo.collapsed ? "w-52" : "w-56"}`}
@@ -116,7 +165,7 @@ function MemoSticker({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Header - always visible, draggable */}
+      {/* Header */}
       <div
         className={`flex cursor-move items-center gap-1 rounded-t px-2 py-1.5 ${colors.header}`}
         onMouseDown={handleMouseDown}
@@ -136,6 +185,23 @@ function MemoSticker({
           placeholder={t("memo.titlePlaceholder")}
           className={`flex-1 bg-transparent text-xs font-semibold ${colors.headerText} placeholder:${colors.headerText}/60 outline-none`}
         />
+
+        {/* Link to element button */}
+        <button
+          type="button"
+          onClick={handleLinkNode}
+          title={
+            memo.targetNodeId
+              ? t("memo.unlink")
+              : selectedNodeId
+                ? t("memo.linkSelected")
+                : t("memo.selectToLink")
+          }
+          className={`shrink-0 ${memo.targetNodeId ? "text-blue-600" : colors.headerText} hover:opacity-70 ${!memo.targetNodeId && !selectedNodeId ? "opacity-30" : ""}`}
+          disabled={!memo.targetNodeId && !selectedNodeId}
+        >
+          {memo.targetNodeId ? <Unlink size={12} /> : <Link2 size={12} />}
+        </button>
 
         <div className="relative">
           <button
@@ -171,6 +237,14 @@ function MemoSticker({
           <X size={12} />
         </button>
       </div>
+
+      {/* Linked element indicator */}
+      {linkedNodeName && (
+        <div className={`flex items-center gap-1 px-2 py-0.5 text-[10px] ${colors.text} opacity-70 border-b ${colors.border}`}>
+          <Link2 size={10} />
+          <span className="truncate">{linkedNodeName}</span>
+        </div>
+      )}
 
       {/* Body - collapsible */}
       {!memo.collapsed && (
