@@ -136,28 +136,28 @@ export function ContextMenu() {
       const selNode = queryRef.current.node(sel).get();
 
       // Paste as sibling: add to the selected node's parent
-      // (same behavior as duplicate, so non-canvas nodes work)
       const parentId = selNode?.data?.parent;
       if (!parentId) return;
 
+      // Capture the tree BEFORE any mutations
       const nodeTree = queryRef.current.node(clipboardNodeId).toNodeTree();
       const freshTree = cloneTreeWithFreshIds(nodeTree);
-      actionsRef.current.addNodeTree(freshTree, parentId);
 
+      // For cut: delete original first (tree already captured above)
       if (clipboardAction === "cut") {
         try {
-          const cutNode = queryRef.current.node(clipboardNodeId).get();
-          if (cutNode?.data.parent) {
-            actionsRef.current.delete(clipboardNodeId);
-          }
+          actionsRef.current.delete(clipboardNodeId);
         } catch {
           // Cut source may have already been removed
         }
         clipboardNodeId = null;
         clipboardAction = null;
       }
+
+      // Then add the clone
+      actionsRef.current.addNodeTree(freshTree, parentId);
     } catch {
-      // Target may not accept children or clipboard node no longer exists
+      // Clipboard node no longer exists or target can't accept children
     }
     setMenuPos(null);
   }, []);
