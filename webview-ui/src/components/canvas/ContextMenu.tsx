@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
+import { useEditorStore } from "../../stores/editorStore";
 import { Trash2, Copy, Scissors, ClipboardPaste, CopyPlus } from "lucide-react";
 
 interface MenuPosition {
@@ -26,17 +27,101 @@ export function ContextMenu() {
     };
   });
 
+  // Sync Craft.js selection → editorStore so memo linking works
+  const setSelectedNodeId = useEditorStore((s) => s.setSelectedNodeId);
+  useEffect(() => {
+    setSelectedNodeId(selected);
+  }, [selected, setSelectedNodeId]);
+
+  // Use refs to always access latest values in event handlers,
+  // avoiding stale closure issues with useCallback
+  const selectedRef = useRef(selected);
+  const queryRef = useRef(query);
+  const actionsRef = useRef(actions);
+  selectedRef.current = selected;
+  queryRef.current = query;
+  actionsRef.current = actions;
+
+  const deleteSelected = useCallback(() => {
+    const sel = selectedRef.current;
+    if (!sel) return;
+    try {
+      const nodeHelper = queryRef.current.node(sel);
+      // Check node still exists
+      const node = nodeHelper.get();
+      if (!node) return;
+      // Don't delete root or top-level canvas node
+      if (nodeHelper.isRoot() || nodeHelper.isTopLevelNode()) return;
+      if (!nodeHelper.isDeletable()) return;
+      actionsRef.current.delete(sel);
+    } catch {
+      // Node may have already been removed
+    }
+    setMenuPos(null);
+  }, []);
+
+  const copySelected = useCallback(() => {
+    const sel = selectedRef.current;
+    if (!sel) return;
+    clipboardNodeId = sel;
+    clipboardAction = "copy";
+    setMenuPos(null);
+  }, []);
+
+  const cutSelected = useCallback(() => {
+    const sel = selectedRef.current;
+    if (!sel) return;
+    clipboardNodeId = sel;
+    clipboardAction = "cut";
+    setMenuPos(null);
+  }, []);
+
+  const pasteClipboard = useCallback(() => {
+    if (!clipboardNodeId || !selectedRef.current) return;
+    try {
+      const parentId = selectedRef.current;
+      const nodeTree = queryRef.current.node(clipboardNodeId).toNodeTree();
+      actionsRef.current.addNodeTree(nodeTree, parentId);
+
+      if (clipboardAction === "cut") {
+        const cutNode = queryRef.current.node(clipboardNodeId).get();
+        if (cutNode?.data.parent) {
+          actionsRef.current.delete(clipboardNodeId);
+        }
+        clipboardNodeId = null;
+        clipboardAction = null;
+      }
+    } catch {
+      // Target may not accept children
+    }
+    setMenuPos(null);
+  }, []);
+
+  const duplicateSelected = useCallback(() => {
+    const sel = selectedRef.current;
+    if (!sel) return;
+    try {
+      const node = queryRef.current.node(sel).get();
+      const parentId = node?.data.parent;
+      if (!parentId) return;
+      const nodeTree = queryRef.current.node(sel).toNodeTree();
+      actionsRef.current.addNodeTree(nodeTree, parentId);
+    } catch {
+      // ignore
+    }
+    setMenuPos(null);
+  }, []);
+
   const handleContextMenu = useCallback(
     (e: MouseEvent) => {
-      if (!selected) return;
-      // Only show menu inside the canvas area
+      if (!selectedRef.current) return;
       const target = e.target as HTMLElement;
       if (target.closest("[data-mocker-canvas]")) {
         e.preventDefault();
         setMenuPos({ x: e.clientX, y: e.clientY });
       }
     },
-    [selected],
+    [],
   );
 
   const handleClick = useCallback(() => {
@@ -45,7 +130,7 @@ export function ContextMenu() {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!selected) return;
+      if (!selectedRef.current) return;
 
       // Don't handle if focused on input/textarea
       const tag = (e.target as HTMLElement).tagName;
@@ -72,7 +157,7 @@ export function ContextMenu() {
         duplicateSelected();
       }
     },
-    [selected],
+    [deleteSelected, copySelected, cutSelected, pasteClipboard, duplicateSelected],
   );
 
   useEffect(() => {
@@ -85,69 +170,6 @@ export function ContextMenu() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleContextMenu, handleClick, handleKeyDown]);
-
-  const deleteSelected = () => {
-    if (!selected) return;
-    // Don't delete root or top-level canvas node
-    try {
-      const nodeHelper = query.node(selected);
-      if (nodeHelper.isRoot() || nodeHelper.isTopLevelNode()) return;
-      if (!nodeHelper.isDeletable()) return;
-      actions.delete(selected);
-    } catch {
-      // ignore
-    }
-    setMenuPos(null);
-  };
-
-  const copySelected = () => {
-    if (!selected) return;
-    clipboardNodeId = selected;
-    clipboardAction = "copy";
-    setMenuPos(null);
-  };
-
-  const cutSelected = () => {
-    if (!selected) return;
-    clipboardNodeId = selected;
-    clipboardAction = "cut";
-    setMenuPos(null);
-  };
-
-  const pasteClipboard = () => {
-    if (!clipboardNodeId || !selected) return;
-    try {
-      const parentId = selected;
-      const nodeTree = query.node(clipboardNodeId).toNodeTree();
-      actions.addNodeTree(nodeTree, parentId);
-
-      if (clipboardAction === "cut") {
-        const cutNode = query.node(clipboardNodeId).get();
-        if (cutNode.data.parent) {
-          actions.delete(clipboardNodeId);
-        }
-        clipboardNodeId = null;
-        clipboardAction = null;
-      }
-    } catch {
-      // Target may not accept children
-    }
-    setMenuPos(null);
-  };
-
-  const duplicateSelected = () => {
-    if (!selected) return;
-    try {
-      const node = query.node(selected).get();
-      const parentId = node.data.parent;
-      if (!parentId) return;
-      const nodeTree = query.node(selected).toNodeTree();
-      actions.addNodeTree(nodeTree, parentId);
-    } catch {
-      // ignore
-    }
-    setMenuPos(null);
-  };
 
   if (!menuPos || !selected) return null;
 
