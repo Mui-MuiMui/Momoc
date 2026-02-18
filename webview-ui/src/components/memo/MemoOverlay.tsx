@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef } from "react";
-import { useEditor } from "@craftjs/core";
+import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { StickyNote, Plus, X, ChevronDown, ChevronRight } from "lucide-react";
+import { useEditorStore, type Memo, type MemoColor } from "../../stores/editorStore";
 
 const MEMO_COLORS = [
   { name: "yellow", bg: "bg-yellow-200", header: "bg-yellow-300", border: "border-yellow-300", text: "text-yellow-900", headerText: "text-yellow-800", placeholder: "placeholder:text-yellow-600" },
@@ -12,28 +12,15 @@ const MEMO_COLORS = [
   { name: "orange", bg: "bg-orange-200", header: "bg-orange-300", border: "border-orange-300", text: "text-orange-900", headerText: "text-orange-800", placeholder: "placeholder:text-orange-600" },
 ] as const;
 
-type MemoColor = (typeof MEMO_COLORS)[number]["name"];
-
-interface Memo {
-  id: string;
-  title: string;
-  body: string;
-  color: MemoColor;
-  collapsed: boolean;
-  x: number;
-  y: number;
-}
-
 function getColorScheme(color: MemoColor) {
   return MEMO_COLORS.find((c) => c.name === color) || MEMO_COLORS[0];
 }
 
 export function MemoOverlay() {
   const { t } = useTranslation();
-  const [memos, setMemos] = useState<Memo[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
+  const { memos, addMemo, updateMemo, removeMemo } = useEditorStore();
 
-  const addMemo = () => {
+  const handleAddMemo = () => {
     const newMemo: Memo = {
       id: `memo-${Date.now()}`,
       title: "",
@@ -43,17 +30,8 @@ export function MemoOverlay() {
       x: 100 + memos.length * 20,
       y: 100 + memos.length * 20,
     };
-    setMemos([...memos, newMemo]);
-    setIsAdding(false);
+    addMemo(newMemo);
   };
-
-  const updateMemo = useCallback((id: string, updates: Partial<Memo>) => {
-    setMemos((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)));
-  }, []);
-
-  const removeMemo = useCallback((id: string) => {
-    setMemos((prev) => prev.filter((m) => m.id !== id));
-  }, []);
 
   return (
     <>
@@ -61,7 +39,7 @@ export function MemoOverlay() {
       <div className="absolute right-2 top-2 z-50">
         <button
           type="button"
-          onClick={() => (isAdding ? setIsAdding(false) : addMemo())}
+          onClick={handleAddMemo}
           className="flex items-center gap-1 rounded bg-yellow-500/80 px-2 py-1 text-xs text-black hover:bg-yellow-500"
           title={t("memo.addNew")}
         >
@@ -97,12 +75,10 @@ function MemoSticker({
   const [position, setPosition] = useState({ x: memo.x, y: memo.y });
   const [showColorPicker, setShowColorPicker] = useState(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
-  const colorPickerRef = useRef<HTMLDivElement>(null);
 
   const colors = getColorScheme(memo.color);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Don't start drag on buttons or inputs
     if ((e.target as HTMLElement).closest("button, input, textarea")) return;
     setIsDragging(true);
     dragOffsetRef.current = {
@@ -113,14 +89,18 @@ function MemoSticker({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
-      setPosition({
+      const newPos = {
         x: e.clientX - dragOffsetRef.current.x,
         y: e.clientY - dragOffsetRef.current.y,
-      });
+      };
+      setPosition(newPos);
     }
   };
 
   const handleMouseUp = () => {
+    if (isDragging) {
+      onUpdate({ x: position.x, y: position.y });
+    }
     setIsDragging(false);
   };
 
@@ -141,7 +121,6 @@ function MemoSticker({
         className={`flex cursor-move items-center gap-1 rounded-t px-2 py-1.5 ${colors.header}`}
         onMouseDown={handleMouseDown}
       >
-        {/* Collapse toggle */}
         <button
           type="button"
           onClick={toggleCollapse}
@@ -150,7 +129,6 @@ function MemoSticker({
           {memo.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
         </button>
 
-        {/* Title input */}
         <input
           type="text"
           value={memo.title}
@@ -159,7 +137,6 @@ function MemoSticker({
           className={`flex-1 bg-transparent text-xs font-semibold ${colors.headerText} placeholder:${colors.headerText}/60 outline-none`}
         />
 
-        {/* Color picker button */}
         <div className="relative">
           <button
             type="button"
@@ -169,10 +146,7 @@ function MemoSticker({
             title={t("memo.changeColor")}
           />
           {showColorPicker && (
-            <div
-              ref={colorPickerRef}
-              className="absolute right-0 top-full z-50 mt-1 flex gap-1 rounded bg-white p-1.5 shadow-lg"
-            >
+            <div className="absolute right-0 top-full z-50 mt-1 flex gap-1 rounded bg-white p-1.5 shadow-lg">
               {MEMO_COLORS.map((c) => (
                 <button
                   key={c.name}
@@ -189,7 +163,6 @@ function MemoSticker({
           )}
         </div>
 
-        {/* Remove button */}
         <button
           type="button"
           onClick={onRemove}

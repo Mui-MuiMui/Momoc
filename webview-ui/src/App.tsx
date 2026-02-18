@@ -20,89 +20,98 @@ export default function App() {
   const { setDocumentContent, setFileName, setThemeMode, setIsDirty } =
     useEditorStore();
 
-  // --- Save system using Craft.js onNodesChange callback ---
+  // --- Save system ---
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>("");
-  const loadingRef = useRef(false); // true while deserializing (suppress saves)
+  const loadingRef = useRef(false);
+  const lastCraftStateRef = useRef<string>("");
+
+  /** Build combined save payload (craftState + memos) */
+  const buildSaveContent = useCallback((craftStateStr: string) => {
+    const memos = useEditorStore.getState().memos;
+    const craftState = JSON.parse(craftStateStr);
+    return JSON.stringify({ version: 1, craftState, memos });
+  }, []);
 
   const doSave = useCallback(
-    (serialized: string) => {
+    (content: string) => {
       getVsCodeApi().postMessage({
         type: "doc:save",
-        payload: { content: serialized },
+        payload: { content },
       });
-      lastSavedRef.current = serialized;
+      lastSavedRef.current = content;
       setIsDirty(false);
     },
     [setIsDirty],
   );
 
+  /** Schedule a debounced save using the latest state */
+  const scheduleSave = useCallback(() => {
+    if (loadingRef.current) return;
+    if (!lastCraftStateRef.current) return;
+
+    const content = buildSaveContent(lastCraftStateRef.current);
+    if (content === lastSavedRef.current) return;
+
+    setIsDirty(true);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const latest = buildSaveContent(lastCraftStateRef.current);
+      doSave(latest);
+      saveTimerRef.current = null;
+    }, SAVE_DEBOUNCE_MS);
+  }, [setIsDirty, doSave, buildSaveContent]);
+
   // Craft.js calls this whenever any node changes
   const handleNodesChange = useCallback(
     (query: { serialize: () => string }) => {
       try {
-        // Suppress saves while loading/deserializing
         if (loadingRef.current) return;
-
         const serialized = query.serialize();
+        lastCraftStateRef.current = serialized;
 
-        // Record state but don't save if it matches what's already on disk
+        // First call: just record, don't save
         if (!lastSavedRef.current) {
-          lastSavedRef.current = serialized;
+          lastSavedRef.current = buildSaveContent(serialized);
           return;
         }
 
-        // No actual change
-        if (serialized === lastSavedRef.current) return;
-
-        setIsDirty(true);
-
-        // Debounce: clear previous timer, set a new one
-        if (saveTimerRef.current) {
-          clearTimeout(saveTimerRef.current);
-        }
-        saveTimerRef.current = setTimeout(() => {
-          // Re-serialize at save time to capture latest state
-          try {
-            const latest = query.serialize();
-            doSave(latest);
-          } catch {
-            doSave(serialized);
-          }
-          saveTimerRef.current = null;
-        }, SAVE_DEBOUNCE_MS);
+        scheduleSave();
       } catch (err) {
         console.error("[Mocker] onNodesChange serialize error:", err);
       }
     },
-    [setIsDirty, doSave],
+    [scheduleSave, buildSaveContent],
   );
+
+  // Watch memo changes and trigger save
+  const memos = useEditorStore((s) => s.memos);
+  const prevMemosRef = useRef(memos);
+  useEffect(() => {
+    if (loadingRef.current) return;
+    if (prevMemosRef.current === memos) return;
+    prevMemosRef.current = memos;
+    scheduleSave();
+  }, [memos, scheduleSave]);
 
   // Ctrl+S immediate save
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        // Clear pending debounce
         if (saveTimerRef.current) {
           clearTimeout(saveTimerRef.current);
           saveTimerRef.current = null;
         }
-        // Force save current state
-        const content = lastSavedRef.current;
-        if (content) {
-          // Trigger VSCode to save the document
-          getVsCodeApi().postMessage({
-            type: "doc:save",
-            payload: { content },
-          });
-          setIsDirty(false);
+        if (lastCraftStateRef.current) {
+          const content = buildSaveContent(lastCraftStateRef.current);
+          doSave(content);
         }
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [setIsDirty]);
+  }, [doSave, buildSaveContent]);
 
   // --- VSCode message handler ---
   const handleMessage = useCallback(
@@ -148,7 +157,11 @@ export default function App() {
       onRender={RenderNode}
       onNodesChange={handleNodesChange}
     >
-      <EditorLoader loadingRef={loadingRef} lastSavedRef={lastSavedRef} />
+      <EditorLoader
+        loadingRef={loadingRef}
+        lastSavedRef={lastSavedRef}
+        lastCraftStateRef={lastCraftStateRef}
+      />
       <div className="flex h-screen flex-col overflow-hidden bg-[var(--vscode-editor-background,#1e1e1e)] text-[var(--vscode-foreground,#ccc)]">
         <Toolbar />
         <div className="flex flex-1 overflow-hidden">

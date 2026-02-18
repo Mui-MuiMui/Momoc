@@ -3,6 +3,17 @@ import { create } from "zustand";
 export type LayoutMode = "flow" | "absolute";
 export type ThemeMode = "light" | "dark";
 export type ViewportMode = "desktop" | "tablet" | "mobile" | "custom";
+export type MemoColor = "yellow" | "blue" | "green" | "pink" | "purple" | "orange";
+
+export interface Memo {
+  id: string;
+  title: string;
+  body: string;
+  color: MemoColor;
+  collapsed: boolean;
+  x: number;
+  y: number;
+}
 
 interface EditorState {
   layoutMode: LayoutMode;
@@ -14,6 +25,8 @@ interface EditorState {
   fileName: string;
   isDirty: boolean;
   selectedNodeId: string | null;
+  memos: Memo[];
+  zoom: number;
 
   setLayoutMode: (mode: LayoutMode) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -23,6 +36,11 @@ interface EditorState {
   setFileName: (name: string) => void;
   setIsDirty: (dirty: boolean) => void;
   setSelectedNodeId: (id: string | null) => void;
+  setMemos: (memos: Memo[]) => void;
+  addMemo: (memo: Memo) => void;
+  updateMemo: (id: string, updates: Partial<Memo>) => void;
+  removeMemo: (id: string) => void;
+  setZoom: (zoom: number) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -35,6 +53,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   fileName: "",
   isDirty: false,
   selectedNodeId: null,
+  memos: [],
+  zoom: 1,
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
   setThemeMode: (mode) => set({ themeMode: mode }),
@@ -45,4 +65,13 @@ export const useEditorStore = create<EditorState>((set) => ({
   setFileName: (name) => set({ fileName: name }),
   setIsDirty: (dirty) => set({ isDirty: dirty }),
   setSelectedNodeId: (id) => set({ selectedNodeId: id }),
+  setMemos: (memos) => set({ memos }),
+  addMemo: (memo) => set((state) => ({ memos: [...state.memos, memo] })),
+  updateMemo: (id, updates) =>
+    set((state) => ({
+      memos: state.memos.map((m) => (m.id === id ? { ...m, ...updates } : m)),
+    })),
+  removeMemo: (id) =>
+    set((state) => ({ memos: state.memos.filter((m) => m.id !== id) })),
+  setZoom: (zoom) => set({ zoom }),
 }));
