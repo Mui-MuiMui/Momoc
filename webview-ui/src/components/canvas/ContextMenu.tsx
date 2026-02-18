@@ -21,49 +21,46 @@ function freshId(): string {
 /**
  * Clone a NodeTree with fresh IDs so that addNodeTree doesn't overwrite
  * existing nodes. Craft.js's addNodeTree reuses the original IDs if present.
+ *
+ * Uses shallow cloning to preserve non-serializable references like
+ * React component types (node.data.type).
  */
 function cloneTreeWithFreshIds(tree: NodeTree): NodeTree {
   const idMap = new Map<string, string>();
 
-  // Generate a new ID for every node in the tree
   for (const oldId of Object.keys(tree.nodes)) {
     idMap.set(oldId, freshId());
   }
+
+  const remapId = (id: string) => idMap.get(id) || id;
 
   const newNodes: Record<string, Node> = {};
 
   for (const [oldId, node] of Object.entries(tree.nodes)) {
     const newId = idMap.get(oldId)!;
-    // Deep clone the node
-    const cloned: Node = JSON.parse(JSON.stringify(node));
-    cloned.id = newId;
 
-    // Remap parent
-    if (cloned.data.parent && idMap.has(cloned.data.parent)) {
-      cloned.data.parent = idMap.get(cloned.data.parent)!;
-    }
+    // Shallow clone data, preserving type reference (React component)
+    const newData = {
+      ...node.data,
+      props: { ...node.data.props },
+      custom: { ...(node.data.custom || {}) },
+      parent: node.data.parent ? remapId(node.data.parent) : node.data.parent,
+      nodes: (node.data.nodes || []).map(remapId),
+      linkedNodes: Object.fromEntries(
+        Object.entries(node.data.linkedNodes || {}).map(([k, v]) => [k, remapId(v as string)]),
+      ),
+    };
 
-    // Remap child node references
-    if (cloned.data.nodes) {
-      cloned.data.nodes = cloned.data.nodes.map(
-        (childId: string) => idMap.get(childId) || childId,
-      );
-    }
-
-    // Remap linked nodes
-    if (cloned.data.linkedNodes) {
-      const newLinked: Record<string, string> = {};
-      for (const [key, linkedId] of Object.entries(cloned.data.linkedNodes)) {
-        newLinked[key] = idMap.get(linkedId as string) || (linkedId as string);
-      }
-      cloned.data.linkedNodes = newLinked;
-    }
-
-    // Reset events and internal timestamps
-    cloned.events = { selected: false, dragged: false, hovered: false } as Node["events"];
-    cloned._hydrationTimestamp = Date.now();
-
-    newNodes[newId] = cloned;
+    newNodes[newId] = {
+      id: newId,
+      data: newData,
+      info: { ...node.info },
+      related: { ...node.related },
+      events: { selected: false, dragged: false, hovered: false },
+      rules: node.rules,
+      dom: null,
+      _hydrationTimestamp: Date.now(),
+    } as unknown as Node;
   }
 
   return {
