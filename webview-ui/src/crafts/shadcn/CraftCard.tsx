@@ -4,6 +4,8 @@ import { cn } from "../../utils/cn";
 interface CraftCardProps {
   title?: string;
   description?: string;
+  width?: string;
+  height?: string;
   className?: string;
   children?: React.ReactNode;
 }
@@ -11,6 +13,8 @@ interface CraftCardProps {
 export const CraftCard: UserComponent<CraftCardProps> = ({
   title = "Card Title",
   description = "",
+  width = "auto",
+  height = "auto",
   className = "",
   children,
 }) => {
@@ -27,6 +31,7 @@ export const CraftCard: UserComponent<CraftCardProps> = ({
         "rounded-xl border bg-card text-card-foreground shadow",
         className,
       )}
+      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {(title || description) && (
         <div className="flex flex-col space-y-1.5 p-6">
@@ -46,6 +51,8 @@ CraftCard.craft = {
   props: {
     title: "Card Title",
     description: "",
+    width: "auto",
+    height: "auto",
     className: "",
   },
   rules: {

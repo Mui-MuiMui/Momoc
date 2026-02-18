@@ -8,6 +8,8 @@ interface CraftContainerProps {
   alignItems?: "start" | "center" | "end" | "stretch" | "baseline";
   gap?: string;
   gridCols?: number;
+  width?: string;
+  height?: string;
   className?: string;
   children?: React.ReactNode;
 }
@@ -36,6 +38,8 @@ export const CraftContainer: UserComponent<CraftContainerProps> = ({
   alignItems = "stretch",
   gap = "4",
   gridCols = 3,
+  width = "auto",
+  height = "auto",
   className = "",
   children,
 }) => {
@@ -60,6 +64,7 @@ export const CraftContainer: UserComponent<CraftContainerProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("min-h-[60px] p-4", layoutClasses, className)}
+      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {children}
     </div>
@@ -75,6 +80,8 @@ CraftContainer.craft = {
     alignItems: "stretch",
     gap: "4",
     gridCols: 3,
+    width: "auto",
+    height: "auto",
     className: "",
   },
   rules: {

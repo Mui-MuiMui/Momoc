@@ -3,11 +3,15 @@ import { cn } from "../../utils/cn";
 
 interface CraftSeparatorProps {
   orientation?: "horizontal" | "vertical";
+  width?: string;
+  height?: string;
   className?: string;
 }
 
 export const CraftSeparator: UserComponent<CraftSeparatorProps> = ({
   orientation = "horizontal",
+  width = "auto",
+  height = "auto",
   className = "",
 }) => {
   const {
@@ -25,6 +29,7 @@ export const CraftSeparator: UserComponent<CraftSeparatorProps> = ({
         orientation === "horizontal" ? "h-[1px] w-full" : "h-full w-[1px]",
         className,
       )}
+      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     />
   );
 };
@@ -33,6 +38,8 @@ CraftSeparator.craft = {
   displayName: "Separator",
   props: {
     orientation: "horizontal",
+    width: "auto",
+    height: "auto",
     className: "",
   },
   rules: {

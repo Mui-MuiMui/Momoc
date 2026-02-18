@@ -6,6 +6,8 @@ interface CraftTableProps {
   rows: string;
   hasHeader?: boolean;
   striped?: boolean;
+  width?: string;
+  height?: string;
   className?: string;
 }
 
@@ -14,6 +16,8 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   rows = "Alice,alice@example.com,Admin;Bob,bob@example.com,User;Carol,carol@example.com,Editor",
   hasHeader = true,
   striped = false,
+  width = "auto",
+  height = "auto",
   className = "",
 }) => {
   const {
@@ -31,6 +35,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("w-full overflow-auto", className)}
+      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       <table className="w-full caption-bottom text-sm">
         {hasHeader && (
@@ -76,6 +81,8 @@ CraftTable.craft = {
     rows: "Alice,alice@example.com,Admin;Bob,bob@example.com,User;Carol,carol@example.com,Editor",
     hasHeader: true,
     striped: false,
+    width: "auto",
+    height: "auto",
     className: "",
   },
   rules: {

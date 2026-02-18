@@ -88,10 +88,14 @@ export function ContextMenu() {
 
   const deleteSelected = () => {
     if (!selected) return;
-    // Don't delete the root node
-    const node = query.node(selected).get();
-    if (node.data.parent) {
+    // Don't delete root or top-level canvas node
+    try {
+      const nodeHelper = query.node(selected);
+      if (nodeHelper.isRoot() || nodeHelper.isTopLevelNode()) return;
+      if (!nodeHelper.isDeletable()) return;
       actions.delete(selected);
+    } catch {
+      // ignore
     }
     setMenuPos(null);
   };

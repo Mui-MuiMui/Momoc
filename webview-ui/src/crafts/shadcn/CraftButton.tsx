@@ -33,6 +33,8 @@ interface CraftButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
   disabled?: boolean;
+  width?: string;
+  height?: string;
   className?: string;
 }
 
@@ -41,6 +43,8 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
   variant = "default",
   size = "default",
   disabled = false,
+  width = "auto",
+  height = "auto",
   className = "",
 }) => {
   const {
@@ -55,6 +59,7 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
       className={cn(buttonVariants({ variant, size }), className)}
       disabled={disabled}
       type="button"
+      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {text}
     </button>
@@ -68,6 +73,8 @@ CraftButton.craft = {
     variant: "default",
     size: "default",
     disabled: false,
+    width: "auto",
+    height: "auto",
     className: "",
   },
   rules: {

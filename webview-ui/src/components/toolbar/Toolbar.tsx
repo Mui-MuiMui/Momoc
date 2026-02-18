@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
 import { useSendMessage } from "../../hooks/useVscodeMessage";
+import { ConfirmDialog } from "./ConfirmDialog";
 import {
   Undo2,
   Redo2,
@@ -23,15 +25,14 @@ export function Toolbar() {
   const { layoutMode, setLayoutMode, themeMode, setThemeMode, viewportMode, setViewportMode } =
     useEditorStore();
   const sendMessage = useSendMessage();
+  const [pendingLayout, setPendingLayout] = useState<"flow" | "absolute" | null>(null);
 
   const handleUndo = () => actions.history.undo();
   const handleRedo = () => actions.history.redo();
 
   const handleLayoutChange = (mode: "flow" | "absolute") => {
     if (mode === layoutMode) return;
-    if (confirm(t("dialog.layoutSwitch.message"))) {
-      setLayoutMode(mode);
-    }
+    setPendingLayout(mode);
   };
 
   const handleThemeToggle = () => {
@@ -111,6 +112,19 @@ export function Toolbar() {
       >
         <Smartphone size={16} />
       </ToolbarButton>
+
+      <ConfirmDialog
+        open={pendingLayout !== null}
+        title={t("dialog.layoutSwitch.title")}
+        message={t("dialog.layoutSwitch.message")}
+        confirmLabel={t("dialog.layoutSwitch.confirm")}
+        cancelLabel={t("dialog.layoutSwitch.cancel")}
+        onConfirm={() => {
+          if (pendingLayout) setLayoutMode(pendingLayout);
+          setPendingLayout(null);
+        }}
+        onCancel={() => setPendingLayout(null)}
+      />
     </div>
   );
 }
