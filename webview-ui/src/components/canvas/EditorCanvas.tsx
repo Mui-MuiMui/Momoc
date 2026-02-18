@@ -1,5 +1,4 @@
 import { Frame, Element } from "@craftjs/core";
-import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
 import { CraftContainer } from "../../crafts/layout/CraftContainer";
 import { MemoOverlay } from "../memo/MemoOverlay";
@@ -10,10 +9,25 @@ const VIEWPORT_WIDTHS: Record<string, number> = {
   mobile: 375,
 };
 
+const VIEWPORT_HEIGHTS: Record<string, number> = {
+  desktop: 800,
+  tablet: 1024,
+  mobile: 812,
+};
+
 export function EditorCanvas() {
-  const { t } = useTranslation();
-  const { themeMode, viewportMode } = useEditorStore();
-  const viewportWidth = VIEWPORT_WIDTHS[viewportMode] || 1280;
+  const { themeMode, viewportMode, customViewportWidth, customViewportHeight } =
+    useEditorStore();
+
+  const viewportWidth =
+    viewportMode === "custom"
+      ? customViewportWidth
+      : VIEWPORT_WIDTHS[viewportMode] || 1280;
+
+  const viewportHeight =
+    viewportMode === "custom"
+      ? customViewportHeight
+      : VIEWPORT_HEIGHTS[viewportMode] || 800;
 
   return (
     <div
@@ -25,9 +39,13 @@ export function EditorCanvas() {
         className="relative bg-white shadow-lg transition-all duration-300"
         style={{
           width: viewportWidth,
-          minHeight: "calc(100vh - 80px)",
+          minHeight: viewportHeight,
         }}
       >
+        {/* Size label */}
+        <div className="absolute -top-5 left-0 text-[10px] text-[var(--vscode-descriptionForeground,#888)] font-mono">
+          {viewportWidth} x {viewportHeight}
+        </div>
         <div className={themeMode === "dark" ? "dark" : ""}>
           <div className="min-h-full bg-background text-foreground">
             <Frame>

@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
-import { useSendMessage } from "../../hooks/useVscodeMessage";
 import { ConfirmDialog } from "./ConfirmDialog";
 import {
   Undo2,
@@ -14,6 +13,8 @@ import {
   Monitor,
   Tablet,
   Smartphone,
+  Settings2,
+  Circle,
 } from "lucide-react";
 
 export function Toolbar() {
@@ -22,10 +23,23 @@ export function Toolbar() {
     canUndo: query.history.canUndo(),
     canRedo: query.history.canRedo(),
   }));
-  const { layoutMode, setLayoutMode, themeMode, setThemeMode, viewportMode, setViewportMode } =
-    useEditorStore();
-  const sendMessage = useSendMessage();
+  const {
+    layoutMode,
+    setLayoutMode,
+    themeMode,
+    setThemeMode,
+    viewportMode,
+    setViewportMode,
+    customViewportWidth,
+    customViewportHeight,
+    setCustomViewportSize,
+    isDirty,
+  } = useEditorStore();
   const [pendingLayout, setPendingLayout] = useState<"flow" | "absolute" | null>(null);
+  const [showCustomSize, setShowCustomSize] = useState(false);
+  const [customW, setCustomW] = useState(String(customViewportWidth));
+  const [customH, setCustomH] = useState(String(customViewportHeight));
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const handleUndo = () => actions.history.undo();
   const handleRedo = () => actions.history.redo();
@@ -38,11 +52,45 @@ export function Toolbar() {
   const handleThemeToggle = () => {
     const newTheme = themeMode === "light" ? "dark" : "light";
     setThemeMode(newTheme);
-    sendMessage("doc:save", { themeChange: newTheme });
   };
+
+  const handleCustomViewport = () => {
+    setViewportMode("custom");
+    setShowCustomSize(true);
+    setCustomW(String(customViewportWidth));
+    setCustomH(String(customViewportHeight));
+  };
+
+  const applyCustomSize = () => {
+    const w = parseInt(customW, 10);
+    const h = parseInt(customH, 10);
+    if (w > 0 && h > 0) {
+      setCustomViewportSize(w, h);
+    }
+    setShowCustomSize(false);
+  };
+
+  // Close popover on click outside
+  useEffect(() => {
+    if (!showCustomSize) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowCustomSize(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showCustomSize]);
 
   return (
     <div className="flex h-10 items-center gap-1 border-b border-[var(--vscode-panel-border,#333)] bg-[var(--vscode-titleBar-activeBackground,#2d2d2d)] px-2">
+      {/* Dirty indicator */}
+      {isDirty && (
+        <span title={t("toolbar.unsaved")} className="mr-1 flex items-center">
+          <Circle size={8} fill="#e8a317" stroke="none" />
+        </span>
+      )}
+
       <ToolbarButton
         onClick={handleUndo}
         disabled={!canUndo}
@@ -58,7 +106,7 @@ export function Toolbar() {
         <Redo2 size={16} />
       </ToolbarButton>
 
-      <div className="mx-2 h-5 w-px bg-[var(--vscode-panel-border,#444)]" />
+      <Divider />
 
       <ToolbarButton
         onClick={() => handleLayoutChange("flow")}
@@ -77,7 +125,7 @@ export function Toolbar() {
         <span className="ml-1 text-xs">{t("toolbar.layoutAbsolute")}</span>
       </ToolbarButton>
 
-      <div className="mx-2 h-5 w-px bg-[var(--vscode-panel-border,#444)]" />
+      <Divider />
 
       <ToolbarButton
         onClick={handleThemeToggle}
@@ -89,7 +137,7 @@ export function Toolbar() {
         </span>
       </ToolbarButton>
 
-      <div className="mx-2 h-5 w-px bg-[var(--vscode-panel-border,#444)]" />
+      <Divider />
 
       <ToolbarButton
         onClick={() => setViewportMode("desktop")}
@@ -113,6 +161,58 @@ export function Toolbar() {
         <Smartphone size={16} />
       </ToolbarButton>
 
+      {/* Custom viewport button */}
+      <div className="relative">
+        <ToolbarButton
+          onClick={handleCustomViewport}
+          active={viewportMode === "custom"}
+          title={t("toolbar.viewportCustom")}
+        >
+          <Settings2 size={16} />
+          {viewportMode === "custom" && (
+            <span className="ml-1 text-xs">
+              {customViewportWidth}x{customViewportHeight}
+            </span>
+          )}
+        </ToolbarButton>
+
+        {showCustomSize && (
+          <div
+            ref={popoverRef}
+            className="absolute right-0 top-full z-[9999] mt-1 rounded-md border border-[var(--vscode-panel-border,#454545)] bg-[var(--vscode-editor-background,#1e1e1e)] p-3 shadow-xl"
+          >
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={customW}
+                onChange={(e) => setCustomW(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyCustomSize()}
+                className="w-20 rounded border border-[var(--vscode-input-border,#3c3c3c)] bg-[var(--vscode-input-background,#3c3c3c)] px-2 py-1 text-xs text-[var(--vscode-input-foreground,#ccc)] outline-none focus:border-[var(--vscode-focusBorder,#007fd4)]"
+                min={100}
+                placeholder="W"
+              />
+              <span className="text-xs text-[var(--vscode-descriptionForeground,#888)]">x</span>
+              <input
+                type="number"
+                value={customH}
+                onChange={(e) => setCustomH(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyCustomSize()}
+                className="w-20 rounded border border-[var(--vscode-input-border,#3c3c3c)] bg-[var(--vscode-input-background,#3c3c3c)] px-2 py-1 text-xs text-[var(--vscode-input-foreground,#ccc)] outline-none focus:border-[var(--vscode-focusBorder,#007fd4)]"
+                min={100}
+                placeholder="H"
+              />
+              <button
+                type="button"
+                onClick={applyCustomSize}
+                className="rounded bg-[var(--vscode-button-background,#0e639c)] px-2 py-1 text-xs text-[var(--vscode-button-foreground,#fff)] hover:bg-[var(--vscode-button-hoverBackground,#1177bb)]"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <ConfirmDialog
         open={pendingLayout !== null}
         title={t("dialog.layoutSwitch.title")}
@@ -127,6 +227,10 @@ export function Toolbar() {
       />
     </div>
   );
+}
+
+function Divider() {
+  return <div className="mx-2 h-5 w-px bg-[var(--vscode-panel-border,#444)]" />;
 }
 
 function ToolbarButton({

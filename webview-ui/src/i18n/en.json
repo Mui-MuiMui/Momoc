@@ -11,6 +11,8 @@
   "toolbar.viewportDesktop": "Desktop",
   "toolbar.viewportTablet": "Tablet",
   "toolbar.viewportMobile": "Mobile",
+  "toolbar.viewportCustom": "Custom",
+  "toolbar.unsaved": "Unsaved changes",
   "palette.title": "Components",
   "palette.shadcn": "shadcn/ui",
   "palette.html": "HTML Elements",

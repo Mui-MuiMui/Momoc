@@ -11,6 +11,8 @@
   "toolbar.viewportDesktop": "デスクトップ",
   "toolbar.viewportTablet": "タブレット",
   "toolbar.viewportMobile": "モバイル",
+  "toolbar.viewportCustom": "カスタム",
+  "toolbar.unsaved": "未保存の変更があります",
   "palette.title": "コンポーネント",
   "palette.shadcn": "shadcn/ui",
   "palette.html": "HTML要素",
