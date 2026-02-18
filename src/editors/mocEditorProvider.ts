@@ -94,14 +94,27 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
   ): Promise<void> {
     switch (message.type) {
       case "doc:save": {
-        const payload = message.payload as { content: string };
-        const edit = new vscode.WorkspaceEdit();
-        edit.replace(
-          document.uri,
-          new vscode.Range(0, 0, document.lineCount, 0),
-          payload.content,
-        );
-        await vscode.workspace.applyEdit(edit);
+        try {
+          const payload = message.payload as { content: string };
+          if (!payload?.content) {
+            console.error("[Mocker] doc:save received empty content");
+            break;
+          }
+          const edit = new vscode.WorkspaceEdit();
+          const fullRange = new vscode.Range(
+            0,
+            0,
+            document.lineCount,
+            document.lineAt(Math.max(0, document.lineCount - 1)).text.length,
+          );
+          edit.replace(document.uri, fullRange, payload.content);
+          const success = await vscode.workspace.applyEdit(edit);
+          if (!success) {
+            console.error("[Mocker] WorkspaceEdit.applyEdit returned false");
+          }
+        } catch (err) {
+          console.error("[Mocker] doc:save error:", err);
+        }
         break;
       }
 

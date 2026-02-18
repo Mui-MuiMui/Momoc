@@ -1,12 +1,14 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(node --version:*)",
+      "Bash(pnpm:*)"
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "serena",
     "sequential-thinking"
-  ],
-  "permissions": {
-    "allow": [
-      "Bash(cat:*)"
-    ]
-  }
+  ]
 }
