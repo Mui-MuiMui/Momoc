@@ -1,0 +1,136 @@
+{
+  "name": "mocker",
+  "displayName": "Mocker",
+  "description": "Interactive Design-Code Lab - Build mockups with GUI, code, and AI agents",
+  "version": "0.0.1",
+  "publisher": "mocker",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.100.0",
+    "node": ">=24.0.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "mockup",
+    "design",
+    "gui-builder",
+    "react",
+    "tailwind",
+    "shadcn"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "mocker.mocEditor",
+        "displayName": "%customEditor.mocEditor.displayName%",
+        "selector": [
+          {
+            "filenamePattern": "*.moc"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "mocker.createMocFile",
+        "title": "%command.createMocFile%",
+        "category": "Mocker"
+      },
+      {
+        "command": "mocker.toggleCodeDesign",
+        "title": "%command.toggleCodeDesign%",
+        "category": "Mocker"
+      },
+      {
+        "command": "mocker.openPreview",
+        "title": "%command.openPreview%",
+        "category": "Mocker"
+      },
+      {
+        "command": "mocker.switchLayoutMode",
+        "title": "%command.switchLayoutMode%",
+        "category": "Mocker"
+      },
+      {
+        "command": "mocker.toggleTheme",
+        "title": "%command.toggleTheme%",
+        "category": "Mocker"
+      },
+      {
+        "command": "mocker.exportFlatTsx",
+        "title": "%command.exportFlatTsx%",
+        "category": "Mocker"
+      }
+    ],
+    "languages": [
+      {
+        "id": "moc",
+        "aliases": [
+          "Moc",
+          "moc"
+        ],
+        "extensions": [
+          ".moc"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "mocker.createMocFile",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "l10n": "./l10n",
+  "scripts": {
+    "vscode:prepublish": "pnpm run build",
+    "build": "pnpm run build:extension && pnpm run build:webview",
+    "build:extension": "node esbuild.mjs --production",
+    "build:webview": "pnpm --filter webview-ui build",
+    "watch": "node esbuild.mjs --watch",
+    "dev": "concurrently \"pnpm run watch\" \"pnpm --filter webview-ui dev\"",
+    "lint": "eslint src/ webview-ui/src/",
+    "lint:fix": "eslint src/ webview-ui/src/ --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"webview-ui/src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"webview-ui/src/**/*.{ts,tsx}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vscode-test",
+    "package": "pnpm run build && vsce package --no-dependencies",
+    "preinstall": "npx only-allow pnpm"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vscode/test-electron": "^2.5.0",
+    "@vscode/vsce": "^3.0.0",
+    "concurrently": "^9.0.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "ts-morph": "^25.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+import { useNode, type UserComponent } from "@craftjs/core";
+import { cn } from "../../utils/cn";
+
+interface CraftImageProps {
+  src?: string;
+  alt?: string;
+  className?: string;
+}
+
+export const CraftImage: UserComponent<CraftImageProps> = ({
+  src = "https://placehold.co/300x200/e2e8f0/64748b?text=Image",
+  alt = "Placeholder",
+  className = "",
+}) => {
+  const {
+    connectors: { connect, drag },
+  } = useNode();
+
+  return (
+    <img
+      ref={(ref) => {
+        if (ref) connect(drag(ref));
+      }}
+      src={src}
+      alt={alt}
+      className={cn("max-w-full", className)}
+    />
+  );
+};
+
+CraftImage.craft = {
+  displayName: "Image",
+  props: {
+    src: "https://placehold.co/300x200/e2e8f0/64748b?text=Image",
+    alt: "Placeholder",
+    className: "",
+  },
+  rules: {
+    canDrag: () => true,
+    canMoveIn: () => false,
+  },
+};
