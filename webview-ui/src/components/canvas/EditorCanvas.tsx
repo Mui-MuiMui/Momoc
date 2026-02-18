@@ -68,98 +68,103 @@ export function EditorCanvas() {
   );
 
   return (
-    <div
-      data-mocker-canvas
-      className="relative flex-1 overflow-auto bg-[var(--vscode-editor-background,#1e1e1e)]"
-      onWheel={handleWheel}
-    >
-      <MemoOverlay />
-
-      {/* Scrollable canvas area with generous padding */}
+    <div data-mocker-canvas className="relative flex-1">
+      {/* Scrollable canvas area */}
       <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          padding: "80px",
-          minHeight: "100%",
-          minWidth: "100%",
-        }}
+        className="absolute inset-0 overflow-auto bg-[var(--vscode-editor-background,#1e1e1e)]"
+        onWheel={handleWheel}
       >
-        {/* Zoom wrapper - transform scales visually, outer div handles layout size */}
         <div
           style={{
-            width: viewportWidth * zoom,
-            flexShrink: 0,
+            display: "flex",
+            justifyContent: "center",
+            padding: "80px",
+            minHeight: "100%",
+            width: "max-content",
+            minWidth: "100%",
           }}
         >
+          {/* Zoom wrapper - outer div matches scaled layout size for proper scroll */}
           <div
             style={{
-              width: viewportWidth,
-              minHeight: viewportHeight,
-              transform: `scale(${zoom})`,
-              transformOrigin: "top left",
+              width: viewportWidth * zoom,
+              flexShrink: 0,
             }}
-            className="relative bg-white shadow-lg transition-shadow"
           >
-            {/* Size label */}
-            <div className="absolute -top-5 left-0 text-[10px] text-[var(--vscode-descriptionForeground,#888)] font-mono">
-              {viewportWidth} x {viewportHeight}
-              {zoom !== 1 && ` (${Math.round(zoom * 100)}%)`}
-            </div>
-            <div className={themeMode === "dark" ? "dark" : ""}>
-              <div className="min-h-full bg-background text-foreground">
-                <Frame>
-                  <Element
-                    is={CraftContainer}
-                    canvas
-                    display="flex"
-                    flexDirection="column"
-                    className="min-h-screen"
-                  >
-                  </Element>
-                </Frame>
+            <div
+              style={{
+                width: viewportWidth,
+                minHeight: viewportHeight,
+                transform: `scale(${zoom})`,
+                transformOrigin: "top left",
+              }}
+              className="relative bg-white shadow-lg transition-shadow"
+            >
+              {/* Size label */}
+              <div className="absolute -top-5 left-0 text-[10px] text-[var(--vscode-descriptionForeground,#888)] font-mono">
+                {viewportWidth} x {viewportHeight}
+                {zoom !== 1 && ` (${Math.round(zoom * 100)}%)`}
+              </div>
+              <div className={themeMode === "dark" ? "dark" : ""}>
+                <div className="min-h-full bg-background text-foreground">
+                  <Frame>
+                    <Element
+                      is={CraftContainer}
+                      canvas
+                      display="flex"
+                      flexDirection="column"
+                      className="min-h-screen"
+                    >
+                    </Element>
+                  </Frame>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Zoom controls - floating bottom-right */}
-      <div className="absolute bottom-3 right-3 z-50 flex items-center gap-1 rounded-md border border-[var(--vscode-panel-border,#454545)] bg-[var(--vscode-editor-background,#1e1e1e)] p-1 shadow-lg">
-        <button
-          type="button"
-          onClick={handleZoomOut}
-          disabled={zoom <= ZOOM_MIN}
-          title={t("canvas.zoomOut")}
-          className="flex h-6 w-6 items-center justify-center rounded text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] disabled:opacity-30"
-        >
-          <ZoomOut size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={handleZoomReset}
-          title={t("canvas.zoomReset")}
-          className="min-w-[40px] px-1 text-center text-[10px] font-mono text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] rounded"
-        >
-          {Math.round(zoom * 100)}%
-        </button>
-        <button
-          type="button"
-          onClick={handleZoomIn}
-          disabled={zoom >= ZOOM_MAX}
-          title={t("canvas.zoomIn")}
-          className="flex h-6 w-6 items-center justify-center rounded text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] disabled:opacity-30"
-        >
-          <ZoomIn size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={handleZoomReset}
-          title={t("canvas.zoomFit")}
-          className="flex h-6 w-6 items-center justify-center rounded text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)]"
-        >
-          <Maximize2 size={14} />
-        </button>
+      {/* Fixed overlays (outside scroll container) */}
+      <MemoOverlay />
+
+      {/* Zoom controls - fixed bottom-right */}
+      <div className="pointer-events-none absolute bottom-3 right-3 z-50">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-md border border-[var(--vscode-panel-border,#454545)] bg-[var(--vscode-editor-background,#1e1e1e)] p-1 shadow-lg">
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            disabled={zoom <= ZOOM_MIN}
+            title={t("canvas.zoomOut")}
+            className="flex h-6 w-6 items-center justify-center rounded text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] disabled:opacity-30"
+          >
+            <ZoomOut size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomReset}
+            title={t("canvas.zoomReset")}
+            className="min-w-[40px] px-1 text-center text-[10px] font-mono text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] rounded"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            disabled={zoom >= ZOOM_MAX}
+            title={t("canvas.zoomIn")}
+            className="flex h-6 w-6 items-center justify-center rounded text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] disabled:opacity-30"
+          >
+            <ZoomIn size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomReset}
+            title={t("canvas.zoomFit")}
+            className="flex h-6 w-6 items-center justify-center rounded text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)]"
+          >
+            <Maximize2 size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );
