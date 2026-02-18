@@ -27,5 +27,10 @@
   "dialog.layoutSwitch.confirm": "Switch",
   "dialog.layoutSwitch.cancel": "Cancel",
   "memo.placeholder": "Add a note for AI...",
-  "memo.addNew": "Add Memo"
+  "memo.addNew": "Add Memo",
+  "contextMenu.copy": "Copy",
+  "contextMenu.cut": "Cut",
+  "contextMenu.paste": "Paste",
+  "contextMenu.duplicate": "Duplicate",
+  "contextMenu.delete": "Delete"
 }

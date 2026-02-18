@@ -9,6 +9,7 @@ import { CraftCard } from "./shadcn/CraftCard";
 import { CraftLabel } from "./shadcn/CraftLabel";
 import { CraftSeparator } from "./shadcn/CraftSeparator";
 import { CraftBadge } from "./shadcn/CraftBadge";
+import { CraftTable } from "./shadcn/CraftTable";
 
 export const resolvers = {
   CraftDiv,
@@ -22,6 +23,7 @@ export const resolvers = {
   CraftLabel,
   CraftSeparator,
   CraftBadge,
+  CraftTable,
 };
 
 export type ResolverKey = keyof typeof resolvers;
@@ -114,5 +116,12 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Award",
     defaultProps: { text: "Badge" },
+  },
+  {
+    resolverKey: "CraftTable",
+    label: "Table",
+    category: "shadcn",
+    icon: "Table",
+    defaultProps: {},
   },
 ];

@@ -16,7 +16,10 @@ export function EditorCanvas() {
   const viewportWidth = VIEWPORT_WIDTHS[viewportMode] || 1280;
 
   return (
-    <div className="relative flex flex-1 items-start justify-center overflow-auto bg-[var(--vscode-editor-background,#1e1e1e)] p-4">
+    <div
+      data-mocker-canvas
+      className="relative flex flex-1 items-start justify-center overflow-auto bg-[var(--vscode-editor-background,#1e1e1e)] p-4"
+    >
       <MemoOverlay />
       <div
         className="relative bg-white shadow-lg transition-all duration-300"

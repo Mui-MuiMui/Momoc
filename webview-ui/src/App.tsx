@@ -5,6 +5,8 @@ import { Toolbar } from "./components/toolbar/Toolbar";
 import { ComponentPalette } from "./components/palette/ComponentPalette";
 import { EditorCanvas } from "./components/canvas/EditorCanvas";
 import { PropertiesPanel } from "./components/properties/PropertiesPanel";
+import { ContextMenu } from "./components/canvas/ContextMenu";
+import { RenderNode } from "./components/canvas/RenderNode";
 import { useVscodeMessage } from "./hooks/useVscodeMessage";
 import { useEditorStore } from "./stores/editorStore";
 import { resolvers } from "./crafts/resolvers";
@@ -34,7 +36,9 @@ export default function App() {
         }
         case "i18n:locale": {
           const p = message.payload as { locale: string };
-          i18n.changeLanguage(p.locale);
+          // VSCode sends locale like "ja" or "en"
+          const lang = p.locale.split("-")[0];
+          i18n.changeLanguage(lang);
           break;
         }
       }
@@ -45,7 +49,10 @@ export default function App() {
   useVscodeMessage(handleMessage);
 
   return (
-    <Editor resolver={resolvers}>
+    <Editor
+      resolver={resolvers}
+      onRender={RenderNode}
+    >
       <div className="flex h-screen flex-col overflow-hidden bg-[var(--vscode-editor-background,#1e1e1e)] text-[var(--vscode-foreground,#ccc)]">
         <Toolbar />
         <div className="flex flex-1 overflow-hidden">
@@ -53,6 +60,7 @@ export default function App() {
           <EditorCanvas />
           <PropertiesPanel />
         </div>
+        <ContextMenu />
       </div>
     </Editor>
   );

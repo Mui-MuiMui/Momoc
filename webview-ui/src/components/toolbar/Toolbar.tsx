@@ -27,12 +27,10 @@ export function Toolbar() {
   const handleUndo = () => actions.history.undo();
   const handleRedo = () => actions.history.redo();
 
-  const handleLayoutToggle = () => {
-    const newMode = layoutMode === "flow" ? "absolute" : "flow";
-    if (
-      confirm(t("dialog.layoutSwitch.message"))
-    ) {
-      setLayoutMode(newMode);
+  const handleLayoutChange = (mode: "flow" | "absolute") => {
+    if (mode === layoutMode) return;
+    if (confirm(t("dialog.layoutSwitch.message"))) {
+      setLayoutMode(mode);
     }
   };
 
@@ -62,14 +60,20 @@ export function Toolbar() {
       <div className="mx-2 h-5 w-px bg-[var(--vscode-panel-border,#444)]" />
 
       <ToolbarButton
-        onClick={handleLayoutToggle}
-        title={t("toolbar.layoutMode")}
-        active={layoutMode === "absolute"}
+        onClick={() => handleLayoutChange("flow")}
+        active={layoutMode === "flow"}
+        title={t("toolbar.layoutFlow")}
       >
-        {layoutMode === "flow" ? <LayoutGrid size={16} /> : <Move size={16} />}
-        <span className="ml-1 text-xs">
-          {layoutMode === "flow" ? t("toolbar.layoutFlow") : t("toolbar.layoutAbsolute")}
-        </span>
+        <LayoutGrid size={16} />
+        <span className="ml-1 text-xs">{t("toolbar.layoutFlow")}</span>
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => handleLayoutChange("absolute")}
+        active={layoutMode === "absolute"}
+        title={t("toolbar.layoutAbsolute")}
+      >
+        <Move size={16} />
+        <span className="ml-1 text-xs">{t("toolbar.layoutAbsolute")}</span>
       </ToolbarButton>
 
       <div className="mx-2 h-5 w-px bg-[var(--vscode-panel-border,#444)]" />
