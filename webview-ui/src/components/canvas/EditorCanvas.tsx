@@ -36,9 +36,10 @@ export function EditorCanvas() {
     >
       <MemoOverlay />
       <div
-        className="relative bg-white shadow-lg transition-all duration-300"
+        className="relative flex-shrink-0 bg-white shadow-lg transition-all duration-300"
         style={{
           width: viewportWidth,
+          maxWidth: viewportWidth,
           minHeight: viewportHeight,
         }}
       >

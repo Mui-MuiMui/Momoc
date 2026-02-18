@@ -43,9 +43,16 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
 
     webviewPanel.webview.html = this.getHtmlForWebview(webviewPanel.webview);
 
+    // Track edits we applied ourselves to avoid echoing them back
+    let suppressExternalChange = false;
+
     const changeDocumentSubscription =
       vscode.workspace.onDidChangeTextDocument((e) => {
         if (e.document.uri.toString() === document.uri.toString()) {
+          if (suppressExternalChange) {
+            suppressExternalChange = false;
+            return;
+          }
           webviewPanel.webview.postMessage({
             type: "doc:externalChange",
             payload: { content: document.getText() },
@@ -53,8 +60,11 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         }
       });
 
-    webviewPanel.webview.onDidReceiveMessage((message) => {
-      this.handleWebviewMessage(message, document, webviewPanel);
+    webviewPanel.webview.onDidReceiveMessage(async (message) => {
+      if (message.type === "doc:save") {
+        suppressExternalChange = true;
+      }
+      await this.handleWebviewMessage(message, document, webviewPanel);
     });
 
     webviewPanel.onDidDispose(() => {
