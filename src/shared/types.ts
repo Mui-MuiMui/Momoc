@@ -27,6 +27,11 @@ export interface MocDocument {
 export interface MocEditorData {
   craftState: Record<string, unknown>;
   memos: MocEditorMemo[];
+  viewport?: {
+    mode: string;
+    width: number;
+    height: number;
+  };
 }
 
 /** Full memo object as used by the GUI editor (richer than MocMemo) */

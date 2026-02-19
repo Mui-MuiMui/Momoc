@@ -113,11 +113,15 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     this.documentMetadata.set(docKey, mocDoc.metadata);
 
     if (mocDoc.editorData) {
-      return JSON.stringify({
+      const json: Record<string, unknown> = {
         version: 1,
         craftState: mocDoc.editorData.craftState,
         memos: mocDoc.editorData.memos,
-      });
+      };
+      if (mocDoc.editorData.viewport) {
+        json.viewport = mocDoc.editorData.viewport;
+      }
+      return JSON.stringify(json);
     }
 
     // New file from template (TSX with metadata but no editor-data yet)
@@ -132,10 +136,14 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
 
     let craftState: Record<string, unknown>;
     let memos: MocEditorData["memos"];
+    let viewport: MocEditorData["viewport"];
     try {
       const parsed = JSON.parse(webviewJson);
       craftState = parsed.craftState || {};
       memos = Array.isArray(parsed.memos) ? parsed.memos : [];
+      if (parsed.viewport) {
+        viewport = parsed.viewport;
+      }
     } catch {
       // If JSON parsing fails, return as-is
       return webviewJson;
@@ -175,7 +183,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       imports,
       tsxSource,
       rawContent: "",
-      editorData: { craftState, memos },
+      editorData: { craftState, memos, viewport },
     };
 
     return serializeMocFile(mocDoc);
