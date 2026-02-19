@@ -40,11 +40,12 @@ const MARGIN_DIRS = [
 ] as const;
 
 const TEXT_ALIGN_OPTIONS = [
-  { label: "Left", cls: "text-left" },
-  { label: "Center", cls: "text-center" },
-  { label: "Right", cls: "text-right" },
-  { label: "Justify", cls: "text-justify" },
+  { label: "Left", textCls: "text-left", justifyCls: "justify-start" },
+  { label: "Center", textCls: "text-center", justifyCls: "justify-center" },
+  { label: "Right", textCls: "text-right", justifyCls: "justify-end" },
+  { label: "Justify", textCls: "text-justify", justifyCls: "justify-between" },
 ];
+const ALL_TEXT_ALIGN_CLASSES = TEXT_ALIGN_OPTIONS.flatMap((o) => [o.textCls, o.justifyCls]);
 
 const ALIGN_SELF_OPTIONS = [
   { label: "Auto", cls: "self-auto" },
@@ -131,7 +132,6 @@ export function TailwindEditor() {
   const bgGroup = COLOR_OPTIONS.map((c) => `bg-${c}`);
   const fontWeightGroup = FONT_WEIGHT_OPTIONS.map((w) => `font-${w}`);
   const borderRadiusGroup = BORDER_RADIUS_OPTIONS.map((r) => `rounded-${r}`);
-  const textAlignGroup = TEXT_ALIGN_OPTIONS.map((o) => o.cls);
   const alignSelfGroup = ALIGN_SELF_OPTIONS.map((o) => o.cls);
   const contentVAlignGroup = CONTENT_VALIGN_OPTIONS.map((o) => o.cls);
 
@@ -177,10 +177,17 @@ export function TailwindEditor() {
         <div className="flex gap-1">
           {TEXT_ALIGN_OPTIONS.map((o) => (
             <ClassButton
-              key={o.cls}
+              key={o.textCls}
               label={o.label}
-              active={activeSet.has(o.cls)}
-              onClick={() => setGroupClass(o.cls, textAlignGroup)}
+              active={activeSet.has(o.textCls)}
+              onClick={() => {
+                const filtered = classes.filter((c) => !ALL_TEXT_ALIGN_CLASSES.includes(c));
+                if (activeSet.has(o.textCls)) {
+                  updateClassName(filtered.join(" "));
+                } else {
+                  updateClassName([...filtered, o.textCls, o.justifyCls].join(" "));
+                }
+              }}
             />
           ))}
         </div>
