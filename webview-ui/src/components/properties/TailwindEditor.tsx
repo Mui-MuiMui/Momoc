@@ -1,21 +1,50 @@
 import { useState, useEffect } from "react";
 import { useEditor } from "@craftjs/core";
 
-const SPACING_OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16", "20", "24"];
-const COLOR_OPTIONS = [
-  "background",
-  "foreground",
-  "primary",
-  "secondary",
-  "muted",
-  "accent",
-  "destructive",
-  "card",
-  "border",
+const SPACING_SCALE = [
+  "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
+  "14", "16", "20", "24", "28", "32", "36", "40", "44", "48", "52", "56",
+  "60", "64", "72", "80", "96",
 ];
-const FONT_SIZE_OPTIONS = ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl"];
+
+const FONT_SIZE_SCALE = [
+  "xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl", "7xl", "8xl", "9xl",
+];
+
+const COLOR_OPTIONS = [
+  "background", "foreground", "primary", "secondary", "muted",
+  "accent", "destructive", "card", "border",
+];
+
 const FONT_WEIGHT_OPTIONS = ["normal", "medium", "semibold", "bold"];
 const BORDER_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "xl", "2xl", "full"];
+
+const PADDING_DIRS = [
+  { label: "All", prefix: "p" },
+  { label: "X", prefix: "px" },
+  { label: "Y", prefix: "py" },
+  { label: "T", prefix: "pt" },
+  { label: "R", prefix: "pr" },
+  { label: "B", prefix: "pb" },
+  { label: "L", prefix: "pl" },
+] as const;
+
+const MARGIN_DIRS = [
+  { label: "All", prefix: "m" },
+  { label: "X", prefix: "mx" },
+  { label: "Y", prefix: "my" },
+  { label: "T", prefix: "mt" },
+  { label: "R", prefix: "mr" },
+  { label: "B", prefix: "mb" },
+  { label: "L", prefix: "ml" },
+] as const;
+
+const TEXT_ALIGN_OPTIONS = [
+  { label: "Left", cls: "text-left" },
+  { label: "Center", cls: "text-center" },
+  { label: "Right", cls: "text-right" },
+  { label: "Justify", cls: "text-justify" },
+];
 
 export function TailwindEditor() {
   const { selectedNodeId, currentClassName, actions } = useEditor((state) => {
@@ -30,13 +59,18 @@ export function TailwindEditor() {
   });
 
   const [rawInput, setRawInput] = useState(currentClassName);
+  const [paddingDir, setPaddingDir] = useState(0);
+  const [marginDir, setMarginDir] = useState(0);
+  const [fontSizeMode, setFontSizeMode] = useState<"preset" | "slider">("preset");
 
-  // Sync rawInput when the selected node changes
   useEffect(() => {
     setRawInput(currentClassName);
   }, [selectedNodeId, currentClassName]);
 
   if (!selectedNodeId) return null;
+
+  const classes = rawInput.split(/\s+/).filter(Boolean);
+  const activeSet = new Set(classes);
 
   const updateClassName = (newClassName: string) => {
     setRawInput(newClassName);
@@ -45,37 +79,51 @@ export function TailwindEditor() {
     });
   };
 
-  const toggleClass = (cls: string, groupClasses?: string[]) => {
-    const classes = rawInput.split(/\s+/).filter(Boolean);
-    if (groupClasses) {
-      // Remove all classes in the same group, then add the new one
-      const filtered = classes.filter((c) => !groupClasses.includes(c));
-      if (classes.includes(cls)) {
-        // Already active — just remove it (toggle off)
-        updateClassName(classes.filter((c) => c !== cls).join(" "));
-      } else {
-        updateClassName([...filtered, cls].join(" "));
-      }
+  const setGroupClass = (cls: string, groupClasses: string[]) => {
+    const filtered = classes.filter((c) => !groupClasses.includes(c));
+    if (activeSet.has(cls)) {
+      updateClassName(filtered.join(" "));
     } else {
-      if (classes.includes(cls)) {
-        updateClassName(classes.filter((c) => c !== cls).join(" "));
-      } else {
-        updateClassName([...classes, cls].join(" "));
-      }
+      updateClassName([...filtered, cls].join(" "));
     }
   };
 
-  // Pre-compute group class lists to avoid text-color / text-size conflicts
-  const textColorClasses = COLOR_OPTIONS.map((c) => `text-${c}`);
-  const textSizeClasses = FONT_SIZE_OPTIONS.map((s) => `text-${s}`);
-  const paddingClasses = SPACING_OPTIONS.map((v) => `p-${v}`);
-  const marginClasses = SPACING_OPTIONS.map((v) => `m-${v}`);
-  const fontWeightClasses = FONT_WEIGHT_OPTIONS.map((w) => `font-${w}`);
-  const borderRadiusClasses = BORDER_RADIUS_OPTIONS.map((r) => `rounded-${r}`);
-  const bgClasses = COLOR_OPTIONS.map((c) => `bg-${c}`);
+  const getSpacingValue = (prefix: string): number => {
+    for (let i = 0; i < SPACING_SCALE.length; i++) {
+      if (activeSet.has(`${prefix}-${SPACING_SCALE[i]}`)) return i;
+    }
+    return -1;
+  };
 
-  // Set of active classes for exact word-boundary matching
-  const activeSet = new Set(rawInput.split(/\s+/).filter(Boolean));
+  const setSpacingValue = (prefix: string, index: number) => {
+    const group = SPACING_SCALE.map((v) => `${prefix}-${v}`);
+    const filtered = classes.filter((c) => !group.includes(c));
+    if (index < 0) {
+      updateClassName(filtered.join(" "));
+    } else {
+      updateClassName([...filtered, `${prefix}-${SPACING_SCALE[index]}`].join(" "));
+    }
+  };
+
+  const getFontSizeIndex = (): number => {
+    for (let i = 0; i < FONT_SIZE_SCALE.length; i++) {
+      if (activeSet.has(`text-${FONT_SIZE_SCALE[i]}`)) return i;
+    }
+    return -1;
+  };
+
+  const fontSizeGroup = FONT_SIZE_SCALE.map((s) => `text-${s}`);
+  const textColorGroup = COLOR_OPTIONS.map((c) => `text-${c}`);
+  const bgGroup = COLOR_OPTIONS.map((c) => `bg-${c}`);
+  const fontWeightGroup = FONT_WEIGHT_OPTIONS.map((w) => `font-${w}`);
+  const borderRadiusGroup = BORDER_RADIUS_OPTIONS.map((r) => `rounded-${r}`);
+  const textAlignGroup = TEXT_ALIGN_OPTIONS.map((o) => o.cls);
+
+  const currentPaddingPrefix = PADDING_DIRS[paddingDir].prefix;
+  const currentMarginPrefix = MARGIN_DIRS[marginDir].prefix;
+  const currentPaddingIdx = getSpacingValue(currentPaddingPrefix);
+  const currentMarginIdx = getSpacingValue(currentMarginPrefix);
+  const currentFontSizeIdx = getFontSizeIndex();
 
   return (
     <div className="flex flex-col gap-3">
@@ -91,41 +139,82 @@ export function TailwindEditor() {
         />
       </div>
 
-      <TailwindSection title="Padding">
-        <div className="flex flex-wrap gap-1">
-          {SPACING_OPTIONS.slice(0, 8).map((v) => (
+      <SpacingSlider
+        title="Padding"
+        directions={PADDING_DIRS}
+        dirIndex={paddingDir}
+        onDirChange={setPaddingDir}
+        value={currentPaddingIdx}
+        onChange={(idx) => setSpacingValue(currentPaddingPrefix, idx)}
+      />
+
+      <SpacingSlider
+        title="Margin"
+        directions={MARGIN_DIRS}
+        dirIndex={marginDir}
+        onDirChange={setMarginDir}
+        value={currentMarginIdx}
+        onChange={(idx) => setSpacingValue(currentMarginPrefix, idx)}
+      />
+
+      <TailwindSection title="Text Align">
+        <div className="flex gap-1">
+          {TEXT_ALIGN_OPTIONS.map((o) => (
             <ClassButton
-              key={v}
-              label={`p-${v}`}
-              active={activeSet.has(`p-${v}`)}
-              onClick={() => toggleClass(`p-${v}`, paddingClasses)}
+              key={o.cls}
+              label={o.label}
+              active={activeSet.has(o.cls)}
+              onClick={() => setGroupClass(o.cls, textAlignGroup)}
             />
           ))}
         </div>
       </TailwindSection>
 
-      <TailwindSection title="Margin">
-        <div className="flex flex-wrap gap-1">
-          {SPACING_OPTIONS.slice(0, 8).map((v) => (
-            <ClassButton
-              key={v}
-              label={`m-${v}`}
-              active={activeSet.has(`m-${v}`)}
-              onClick={() => toggleClass(`m-${v}`, marginClasses)}
-            />
-          ))}
+      <TailwindSection title="Font Size">
+        <div className="mb-1 flex gap-1">
+          <ModeToggle label="Preset" active={fontSizeMode === "preset"} onClick={() => setFontSizeMode("preset")} />
+          <ModeToggle label="Slider" active={fontSizeMode === "slider"} onClick={() => setFontSizeMode("slider")} />
         </div>
+        {fontSizeMode === "preset" ? (
+          <div className="flex flex-wrap gap-1">
+            {FONT_SIZE_SCALE.map((s) => (
+              <ClassButton
+                key={s}
+                label={s}
+                active={activeSet.has(`text-${s}`)}
+                onClick={() => setGroupClass(`text-${s}`, fontSizeGroup)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={-1}
+              max={FONT_SIZE_SCALE.length - 1}
+              value={currentFontSizeIdx}
+              onChange={(e) => {
+                const idx = Number(e.target.value);
+                const filtered = classes.filter((c) => !fontSizeGroup.includes(c));
+                if (idx < 0) {
+                  updateClassName(filtered.join(" "));
+                } else {
+                  updateClassName([...filtered, `text-${FONT_SIZE_SCALE[idx]}`].join(" "));
+                }
+              }}
+              className="flex-1 accent-[var(--vscode-button-background,#0e639c)]"
+            />
+            <span className="w-10 text-right text-[10px] text-[var(--vscode-foreground,#ccc)]">
+              {currentFontSizeIdx >= 0 ? FONT_SIZE_SCALE[currentFontSizeIdx] : "—"}
+            </span>
+          </div>
+        )}
       </TailwindSection>
 
       <TailwindSection title="Text Color">
         <div className="flex flex-wrap gap-1">
           {COLOR_OPTIONS.map((c) => (
-            <ClassButton
-              key={c}
-              label={c}
-              active={activeSet.has(`text-${c}`)}
-              onClick={() => toggleClass(`text-${c}`, textColorClasses)}
-            />
+            <ClassButton key={c} label={c} active={activeSet.has(`text-${c}`)} onClick={() => setGroupClass(`text-${c}`, textColorGroup)} />
           ))}
         </div>
       </TailwindSection>
@@ -133,25 +222,7 @@ export function TailwindEditor() {
       <TailwindSection title="Background">
         <div className="flex flex-wrap gap-1">
           {COLOR_OPTIONS.map((c) => (
-            <ClassButton
-              key={c}
-              label={c}
-              active={activeSet.has(`bg-${c}`)}
-              onClick={() => toggleClass(`bg-${c}`, bgClasses)}
-            />
-          ))}
-        </div>
-      </TailwindSection>
-
-      <TailwindSection title="Font Size">
-        <div className="flex flex-wrap gap-1">
-          {FONT_SIZE_OPTIONS.map((s) => (
-            <ClassButton
-              key={s}
-              label={s}
-              active={activeSet.has(`text-${s}`)}
-              onClick={() => toggleClass(`text-${s}`, textSizeClasses)}
-            />
+            <ClassButton key={c} label={c} active={activeSet.has(`bg-${c}`)} onClick={() => setGroupClass(`bg-${c}`, bgGroup)} />
           ))}
         </div>
       </TailwindSection>
@@ -159,12 +230,7 @@ export function TailwindEditor() {
       <TailwindSection title="Font Weight">
         <div className="flex flex-wrap gap-1">
           {FONT_WEIGHT_OPTIONS.map((w) => (
-            <ClassButton
-              key={w}
-              label={w}
-              active={activeSet.has(`font-${w}`)}
-              onClick={() => toggleClass(`font-${w}`, fontWeightClasses)}
-            />
+            <ClassButton key={w} label={w} active={activeSet.has(`font-${w}`)} onClick={() => setGroupClass(`font-${w}`, fontWeightGroup)} />
           ))}
         </div>
       </TailwindSection>
@@ -172,12 +238,7 @@ export function TailwindEditor() {
       <TailwindSection title="Border Radius">
         <div className="flex flex-wrap gap-1">
           {BORDER_RADIUS_OPTIONS.map((r) => (
-            <ClassButton
-              key={r}
-              label={r}
-              active={activeSet.has(`rounded-${r}`)}
-              onClick={() => toggleClass(`rounded-${r}`, borderRadiusClasses)}
-            />
+            <ClassButton key={r} label={r} active={activeSet.has(`rounded-${r}`)} onClick={() => setGroupClass(`rounded-${r}`, borderRadiusGroup)} />
           ))}
         </div>
       </TailwindSection>
@@ -185,37 +246,90 @@ export function TailwindEditor() {
   );
 }
 
-function TailwindSection({
+/* ---- Sub-components ---- */
+
+function SpacingSlider({
   title,
-  children,
+  directions,
+  dirIndex,
+  onDirChange,
+  value,
+  onChange,
 }: {
   title: string;
-  children: React.ReactNode;
+  directions: ReadonlyArray<{ label: string; prefix: string }>;
+  dirIndex: number;
+  onDirChange: (i: number) => void;
+  value: number;
+  onChange: (idx: number) => void;
 }) {
+  const prefix = directions[dirIndex].prefix;
+  return (
+    <TailwindSection title={title}>
+      <div className="mb-1 flex gap-0.5">
+        {directions.map((d, i) => (
+          <button
+            key={d.prefix}
+            type="button"
+            onClick={() => onDirChange(i)}
+            className={`rounded px-1.5 py-0.5 text-[10px] transition-colors ${
+              i === dirIndex
+                ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+                : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+            }`}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="range"
+          min={-1}
+          max={SPACING_SCALE.length - 1}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="flex-1 accent-[var(--vscode-button-background,#0e639c)]"
+        />
+        <span className="w-12 text-right text-[10px] text-[var(--vscode-foreground,#ccc)]">
+          {value >= 0 ? `${prefix}-${SPACING_SCALE[value]}` : "—"}
+        </span>
+      </div>
+    </TailwindSection>
+  );
+}
+
+function TailwindSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-xs text-[var(--vscode-descriptionForeground,#888)]">
-        {title}
-      </p>
+      <p className="mb-1 text-xs text-[var(--vscode-descriptionForeground,#888)]">{title}</p>
       {children}
     </div>
   );
 }
 
-function ClassButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function ClassButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={`rounded px-1.5 py-0.5 text-[10px] transition-colors ${
+        active
+          ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+          : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function ModeToggle({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded px-2 py-0.5 text-[10px] transition-colors ${
         active
           ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
           : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
