@@ -118,8 +118,15 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         craftState: mocDoc.editorData.craftState,
         memos: mocDoc.editorData.memos,
       };
+      // Restore viewport from editorData, or fall back to metadata
       if (mocDoc.editorData.viewport) {
         json.viewport = mocDoc.editorData.viewport;
+      } else {
+        const vp = mocDoc.metadata.viewport;
+        const dimMatch = vp.match(/^(\d+)x(\d+)$/);
+        if (dimMatch) {
+          json.viewport = { mode: "custom", width: Number(dimMatch[1]), height: Number(dimMatch[2]) };
+        }
       }
       return JSON.stringify(json);
     }
@@ -166,13 +173,25 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
 
     // Retrieve or create metadata
     const existingMeta = this.documentMetadata.get(docKey);
+
+    // Compute human-readable viewport from webview data
+    let metaViewport = existingMeta?.viewport || DEFAULT_METADATA.viewport;
+    if (viewport) {
+      const presets = ["desktop", "tablet", "mobile"];
+      if (presets.includes(viewport.mode)) {
+        metaViewport = viewport.mode;
+      } else {
+        metaViewport = `${viewport.width}x${viewport.height}`;
+      }
+    }
+
     const metadata = {
       version: existingMeta?.version || MOC_VERSION,
       id: existingMeta?.id || generateUuid(),
       intent: existingMeta?.intent || "",
       theme: existingMeta?.theme || DEFAULT_METADATA.theme,
       layout: existingMeta?.layout || DEFAULT_METADATA.layout,
-      viewport: existingMeta?.viewport || DEFAULT_METADATA.viewport,
+      viewport: metaViewport,
       memos: mocMemos,
       selection: undefined,
     };

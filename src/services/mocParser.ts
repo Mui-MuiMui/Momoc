@@ -60,9 +60,7 @@ function parseMetadata(content: string): MocMetadata {
     theme: (tags["theme"] as "light" | "dark") || DEFAULT_METADATA.theme,
     layout:
       (tags["layout"] as "flow" | "absolute") || DEFAULT_METADATA.layout,
-    viewport:
-      (tags["viewport"] as "desktop" | "tablet" | "mobile") ||
-      DEFAULT_METADATA.viewport,
+    viewport: tags["viewport"] || DEFAULT_METADATA.viewport,
     memos,
     craftState: tags["craft-state"] || undefined,
     selection: undefined,

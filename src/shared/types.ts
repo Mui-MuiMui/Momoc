@@ -4,7 +4,7 @@ export interface MocMetadata {
   intent: string;
   theme: "light" | "dark";
   layout: "flow" | "absolute";
-  viewport: "desktop" | "tablet" | "mobile";
+  viewport: string;
   memos: MocMemo[];
   craftState?: string;
   selection?: SelectionContext;
