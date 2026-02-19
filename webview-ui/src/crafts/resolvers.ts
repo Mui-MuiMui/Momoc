@@ -34,6 +34,8 @@ export interface PaletteItem {
   category: "shadcn" | "html" | "layout";
   icon: string;
   defaultProps: Record<string, unknown>;
+  /** When true, the element is created as a Craft.js canvas that accepts children */
+  isCanvas?: boolean;
 }
 
 export const paletteItems: PaletteItem[] = [
@@ -44,6 +46,7 @@ export const paletteItems: PaletteItem[] = [
     category: "layout",
     icon: "LayoutGrid",
     defaultProps: {},
+    isCanvas: true,
   },
   {
     resolverKey: "CraftFreeCanvas",
@@ -51,6 +54,7 @@ export const paletteItems: PaletteItem[] = [
     category: "layout",
     icon: "Move",
     defaultProps: {},
+    isCanvas: true,
   },
   // HTML
   {
@@ -59,6 +63,7 @@ export const paletteItems: PaletteItem[] = [
     category: "html",
     icon: "Square",
     defaultProps: {},
+    isCanvas: true,
   },
   {
     resolverKey: "CraftText",
@@ -95,6 +100,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "CreditCard",
     defaultProps: {},
+    isCanvas: true,
   },
   {
     resolverKey: "CraftLabel",

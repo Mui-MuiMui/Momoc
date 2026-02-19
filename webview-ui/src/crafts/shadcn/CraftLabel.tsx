@@ -11,6 +11,7 @@ interface CraftLabelProps {
 
 export const CraftLabel: UserComponent<CraftLabelProps> = ({
   text = "Label",
+  htmlFor = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -24,6 +25,7 @@ export const CraftLabel: UserComponent<CraftLabelProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
+      htmlFor={htmlFor || undefined}
       className={cn(
         "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
         className,

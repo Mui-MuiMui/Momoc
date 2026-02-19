@@ -107,7 +107,7 @@ function PaletteItem({
         if (ref) {
           connectors.create(
             ref,
-            <Element is={Component} canvas={false} {...item.defaultProps} />,
+            <Element is={Component} canvas={item.isCanvas ?? false} {...item.defaultProps} />,
           );
         }
       }}

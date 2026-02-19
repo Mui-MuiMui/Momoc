@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEditor } from "@craftjs/core";
 
 const SPACING_OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "8", "10", "12", "16", "20", "24"];
@@ -31,6 +31,11 @@ export function TailwindEditor() {
 
   const [rawInput, setRawInput] = useState(currentClassName);
 
+  // Sync rawInput when the selected node changes
+  useEffect(() => {
+    setRawInput(currentClassName);
+  }, [selectedNodeId, currentClassName]);
+
   if (!selectedNodeId) return null;
 
   const updateClassName = (newClassName: string) => {
@@ -40,11 +45,17 @@ export function TailwindEditor() {
     });
   };
 
-  const toggleClass = (cls: string, remove?: string) => {
+  const toggleClass = (cls: string, groupClasses?: string[]) => {
     const classes = rawInput.split(/\s+/).filter(Boolean);
-    if (remove) {
-      const filtered = classes.filter((c) => !c.startsWith(remove));
-      updateClassName([...filtered, cls].join(" "));
+    if (groupClasses) {
+      // Remove all classes in the same group, then add the new one
+      const filtered = classes.filter((c) => !groupClasses.includes(c));
+      if (classes.includes(cls)) {
+        // Already active — just remove it (toggle off)
+        updateClassName(classes.filter((c) => c !== cls).join(" "));
+      } else {
+        updateClassName([...filtered, cls].join(" "));
+      }
     } else {
       if (classes.includes(cls)) {
         updateClassName(classes.filter((c) => c !== cls).join(" "));
@@ -53,6 +64,15 @@ export function TailwindEditor() {
       }
     }
   };
+
+  // Pre-compute group class lists to avoid text-color / text-size conflicts
+  const textColorClasses = COLOR_OPTIONS.map((c) => `text-${c}`);
+  const textSizeClasses = FONT_SIZE_OPTIONS.map((s) => `text-${s}`);
+  const paddingClasses = SPACING_OPTIONS.map((v) => `p-${v}`);
+  const marginClasses = SPACING_OPTIONS.map((v) => `m-${v}`);
+  const fontWeightClasses = FONT_WEIGHT_OPTIONS.map((w) => `font-${w}`);
+  const borderRadiusClasses = BORDER_RADIUS_OPTIONS.map((r) => `rounded-${r}`);
+  const bgClasses = COLOR_OPTIONS.map((c) => `bg-${c}`);
 
   return (
     <div className="flex flex-col gap-3">
@@ -75,7 +95,7 @@ export function TailwindEditor() {
               key={v}
               label={`p-${v}`}
               active={rawInput.includes(`p-${v}`)}
-              onClick={() => toggleClass(`p-${v}`, "p-")}
+              onClick={() => toggleClass(`p-${v}`, paddingClasses)}
             />
           ))}
         </div>
@@ -88,7 +108,7 @@ export function TailwindEditor() {
               key={v}
               label={`m-${v}`}
               active={rawInput.includes(`m-${v}`)}
-              onClick={() => toggleClass(`m-${v}`, "m-")}
+              onClick={() => toggleClass(`m-${v}`, marginClasses)}
             />
           ))}
         </div>
@@ -101,7 +121,7 @@ export function TailwindEditor() {
               key={c}
               label={c}
               active={rawInput.includes(`text-${c}`)}
-              onClick={() => toggleClass(`text-${c}`, "text-")}
+              onClick={() => toggleClass(`text-${c}`, textColorClasses)}
             />
           ))}
         </div>
@@ -114,7 +134,7 @@ export function TailwindEditor() {
               key={c}
               label={c}
               active={rawInput.includes(`bg-${c}`)}
-              onClick={() => toggleClass(`bg-${c}`, "bg-")}
+              onClick={() => toggleClass(`bg-${c}`, bgClasses)}
             />
           ))}
         </div>
@@ -127,7 +147,7 @@ export function TailwindEditor() {
               key={s}
               label={s}
               active={rawInput.includes(`text-${s}`)}
-              onClick={() => toggleClass(`text-${s}`, "text-")}
+              onClick={() => toggleClass(`text-${s}`, textSizeClasses)}
             />
           ))}
         </div>
@@ -140,7 +160,7 @@ export function TailwindEditor() {
               key={w}
               label={w}
               active={rawInput.includes(`font-${w}`)}
-              onClick={() => toggleClass(`font-${w}`, "font-")}
+              onClick={() => toggleClass(`font-${w}`, fontWeightClasses)}
             />
           ))}
         </div>
@@ -153,7 +173,7 @@ export function TailwindEditor() {
               key={r}
               label={r}
               active={rawInput.includes(`rounded-${r}`)}
-              onClick={() => toggleClass(`rounded-${r}`, "rounded-")}
+              onClick={() => toggleClass(`rounded-${r}`, borderRadiusClasses)}
             />
           ))}
         </div>
