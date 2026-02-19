@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Safelist: dynamic classes from TailwindEditor, CraftContainer, and user classNames */
+@source inline("p-0 p-1 p-2 p-3 p-4 p-5 p-6 p-8 m-0 m-1 m-2 m-3 m-4 m-5 m-6 m-8 gap-0 gap-1 gap-2 gap-3 gap-4 gap-5 gap-6 gap-8 gap-10 gap-12 gap-16 gap-20 gap-24 grid-cols-1 grid-cols-2 grid-cols-3 grid-cols-4 grid-cols-5 grid-cols-6 grid-cols-7 grid-cols-8 grid-cols-9 grid-cols-10 grid-cols-11 grid-cols-12 text-background text-foreground text-primary text-secondary text-muted text-accent text-destructive text-card text-border bg-background bg-foreground bg-primary bg-secondary bg-muted bg-accent bg-destructive bg-card bg-border text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl font-normal font-medium font-semibold font-bold rounded-none rounded-sm rounded-md rounded-lg rounded-xl rounded-2xl rounded-full min-h-screen");
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

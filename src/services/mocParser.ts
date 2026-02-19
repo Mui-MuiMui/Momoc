@@ -4,7 +4,7 @@ import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 const MOC_COMMENT_REGEX = /\/\*\*[\s\S]*?\*\//;
 const MOC_TAG_REGEX = /@moc-(\w[\w-]*)\s+(.+)/g;
 const MOC_MEMO_REGEX = /@moc-memo\s+#(\S+)\s+"([^"]+)"/g;
-const EDITOR_DATA_REGEX = /\/\*\s*@moc-editor-data[\s\S]*?DATA:([A-Za-z0-9+/=]+)\s*\*\//;
+const EDITOR_DATA_REGEX = /\/\*(?:\s|\*)*@moc-editor-data[\s\S]*?DATA:([A-Za-z0-9+/=]+)\s*\*\//;
 
 export function parseMocFile(content: string): MocDocument {
   const metadata = parseMetadata(content);
