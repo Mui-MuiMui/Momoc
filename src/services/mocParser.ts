@@ -1,13 +1,14 @@
-import type { MocDocument, MocMetadata, MocMemo } from "../shared/types.js";
+import type { MocDocument, MocMetadata, MocMemo, MocEditorData } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
 const MOC_COMMENT_REGEX = /\/\*\*[\s\S]*?\*\//;
 const MOC_TAG_REGEX = /@moc-(\w[\w-]*)\s+(.+)/g;
 const MOC_MEMO_REGEX = /@moc-memo\s+#(\S+)\s+"([^"]+)"/g;
-const IMPORT_SECTION_REGEX = /^(import\s+[\s\S]*?(?:from\s+["'][^"']+["'];?\s*\n?)*)*/m;
+const EDITOR_DATA_REGEX = /\/\*\s*@moc-editor-data[\s\S]*?DATA:([A-Za-z0-9+/=]+)\s*\*\//;
 
 export function parseMocFile(content: string): MocDocument {
   const metadata = parseMetadata(content);
+  const editorData = parseEditorData(content);
   const { imports, tsxSource } = splitContent(content);
 
   return {
@@ -15,6 +16,7 @@ export function parseMocFile(content: string): MocDocument {
     imports,
     tsxSource,
     rawContent: content,
+    editorData,
   };
 }
 
@@ -67,11 +69,26 @@ function parseMetadata(content: string): MocMetadata {
   };
 }
 
+function parseEditorData(content: string): MocEditorData | undefined {
+  const match = content.match(EDITOR_DATA_REGEX);
+  if (!match) return undefined;
+
+  try {
+    const decoded = Buffer.from(match[1], "base64").toString("utf-8");
+    return JSON.parse(decoded) as MocEditorData;
+  } catch {
+    return undefined;
+  }
+}
+
 function splitContent(content: string): {
   imports: string;
   tsxSource: string;
 } {
-  const withoutComment = content.replace(MOC_COMMENT_REGEX, "").trim();
+  // Remove metadata comment block and editor-data block
+  let withoutComment = content.replace(MOC_COMMENT_REGEX, "");
+  withoutComment = withoutComment.replace(EDITOR_DATA_REGEX, "");
+  withoutComment = withoutComment.trim();
 
   const lines = withoutComment.split("\n");
   const importLines: string[] = [];

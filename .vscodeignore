@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+.claude/**
 src/**
 webview-ui/src/**
 webview-ui/node_modules/**
@@ -7,6 +8,7 @@ webview-ui/package.json
 webview-ui/tsconfig.json
 webview-ui/vite.config.ts
 webview-ui/index.html
+webview-ui/tsconfig.tsbuildinfo
 test/**
 node_modules/**
 .gitignore

@@ -20,6 +20,25 @@ export interface MocDocument {
   imports: string;
   tsxSource: string;
   rawContent: string;
+  /** Base64-encoded JSON containing craftState + full memo objects for editor restoration */
+  editorData?: MocEditorData;
+}
+
+export interface MocEditorData {
+  craftState: Record<string, unknown>;
+  memos: MocEditorMemo[];
+}
+
+/** Full memo object as used by the GUI editor (richer than MocMemo) */
+export interface MocEditorMemo {
+  id: string;
+  title: string;
+  body: string;
+  color: string;
+  collapsed: boolean;
+  x: number;
+  y: number;
+  targetNodeId?: string;
 }
 
 export interface SelectionContext {

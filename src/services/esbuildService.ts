@@ -1,13 +1,25 @@
-import * as esbuild from "esbuild";
 import * as path from "path";
 
-let buildContext: esbuild.BuildContext | null = null;
+let esbuildModule: typeof import("esbuild") | null = null;
+
+async function getEsbuild(): Promise<typeof import("esbuild")> {
+  if (esbuildModule) return esbuildModule;
+  try {
+    esbuildModule = await import("esbuild");
+    return esbuildModule;
+  } catch {
+    throw new Error(
+      "esbuild is not available. Dynamic TSX compilation requires esbuild to be installed in the workspace.",
+    );
+  }
+}
 
 export async function compileTsx(
   tsx: string,
   workspaceRoot: string,
 ): Promise<{ code: string; error?: string }> {
   try {
+    const esbuild = await getEsbuild();
     const result = await esbuild.build({
       stdin: {
         contents: tsx,
@@ -42,10 +54,10 @@ export async function compileTsx(
   }
 }
 
-function aliasPlugin(workspaceRoot: string): esbuild.Plugin {
+function aliasPlugin(workspaceRoot: string) {
   return {
     name: "alias-resolve",
-    setup(build) {
+    setup(build: { onResolve: (opts: { filter: RegExp }, cb: (args: { path: string }) => { path: string }) => void }) {
       build.onResolve({ filter: /^@\// }, (args) => {
         const resolved = path.resolve(
           workspaceRoot,
@@ -59,8 +71,5 @@ function aliasPlugin(workspaceRoot: string): esbuild.Plugin {
 }
 
 export async function dispose(): Promise<void> {
-  if (buildContext) {
-    await buildContext.dispose();
-    buildContext = null;
-  }
+  // No persistent context to dispose in current implementation
 }
