@@ -1,0 +1,9 @@
+{
+  "customEditor.mocEditor.displayName": "Mocker デザインエディタ",
+  "command.createMocFile": "新規 Moc ファイルを作成",
+  "command.toggleCodeDesign": "コード/デザイン表示を切替",
+  "command.openPreview": "プレビューを開く",
+  "command.switchLayoutMode": "レイアウトモードを切替",
+  "command.toggleTheme": "プレビューテーマを切替",
+  "command.exportFlatTsx": "フラット TSX をエクスポート"
+}

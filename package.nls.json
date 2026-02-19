@@ -1,0 +1,9 @@
+{
+  "customEditor.mocEditor.displayName": "Mocker Design Editor",
+  "command.createMocFile": "Create New Moc File",
+  "command.toggleCodeDesign": "Toggle Code/Design View",
+  "command.openPreview": "Open Preview",
+  "command.switchLayoutMode": "Switch Layout Mode",
+  "command.toggleTheme": "Toggle Preview Theme",
+  "command.exportFlatTsx": "Export Flat TSX"
+}
