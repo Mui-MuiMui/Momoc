@@ -93,8 +93,8 @@ const P: Record<string, Record<string, string>> = {
   rose:    { "50":"#fff1f2","100":"#ffe4e6","200":"#fecdd3","300":"#fda4af","400":"#fb7185","500":"#f43f5e","600":"#e11d48","700":"#be123c","800":"#9f1239","900":"#881337","950":"#4c0519" },
 };
 
-/** Regex to match palette color classes: text-red-500, bg-blue-200, etc. */
-const PALETTE_CLASS_RE = /^(text|bg)-(\w+)-(\d{2,3})$/;
+/** Regex to match palette color classes: text-red-500, hover:bg-blue-200, etc. */
+const PALETTE_CLASS_RE = /^((?:hover:)?(?:text|bg))-(\w+)-(\d{2,3})$/;
 
 function parsePaletteClass(cls: string): { prefix: string; family: string; shade: string } | null {
   const m = cls.match(PALETTE_CLASS_RE);
@@ -184,24 +184,26 @@ export function TailwindEditor() {
   const currentMarginIdx = getSpacingValue(currentMarginPrefix);
   const currentFontSizeIdx = getFontSizeIndex();
 
-  // Detect active palette color per prefix
-  const findPaletteColor = (prefix: string) => {
+  // Detect active palette color for a given effective prefix (e.g. "text", "hover:bg")
+  const findPaletteColor = (effectivePrefix: string) => {
     for (const cls of activeSet) {
       const parsed = parsePaletteClass(cls);
-      if (parsed && parsed.prefix === prefix) return parsed;
+      if (parsed && parsed.prefix === effectivePrefix) return parsed;
     }
     return null;
   };
-  const activeTextPalette = findPaletteColor("text");
-  const activeBgPalette = findPaletteColor("bg");
 
-  // Apply a palette or theme color: clears both palette and theme for that prefix
-  const applyColor = (prefix: "text" | "bg", colorCls: string) => {
-    const themeGroup = prefix === "text" ? themeTextGroup : themeBgGroup;
+  // Apply a color: clears palette and theme colors for the given effective prefix
+  const applyColor = (effectivePrefix: string, colorCls: string) => {
+    const basePrefix = effectivePrefix.replace("hover:", "") as "text" | "bg";
+    const themeGroup = THEME_COLOR_OPTIONS.map((c) => `${effectivePrefix}-${c}`);
+    const baseThemeGroup = basePrefix === "text" ? themeTextGroup : themeBgGroup;
     const filtered = classes.filter((c) => {
       if (themeGroup.includes(c)) return false;
+      // Also clear base theme colors only when effectivePrefix has no hover
+      if (effectivePrefix === basePrefix && baseThemeGroup.includes(c)) return false;
       const parsed = parsePaletteClass(c);
-      if (parsed && parsed.prefix === prefix) return false;
+      if (parsed && parsed.prefix === effectivePrefix) return false;
       return true;
     });
     if (activeSet.has(colorCls)) {
@@ -346,8 +348,8 @@ export function TailwindEditor() {
         activeSet={activeSet}
         paletteFamily={textPaletteFamily}
         onFamilyChange={setTextPaletteFamily}
-        activePalette={activeTextPalette}
-        onApply={(cls) => applyColor("text", cls)}
+        findPaletteColor={findPaletteColor}
+        onApply={applyColor}
       />
 
       {/* Background: theme + palette */}
@@ -357,8 +359,8 @@ export function TailwindEditor() {
         activeSet={activeSet}
         paletteFamily={bgPaletteFamily}
         onFamilyChange={setBgPaletteFamily}
-        activePalette={activeBgPalette}
-        onApply={(cls) => applyColor("bg", cls)}
+        findPaletteColor={findPaletteColor}
+        onApply={applyColor}
       />
 
       <TailwindSection title="Font Weight">
@@ -388,7 +390,7 @@ function ColorSection({
   activeSet,
   paletteFamily,
   onFamilyChange,
-  activePalette,
+  findPaletteColor,
   onApply,
 }: {
   title: string;
@@ -396,15 +398,34 @@ function ColorSection({
   activeSet: Set<string>;
   paletteFamily: string;
   onFamilyChange: (f: string) => void;
-  activePalette: { family: string; shade: string } | null;
-  onApply: (cls: string) => void;
+  findPaletteColor: (effectivePrefix: string) => { family: string; shade: string } | null;
+  onApply: (effectivePrefix: string, colorCls: string) => void;
 }) {
+  const [mode, setMode] = useState<"normal" | "hover">("normal");
+  const effectivePrefix = mode === "hover" ? `hover:${prefix}` : prefix;
+  const activePalette = findPaletteColor(effectivePrefix);
+
+  const isThemeActive = (c: string) => {
+    const cls = `${effectivePrefix}-${c}`;
+    return activeSet.has(cls);
+  };
+
+  const isShadeActive = (s: string) => {
+    const cls = `${effectivePrefix}-${paletteFamily}-${s}`;
+    return activeSet.has(cls);
+  };
+
   return (
     <TailwindSection title={title}>
+      {/* Normal / Hover toggle */}
+      <div className="mb-1.5 flex gap-1">
+        <ModeToggle label="Normal" active={mode === "normal"} onClick={() => setMode("normal")} />
+        <ModeToggle label="Hover" active={mode === "hover"} onClick={() => setMode("hover")} />
+      </div>
       {/* Theme colors */}
       <div className="mb-1.5 flex flex-wrap gap-1">
         {THEME_COLOR_OPTIONS.map((c) => (
-          <ClassButton key={c} label={c} active={activeSet.has(`${prefix}-${c}`)} onClick={() => onApply(`${prefix}-${c}`)} />
+          <ClassButton key={c} label={c} active={isThemeActive(c)} onClick={() => onApply(effectivePrefix, `${effectivePrefix}-${c}`)} />
         ))}
       </div>
       {/* Palette family selector */}
@@ -432,15 +453,15 @@ function ColorSection({
       {/* Shade swatches */}
       <div className="flex gap-0.5">
         {PALETTE_SHADES.map((s) => {
-          const cls = `${prefix}-${paletteFamily}-${s}`;
+          const cls = `${effectivePrefix}-${paletteFamily}-${s}`;
           return (
             <button
               key={s}
               type="button"
-              onClick={() => onApply(cls)}
+              onClick={() => onApply(effectivePrefix, cls)}
               title={`${paletteFamily}-${s}`}
               className={`h-4 flex-1 rounded-sm transition-all ${
-                activeSet.has(cls) ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-y-125"
+                isShadeActive(s) ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-y-125"
               }`}
               style={{ backgroundColor: P[paletteFamily][s] }}
             />
