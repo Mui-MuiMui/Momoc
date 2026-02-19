@@ -1,4 +1,4 @@
-import { useState, useRef, type RefObject } from "react";
+import { useState, useRef, useEffect, useCallback, type RefObject } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { StickyNote, Plus, X, ChevronDown, ChevronRight, Link2, Unlink, GripVertical } from "lucide-react";
@@ -113,7 +113,11 @@ function MemoSticker({
     }
   })();
 
+  const positionRef = useRef(position);
+  positionRef.current = position;
+
   const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
     const container = scrollContentRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
@@ -124,23 +128,34 @@ function MemoSticker({
     };
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const container = scrollContentRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    setPosition({
-      x: e.clientX - rect.left - dragOffsetRef.current.x,
-      y: e.clientY - rect.top - dragOffsetRef.current.y,
-    });
-  };
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      const container = scrollContentRef.current;
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const newPos = {
+        x: e.clientX - rect.left - dragOffsetRef.current.x,
+        y: e.clientY - rect.top - dragOffsetRef.current.y,
+      };
+      setPosition(newPos);
+    },
+    [scrollContentRef],
+  );
 
-  const handleMouseUp = () => {
-    if (isDragging) {
-      onUpdate({ x: position.x, y: position.y });
-    }
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+    onUpdate({ x: positionRef.current.x, y: positionRef.current.y });
+  }, [onUpdate]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const toggleCollapse = () => {
     onUpdate({ collapsed: !memo.collapsed });
@@ -158,11 +173,8 @@ function MemoSticker({
 
   return (
     <div
-      className={`absolute z-40 w-56 rounded shadow-lg ${colors.bg}`}
+      className={`absolute z-40 w-56 rounded shadow-lg ${colors.bg} ${isDragging ? "select-none" : ""}`}
       style={{ left: position.x, top: position.y }}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
     >
       {/* Header */}
       <div
