@@ -1,6 +1,4 @@
 import * as http from "http";
-import * as fs from "fs";
-import * as path from "path";
 import * as vscode from "vscode";
 import { compileTsx } from "./esbuildService.js";
 import { parseMocFile } from "./mocParser.js";
@@ -31,7 +29,16 @@ export async function startPreviewServer(
   let cachedError = "";
   const sseClients = new Set<http.ServerResponse>();
 
-  // Initial compile
+  // Pre-compile fallback shadcn/ui components → ESM JS
+  const fallbackJs = new Map<string, string>();
+  for (const [name, source] of Object.entries(FALLBACK_SOURCES)) {
+    const result = await compileTsx(source, workspaceRoot);
+    if (result.code) {
+      fallbackJs.set(name, result.code);
+    }
+  }
+
+  // Initial compile of the .moc component
   await compileCurrentFile();
 
   async function compileCurrentFile(): Promise<void> {
@@ -47,8 +54,9 @@ export async function startPreviewServer(
         ? `${mocDoc.imports}\n${mocDoc.tsxSource}`
         : mocDoc.tsxSource;
 
+      // Externalize @/components/ui/* — browser resolves via import map
       const result = await compileTsx(fullTsx, workspaceRoot, [
-        shadcnFallbackPlugin(workspaceRoot),
+        shadcnExternalPlugin(),
       ]);
       if (result.error) {
         cachedError = result.error;
@@ -70,6 +78,19 @@ export async function startPreviewServer(
     }
   }
 
+  // Build import map: React CDN + shadcn/ui fallback routes
+  function buildImportMap(): string {
+    const imports: Record<string, string> = {
+      "react": "https://esm.sh/react@19",
+      "react-dom/client": "https://esm.sh/react-dom@19/client",
+      "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime",
+    };
+    for (const name of Object.keys(FALLBACK_SOURCES)) {
+      imports[`@/components/ui/${name}`] = `/ui/${name}.js`;
+    }
+    return JSON.stringify({ imports }, null, 4);
+  }
+
   function buildPreviewHtml(): string {
     const darkClass = currentTheme === "dark" ? ' class="dark"' : "";
     const errorHtml = cachedError
@@ -82,15 +103,8 @@ export async function startPreviewServer(
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mocker Preview</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script type="importmap">
-  {
-    "imports": {
-      "react": "https://esm.sh/react@19",
-      "react-dom/client": "https://esm.sh/react-dom@19/client",
-      "react/jsx-runtime": "https://esm.sh/react@19/jsx-runtime"
-    }
-  }
+  ${buildImportMap()}
   </script>
   <style>
     :root {
@@ -144,6 +158,35 @@ export async function startPreviewServer(
       color: var(--foreground);
     }
   </style>
+  <style type="text/tailwindcss">
+    @import "tailwindcss";
+    @theme inline {
+      --color-background: var(--background);
+      --color-foreground: var(--foreground);
+      --color-card: var(--card);
+      --color-card-foreground: var(--card-foreground);
+      --color-popover: var(--popover);
+      --color-popover-foreground: var(--popover-foreground);
+      --color-primary: var(--primary);
+      --color-primary-foreground: var(--primary-foreground);
+      --color-secondary: var(--secondary);
+      --color-secondary-foreground: var(--secondary-foreground);
+      --color-muted: var(--muted);
+      --color-muted-foreground: var(--muted-foreground);
+      --color-accent: var(--accent);
+      --color-accent-foreground: var(--accent-foreground);
+      --color-destructive: var(--destructive);
+      --color-destructive-foreground: var(--destructive-foreground);
+      --color-border: var(--border);
+      --color-input: var(--input);
+      --color-ring: var(--ring);
+      --radius-sm: calc(var(--radius) - 4px);
+      --radius-md: calc(var(--radius) - 2px);
+      --radius-lg: var(--radius);
+      --radius-xl: calc(var(--radius) + 4px);
+    }
+  </style>
+  <script type="module" src="https://esm.sh/@tailwindcss/browser@4"></script>
 </head>
 <body${darkClass}>
   ${errorHtml}
@@ -210,6 +253,20 @@ export async function startPreviewServer(
       });
       res.end(cachedComponentJs);
       return;
+    }
+
+    // Serve fallback shadcn/ui components: /ui/<name>.js
+    if (url.startsWith("/ui/")) {
+      const componentName = url.slice(4).replace(/\.js.*$/, "");
+      const js = fallbackJs.get(componentName);
+      if (js) {
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Cache-Control": "no-cache",
+        });
+        res.end(js);
+        return;
+      }
     }
 
     if (url === "/events") {
@@ -288,7 +345,26 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
-// --- shadcn/ui fallback components for workspaces without shadcn/ui installed ---
+// --- esbuild plugin: externalize @/components/ui/* for browser import map resolution ---
+
+function shadcnExternalPlugin() {
+  return {
+    name: "shadcn-external",
+    setup(build: {
+      onResolve: (
+        opts: { filter: RegExp },
+        cb: (args: { path: string }) => { path: string; external: true },
+      ) => void;
+    }) {
+      build.onResolve({ filter: /^@\/components\/ui\// }, (args) => {
+        return { path: args.path, external: true };
+      });
+    },
+  };
+}
+
+// --- shadcn/ui fallback component sources (TSX) ---
+// Compiled to ESM JS at server startup, served at /ui/<name>.js
 
 const FALLBACK_SOURCES: Record<string, string> = {
   button: `export function Button(props: any) {
@@ -355,59 +431,3 @@ const FALLBACK_SOURCES: Record<string, string> = {
   return <div className="relative w-full overflow-auto"><table className={cls} {...rest}>{children}</table></div>;
 }`,
 };
-
-function shadcnFallbackPlugin(workspaceRoot: string) {
-  return {
-    name: "shadcn-fallback",
-    setup(build: {
-      onResolve: (
-        opts: { filter: RegExp },
-        cb: (args: { path: string }) => { path: string; namespace?: string } | undefined,
-      ) => void;
-      onLoad: (
-        opts: { filter: RegExp; namespace: string },
-        cb: (args: { path: string }) => { contents: string; loader: string },
-      ) => void;
-    }) {
-      build.onResolve({ filter: /^@\/components\/ui\// }, (args) => {
-        const componentPath = args.path.slice(2);
-        const resolved = path.resolve(workspaceRoot, "src", componentPath);
-
-        const extensions = [".tsx", ".ts", ".jsx", ".js"];
-        for (const ext of extensions) {
-          if (fs.existsSync(resolved + ext)) {
-            return { path: resolved + ext };
-          }
-        }
-        if (fs.existsSync(resolved)) {
-          return { path: resolved };
-        }
-        for (const ext of extensions) {
-          const indexPath = path.join(resolved, "index" + ext);
-          if (fs.existsSync(indexPath)) {
-            return { path: indexPath };
-          }
-        }
-
-        // Fall back to built-in component
-        const componentName = path.basename(args.path);
-        if (FALLBACK_SOURCES[componentName]) {
-          return { path: args.path, namespace: "shadcn-fallback" };
-        }
-
-        return undefined;
-      });
-
-      build.onLoad(
-        { filter: /.*/, namespace: "shadcn-fallback" },
-        (args) => {
-          const componentName = path.basename(args.path);
-          return {
-            contents: FALLBACK_SOURCES[componentName] || "export {};",
-            loader: "tsx",
-          };
-        },
-      );
-    },
-  };
-}
