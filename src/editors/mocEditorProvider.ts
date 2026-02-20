@@ -322,6 +322,11 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         break;
       }
 
+      case "command:openBrowserPreview": {
+        await vscode.commands.executeCommand("mocker.openBrowserPreview");
+        break;
+      }
+
       case "editor:ready":
         break;
     }

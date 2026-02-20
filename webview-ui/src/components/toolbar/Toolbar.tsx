@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
+import { getVsCodeApi } from "../../utils/vscodeApi";
 import { ConfirmDialog } from "./ConfirmDialog";
 import {
   Undo2,
@@ -15,6 +16,7 @@ import {
   Smartphone,
   Settings2,
   Circle,
+  ExternalLink,
 } from "lucide-react";
 
 export function Toolbar() {
@@ -69,6 +71,10 @@ export function Toolbar() {
     }
     setShowCustomSize(false);
   };
+
+  const handleBrowserPreview = useCallback(() => {
+    getVsCodeApi().postMessage({ type: "command:openBrowserPreview" });
+  }, []);
 
   // Close popover on click outside
   useEffect(() => {
@@ -212,6 +218,15 @@ export function Toolbar() {
           </div>
         )}
       </div>
+
+      <Divider />
+
+      <ToolbarButton
+        onClick={handleBrowserPreview}
+        title={t("toolbar.browserPreview")}
+      >
+        <ExternalLink size={16} />
+      </ToolbarButton>
 
       <ConfirmDialog
         open={pendingLayout !== null}

@@ -6,6 +6,7 @@
   "command.switchLayoutMode": "レイアウトモードを切り替え",
   "command.toggleTheme": "プレビューテーマを切り替え",
   "command.exportFlatTsx": "Flat TSXをエクスポート",
+  "command.openBrowserPreview": "ブラウザでプレビュー",
   "template.empty": "空のページ",
   "template.loginForm": "ログインフォーム",
   "template.dashboard": "ダッシュボード",

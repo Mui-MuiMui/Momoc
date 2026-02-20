@@ -67,6 +67,11 @@
         "command": "mocker.exportFlatTsx",
         "title": "%command.exportFlatTsx%",
         "category": "Mocker"
+      },
+      {
+        "command": "mocker.openBrowserPreview",
+        "title": "%command.openBrowserPreview%",
+        "category": "Mocker"
       }
     ],
     "languages": [

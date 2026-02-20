@@ -13,6 +13,7 @@
   "toolbar.viewportMobile": "Mobile",
   "toolbar.viewportCustom": "Custom",
   "toolbar.unsaved": "Unsaved changes",
+  "toolbar.browserPreview": "Open in Browser",
   "palette.title": "Components",
   "palette.shadcn": "shadcn/ui",
   "palette.html": "HTML Elements",

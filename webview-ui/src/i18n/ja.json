@@ -13,6 +13,7 @@
   "toolbar.viewportMobile": "モバイル",
   "toolbar.viewportCustom": "カスタム",
   "toolbar.unsaved": "未保存の変更があります",
+  "toolbar.browserPreview": "ブラウザでプレビュー",
   "palette.title": "コンポーネント",
   "palette.shadcn": "shadcn/ui",
   "palette.html": "HTML要素",
