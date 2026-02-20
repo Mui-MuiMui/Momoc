@@ -25,16 +25,15 @@ export const CraftPlaceholderImage: UserComponent<CraftPlaceholderImageProps> = 
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
+      className={cn(className)}
       style={{
         width: width !== "auto" ? width : undefined,
         height: height !== "auto" ? height : undefined,
-        display: "inline-block",
       }}
     >
       <img
         src={src}
         alt={alt}
-        className={cn("max-w-full", className)}
         style={{ width: "100%", height: "100%", display: "block" }}
       />
     </div>

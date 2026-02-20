@@ -54,12 +54,12 @@ export const CraftImage: UserComponent<CraftImageProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      style={{ ...wrapperStyle, display: "inline-block" }}
+      className={cn(className)}
+      style={wrapperStyle}
     >
       <img
         src={resolvedSrc}
         alt={alt}
-        className={cn("max-w-full", className)}
         style={{ width: "100%", height: "100%", objectFit, display: "block" }}
       />
     </div>

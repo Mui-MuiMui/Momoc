@@ -1,5 +1,9 @@
 import { toPng } from "html-to-image";
 
+/** 1x1 transparent PNG as fallback for images that fail to load */
+const TRANSPARENT_PIXEL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAAlwSFlzAAAWJQAAFiUBSVIk8AAAAA0lEQVQI12P4z8BQDwAEgAF/QualzQAAAABJRU5ErkJggg==";
+
 export async function captureViewport(
   width: number,
   height: number,
@@ -22,6 +26,8 @@ export async function captureViewport(
       width,
       height,
       pixelRatio: 1,
+      imagePlaceholder: TRANSPARENT_PIXEL,
+      cacheBust: true,
       filter: (node: Node) => {
         if (node instanceof HTMLElement) {
           if (node.hasAttribute("data-mocker-label")) return false;
