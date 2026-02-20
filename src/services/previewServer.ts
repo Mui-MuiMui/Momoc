@@ -1,4 +1,6 @@
 import * as http from "http";
+import * as fs from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
 import { compileTsx } from "./esbuildService.js";
 import { parseMocFile } from "./mocParser.js";
@@ -45,7 +47,9 @@ export async function startPreviewServer(
         ? `${mocDoc.imports}\n${mocDoc.tsxSource}`
         : mocDoc.tsxSource;
 
-      const result = await compileTsx(fullTsx, workspaceRoot);
+      const result = await compileTsx(fullTsx, workspaceRoot, [
+        shadcnFallbackPlugin(workspaceRoot),
+      ]);
       if (result.error) {
         cachedError = result.error;
         cachedComponentJs = "";
@@ -282,4 +286,128 @@ function escapeHtml(text: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// --- shadcn/ui fallback components for workspaces without shadcn/ui installed ---
+
+const FALLBACK_SOURCES: Record<string, string> = {
+  button: `export function Button(props: any) {
+  const { className = "", variant = "default", size = "default", children, ...rest } = props;
+  const v: Record<string, string> = {
+    default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+    destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+    outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+    secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+    ghost: "hover:bg-accent hover:text-accent-foreground",
+    link: "text-primary underline-offset-4 hover:underline",
+  };
+  const s: Record<string, string> = {
+    default: "h-9 px-4 py-2",
+    sm: "h-8 rounded-md px-3 text-xs",
+    lg: "h-10 rounded-md px-8",
+    icon: "h-9 w-9",
+  };
+  const cls = \`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors \${v[variant] || v.default} \${s[size] || s.default} \${className}\`.trim();
+  return <button className={cls} {...rest}>{children}</button>;
+}`,
+
+  input: `export function Input(props: any) {
+  const { className = "", ...rest } = props;
+  const cls = \`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 \${className}\`.trim();
+  return <input className={cls} {...rest} />;
+}`,
+
+  card: `export function Card(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = \`rounded-xl border bg-card text-card-foreground shadow \${className}\`.trim();
+  return <div className={cls} {...rest}>{children}</div>;
+}`,
+
+  label: `export function Label(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = \`text-sm font-medium leading-none \${className}\`.trim();
+  return <label className={cls} {...rest}>{children}</label>;
+}`,
+
+  badge: `export function Badge(props: any) {
+  const { className = "", variant = "default", children, ...rest } = props;
+  const v: Record<string, string> = {
+    default: "border-transparent bg-primary text-primary-foreground shadow",
+    secondary: "border-transparent bg-secondary text-secondary-foreground",
+    destructive: "border-transparent bg-destructive text-destructive-foreground shadow",
+    outline: "text-foreground",
+  };
+  const cls = \`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors \${v[variant] || v.default} \${className}\`.trim();
+  return <span className={cls} {...rest}>{children}</span>;
+}`,
+
+  separator: `export function Separator(props: any) {
+  const { className = "", orientation = "horizontal", ...rest } = props;
+  const cls = orientation === "horizontal"
+    ? \`shrink-0 bg-border h-[1px] w-full \${className}\`.trim()
+    : \`shrink-0 bg-border h-full w-[1px] \${className}\`.trim();
+  return <div role="separator" className={cls} {...rest} />;
+}`,
+
+  table: `export function Table(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = \`w-full caption-bottom text-sm \${className}\`.trim();
+  return <div className="relative w-full overflow-auto"><table className={cls} {...rest}>{children}</table></div>;
+}`,
+};
+
+function shadcnFallbackPlugin(workspaceRoot: string) {
+  return {
+    name: "shadcn-fallback",
+    setup(build: {
+      onResolve: (
+        opts: { filter: RegExp },
+        cb: (args: { path: string }) => { path: string; namespace?: string } | undefined,
+      ) => void;
+      onLoad: (
+        opts: { filter: RegExp; namespace: string },
+        cb: (args: { path: string }) => { contents: string; loader: string },
+      ) => void;
+    }) {
+      build.onResolve({ filter: /^@\/components\/ui\// }, (args) => {
+        const componentPath = args.path.slice(2);
+        const resolved = path.resolve(workspaceRoot, "src", componentPath);
+
+        const extensions = [".tsx", ".ts", ".jsx", ".js"];
+        for (const ext of extensions) {
+          if (fs.existsSync(resolved + ext)) {
+            return { path: resolved + ext };
+          }
+        }
+        if (fs.existsSync(resolved)) {
+          return { path: resolved };
+        }
+        for (const ext of extensions) {
+          const indexPath = path.join(resolved, "index" + ext);
+          if (fs.existsSync(indexPath)) {
+            return { path: indexPath };
+          }
+        }
+
+        // Fall back to built-in component
+        const componentName = path.basename(args.path);
+        if (FALLBACK_SOURCES[componentName]) {
+          return { path: args.path, namespace: "shadcn-fallback" };
+        }
+
+        return undefined;
+      });
+
+      build.onLoad(
+        { filter: /.*/, namespace: "shadcn-fallback" },
+        (args) => {
+          const componentName = path.basename(args.path);
+          return {
+            contents: FALLBACK_SOURCES[componentName] || "export {};",
+            loader: "tsx",
+          };
+        },
+      );
+    },
+  };
 }
