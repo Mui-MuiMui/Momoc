@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "node:path";
 import { compileTsx } from "../services/esbuildService.js";
 import {
   isProjectInitialized,
@@ -60,6 +61,8 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       enableScripts: true,
       localResourceRoots: [
         vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview"),
+        vscode.Uri.joinPath(document.uri, ".."),
+        ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) ?? []),
       ],
     };
 
@@ -363,6 +366,23 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         break;
       }
 
+      case "resolve:imageUri": {
+        const { src } = message.payload as { src: string };
+        let fileUri: vscode.Uri;
+        if (path.isAbsolute(src)) {
+          fileUri = vscode.Uri.file(src);
+        } else {
+          const docDir = vscode.Uri.joinPath(document.uri, "..");
+          fileUri = vscode.Uri.joinPath(docDir, src);
+        }
+        const webviewUri = webviewPanel.webview.asWebviewUri(fileUri);
+        webviewPanel.webview.postMessage({
+          type: "resolve:imageUri:result",
+          payload: { src, uri: webviewUri.toString() },
+        });
+        break;
+      }
+
       case "editor:ready":
         break;
     }
@@ -391,7 +411,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data: blob: https:; connect-src ${webview.cspSource};">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data: blob: https: http:; connect-src ${webview.cspSource};">
   <link rel="stylesheet" href="${styleUri}">
   <title>Mocker</title>
 </head>

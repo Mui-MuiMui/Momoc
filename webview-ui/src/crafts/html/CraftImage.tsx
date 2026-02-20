@@ -1,6 +1,7 @@
 import { useNode, type UserComponent } from "@craftjs/core";
 import { Image } from "lucide-react";
 import { cn } from "../../utils/cn";
+import { useResolvedImageSrc } from "../../hooks/useResolvedImageSrc";
 
 interface CraftImageProps {
   src?: string;
@@ -23,12 +24,14 @@ export const CraftImage: UserComponent<CraftImageProps> = ({
     connectors: { connect, drag },
   } = useNode();
 
-  const style: React.CSSProperties = {
+  const resolvedSrc = useResolvedImageSrc(src);
+
+  const wrapperStyle: React.CSSProperties = {
     width: width || undefined,
     height: height || undefined,
   };
 
-  if (!src) {
+  if (!resolvedSrc) {
     return (
       <div
         ref={(ref) => {
@@ -38,7 +41,7 @@ export const CraftImage: UserComponent<CraftImageProps> = ({
           "flex flex-col items-center justify-center gap-2 bg-gray-200 text-gray-400",
           className,
         )}
-        style={style}
+        style={wrapperStyle}
       >
         <Image size={32} />
         <span className="text-xs">画像URLを設定</span>
@@ -47,15 +50,19 @@ export const CraftImage: UserComponent<CraftImageProps> = ({
   }
 
   return (
-    <img
+    <div
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      src={src}
-      alt={alt}
-      className={cn("max-w-full", className)}
-      style={{ ...style, objectFit }}
-    />
+      style={{ ...wrapperStyle, display: "inline-block" }}
+    >
+      <img
+        src={resolvedSrc}
+        alt={alt}
+        className={cn("max-w-full", className)}
+        style={{ width: "100%", height: "100%", objectFit, display: "block" }}
+      />
+    </div>
   );
 };
 
