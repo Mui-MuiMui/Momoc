@@ -120,10 +120,14 @@ export function EditorCanvas() {
     if (!content || !container) return;
     const h = container.clientHeight;
     const prevScrollTop = container.scrollTop;
-    content.style.paddingTop = "";
-    content.style.minHeight = "";
-    // Shift scroll back; browser clamps to valid range
-    container.scrollTop = prevScrollTop - (h - 80);
+    // ショートハンド padding:80px は paddingTop 上書き時に分解されるため
+    // "" ではなく明示的に元の値を復元する
+    content.style.paddingTop = "80px";
+    const newScrollTop = Math.max(0, prevScrollTop - (h - 80));
+    // パン後の位置で余白が維持される高さを確保
+    const requiredMinHeight = newScrollTop + h;
+    content.style.minHeight = requiredMinHeight > h ? `${requiredMinHeight}px` : "100%";
+    container.scrollTop = newScrollTop;
   }, []);
 
   // All pan events use native capture-phase listeners to intercept
