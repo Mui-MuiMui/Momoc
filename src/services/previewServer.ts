@@ -108,83 +108,84 @@ export async function startPreviewServer(
   </script>
   <style>
     :root {
-      --background: oklch(1 0 0);
-      --foreground: oklch(0.145 0 0);
-      --card: oklch(1 0 0);
-      --card-foreground: oklch(0.145 0 0);
-      --popover: oklch(1 0 0);
-      --popover-foreground: oklch(0.145 0 0);
-      --primary: oklch(0.205 0 0);
-      --primary-foreground: oklch(0.985 0 0);
-      --secondary: oklch(0.965 0 0);
-      --secondary-foreground: oklch(0.205 0 0);
-      --muted: oklch(0.965 0 0);
-      --muted-foreground: oklch(0.556 0 0);
-      --accent: oklch(0.965 0 0);
-      --accent-foreground: oklch(0.205 0 0);
-      --destructive: oklch(0.577 0.245 27.325);
-      --destructive-foreground: oklch(0.577 0.245 27.325);
-      --border: oklch(0.922 0 0);
-      --input: oklch(0.922 0 0);
-      --ring: oklch(0.708 0 0);
       --radius: 0.625rem;
-    }
-    .dark {
-      --background: oklch(0.145 0 0);
-      --foreground: oklch(0.985 0 0);
-      --card: oklch(0.145 0 0);
-      --card-foreground: oklch(0.985 0 0);
-      --popover: oklch(0.145 0 0);
-      --popover-foreground: oklch(0.985 0 0);
-      --primary: oklch(0.985 0 0);
-      --primary-foreground: oklch(0.205 0 0);
-      --secondary: oklch(0.269 0 0);
-      --secondary-foreground: oklch(0.985 0 0);
-      --muted: oklch(0.269 0 0);
-      --muted-foreground: oklch(0.708 0 0);
-      --accent: oklch(0.269 0 0);
-      --accent-foreground: oklch(0.985 0 0);
-      --destructive: oklch(0.396 0.141 25.723);
-      --destructive-foreground: oklch(0.637 0.237 25.331);
-      --border: oklch(0.269 0 0);
-      --input: oklch(0.269 0 0);
-      --ring: oklch(0.439 0 0);
     }
     body {
       margin: 0;
       padding: 0;
       font-family: system-ui, -apple-system, sans-serif;
-      background-color: var(--background);
-      color: var(--foreground);
+      background-color: var(--color-background);
+      color: var(--color-foreground);
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style type="text/tailwindcss">
     @import "tailwindcss";
     @theme {
-      --color-background: var(--background);
-      --color-foreground: var(--foreground);
-      --color-card: var(--card);
-      --color-card-foreground: var(--card-foreground);
-      --color-popover: var(--popover);
-      --color-popover-foreground: var(--popover-foreground);
-      --color-primary: var(--primary);
-      --color-primary-foreground: var(--primary-foreground);
-      --color-secondary: var(--secondary);
-      --color-secondary-foreground: var(--secondary-foreground);
-      --color-muted: var(--muted);
-      --color-muted-foreground: var(--muted-foreground);
-      --color-accent: var(--accent);
-      --color-accent-foreground: var(--accent-foreground);
-      --color-destructive: var(--destructive);
-      --color-destructive-foreground: var(--destructive-foreground);
-      --color-border: var(--border);
-      --color-input: var(--input);
-      --color-ring: var(--ring);
+      --color-background: oklch(1 0 0);
+      --color-foreground: oklch(0.145 0 0);
+      --color-card: oklch(1 0 0);
+      --color-card-foreground: oklch(0.145 0 0);
+      --color-popover: oklch(1 0 0);
+      --color-popover-foreground: oklch(0.145 0 0);
+      --color-primary: oklch(0.205 0 0);
+      --color-primary-foreground: oklch(0.985 0 0);
+      --color-secondary: oklch(0.965 0 0);
+      --color-secondary-foreground: oklch(0.205 0 0);
+      --color-muted: oklch(0.965 0 0);
+      --color-muted-foreground: oklch(0.556 0 0);
+      --color-accent: oklch(0.965 0 0);
+      --color-accent-foreground: oklch(0.205 0 0);
+      --color-destructive: oklch(0.577 0.245 27.325);
+      --color-destructive-foreground: oklch(0.577 0.245 27.325);
+      --color-border: oklch(0.922 0 0);
+      --color-input: oklch(0.922 0 0);
+      --color-ring: oklch(0.708 0 0);
       --radius-sm: calc(var(--radius) - 4px);
       --radius-md: calc(var(--radius) - 2px);
       --radius-lg: var(--radius);
       --radius-xl: calc(var(--radius) + 4px);
+    }
+    .dark {
+      --color-background: oklch(0.145 0 0);
+      --color-foreground: oklch(0.985 0 0);
+      --color-card: oklch(0.145 0 0);
+      --color-card-foreground: oklch(0.985 0 0);
+      --color-popover: oklch(0.145 0 0);
+      --color-popover-foreground: oklch(0.985 0 0);
+      --color-primary: oklch(0.985 0 0);
+      --color-primary-foreground: oklch(0.205 0 0);
+      --color-secondary: oklch(0.269 0 0);
+      --color-secondary-foreground: oklch(0.985 0 0);
+      --color-muted: oklch(0.269 0 0);
+      --color-muted-foreground: oklch(0.708 0 0);
+      --color-accent: oklch(0.269 0 0);
+      --color-accent-foreground: oklch(0.985 0 0);
+      --color-destructive: oklch(0.396 0.141 25.723);
+      --color-destructive-foreground: oklch(0.637 0.237 25.331);
+      --color-border: oklch(0.269 0 0);
+      --color-input: oklch(0.269 0 0);
+      --color-ring: oklch(0.439 0 0);
+    }
+    @layer base {
+      thead tr {
+        border-bottom: 1px solid var(--color-border);
+      }
+      tbody tr {
+        border-bottom: 1px solid var(--color-border);
+      }
+      th {
+        height: 2.5rem;
+        padding: 0 1rem;
+        text-align: left;
+        vertical-align: middle;
+        font-weight: 500;
+        color: var(--color-muted-foreground);
+      }
+      td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+      }
     }
   </style>
 </head>
