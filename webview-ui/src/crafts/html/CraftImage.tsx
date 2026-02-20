@@ -9,6 +9,7 @@ interface CraftImageProps {
   width?: string;
   height?: string;
   objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
+  keepAspectRatio?: boolean;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ export const CraftImage: UserComponent<CraftImageProps> = ({
   width = "300px",
   height = "200px",
   objectFit = "cover",
+  keepAspectRatio = false,
   className = "",
 }) => {
   const {
@@ -74,6 +76,7 @@ CraftImage.craft = {
     width: "300px",
     height: "200px",
     objectFit: "cover",
+    keepAspectRatio: false,
     className: "",
   },
   rules: {

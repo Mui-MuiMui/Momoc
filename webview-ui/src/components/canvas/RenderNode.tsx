@@ -26,12 +26,14 @@ export function RenderNode({
     dom,
     name,
     isCanvas,
+    keepAspectRatio,
   } = useNode((node) => ({
     isActive: node.events.selected,
     isHover: node.events.hovered,
     dom: node.dom,
     name: node.data.displayName || node.data.name || "Element",
     isCanvas: node.data.isCanvas,
+    keepAspectRatio: !!(node.data.props as Record<string, unknown>)?.keepAspectRatio,
   }));
 
   const { actions: editorActions } = useEditor();
@@ -126,6 +128,53 @@ export function RenderNode({
     [id, editorActions],
   );
 
+  // Calculate new dimensions for a resize operation
+  const calcResize = useCallback(
+    (
+      state: { startWidth: number; startHeight: number; handle: HandlePosition },
+      dx: number,
+      dy: number,
+      lock: boolean,
+    ): { w: number; h: number } => {
+      let w = state.startWidth;
+      let h = state.startHeight;
+      const ratio = state.startWidth / state.startHeight;
+
+      switch (state.handle) {
+        case "right":
+          w = Math.max(20, state.startWidth + dx);
+          if (lock) h = Math.max(20, w / ratio);
+          break;
+        case "bottom":
+          h = Math.max(20, state.startHeight + dy);
+          if (lock) w = Math.max(20, h * ratio);
+          break;
+        case "bottom-right":
+          w = Math.max(20, state.startWidth + dx);
+          if (lock) { h = Math.max(20, w / ratio); }
+          else { h = Math.max(20, state.startHeight + dy); }
+          break;
+        case "bottom-left":
+          w = Math.max(20, state.startWidth - dx);
+          if (lock) { h = Math.max(20, w / ratio); }
+          else { h = Math.max(20, state.startHeight + dy); }
+          break;
+        case "top-right":
+          w = Math.max(20, state.startWidth + dx);
+          if (lock) { h = Math.max(20, w / ratio); }
+          else { h = Math.max(20, state.startHeight - dy); }
+          break;
+        case "top-left":
+          w = Math.max(20, state.startWidth - dx);
+          if (lock) { h = Math.max(20, w / ratio); }
+          else { h = Math.max(20, state.startHeight - dy); }
+          break;
+      }
+      return { w, h };
+    },
+    [],
+  );
+
   // Resize handlers
   const onMouseDown = useCallback(
     (handle: HandlePosition, e: MouseEvent) => {
@@ -145,88 +194,29 @@ export function RenderNode({
       const onMouseMove = (ev: MouseEvent) => {
         const state = resizeStateRef.current;
         if (!state || !dom) return;
-
         const dx = ev.clientX - state.startX;
         const dy = ev.clientY - state.startY;
-
-        let newWidth = state.startWidth;
-        let newHeight = state.startHeight;
-
-        switch (state.handle) {
-          case "right":
-            newWidth = Math.max(20, state.startWidth + dx);
-            break;
-          case "bottom":
-            newHeight = Math.max(20, state.startHeight + dy);
-            break;
-          case "bottom-right":
-            newWidth = Math.max(20, state.startWidth + dx);
-            newHeight = Math.max(20, state.startHeight + dy);
-            break;
-          case "bottom-left":
-            newWidth = Math.max(20, state.startWidth - dx);
-            newHeight = Math.max(20, state.startHeight + dy);
-            break;
-          case "top-right":
-            newWidth = Math.max(20, state.startWidth + dx);
-            newHeight = Math.max(20, state.startHeight - dy);
-            break;
-          case "top-left":
-            newWidth = Math.max(20, state.startWidth - dx);
-            newHeight = Math.max(20, state.startHeight - dy);
-            break;
-        }
-
-        dom.style.width = `${newWidth}px`;
-        dom.style.height = `${newHeight}px`;
+        const { w, h } = calcResize(state, dx, dy, keepAspectRatio);
+        dom.style.width = `${w}px`;
+        dom.style.height = `${h}px`;
       };
 
       const onMouseUp = (ev: MouseEvent) => {
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
-
         const state = resizeStateRef.current;
         if (!state || !dom) return;
-
         const dx = ev.clientX - state.startX;
         const dy = ev.clientY - state.startY;
-
-        let newWidth = state.startWidth;
-        let newHeight = state.startHeight;
-
-        switch (state.handle) {
-          case "right":
-            newWidth = Math.max(20, state.startWidth + dx);
-            break;
-          case "bottom":
-            newHeight = Math.max(20, state.startHeight + dy);
-            break;
-          case "bottom-right":
-            newWidth = Math.max(20, state.startWidth + dx);
-            newHeight = Math.max(20, state.startHeight + dy);
-            break;
-          case "bottom-left":
-            newWidth = Math.max(20, state.startWidth - dx);
-            newHeight = Math.max(20, state.startHeight + dy);
-            break;
-          case "top-right":
-            newWidth = Math.max(20, state.startWidth + dx);
-            newHeight = Math.max(20, state.startHeight - dy);
-            break;
-          case "top-left":
-            newWidth = Math.max(20, state.startWidth - dx);
-            newHeight = Math.max(20, state.startHeight - dy);
-            break;
-        }
-
-        commitResize(newWidth, newHeight);
+        const { w, h } = calcResize(state, dx, dy, keepAspectRatio);
+        commitResize(w, h);
         resizeStateRef.current = null;
       };
 
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [dom, commitResize],
+    [dom, commitResize, calcResize, keepAspectRatio],
   );
 
   // Create/remove resize handles
