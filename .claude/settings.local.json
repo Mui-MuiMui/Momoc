@@ -3,7 +3,8 @@
     "allow": [
       "Bash(cat:*)",
       "Bash(node --version:*)",
-      "Bash(pnpm:*)"
+      "Bash(pnpm:*)",
+      "Bash(node:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
