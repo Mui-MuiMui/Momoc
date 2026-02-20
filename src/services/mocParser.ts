@@ -4,7 +4,7 @@ import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 const MOC_COMMENT_REGEX = /\/\*\*[\s\S]*?\*\//;
 const MOC_TAG_REGEX = /@moc-(\w[\w-]*)\s+(.+)/g;
 const MOC_MEMO_REGEX = /@moc-memo\s+#(\S+)\s+"([^"]+)"/g;
-const EDITOR_DATA_REGEX = /\/\*(?:\s|\*)*@moc-editor-data[\s\S]*?DATA:([A-Za-z0-9+/=]+)\s*\*\//;
+const EDITOR_DATA_REGEX = /const\s+__mocEditorData\s*=\s*`([\s\S]*?)`;/;
 
 export function parseMocFile(content: string): MocDocument {
   const metadata = parseMetadata(content);
@@ -25,7 +25,6 @@ function parseMetadata(content: string): MocMetadata {
   if (!commentMatch) {
     return {
       ...DEFAULT_METADATA,
-      id: "",
       intent: "",
       memos: [],
     };
@@ -55,7 +54,6 @@ function parseMetadata(content: string): MocMetadata {
 
   return {
     version: tags["version"] || MOC_VERSION,
-    id: tags["id"] || "",
     intent: tags["intent"] || "",
     theme: (tags["theme"] as "light" | "dark") || DEFAULT_METADATA.theme,
     layout:
@@ -72,8 +70,11 @@ function parseEditorData(content: string): MocEditorData | undefined {
   if (!match) return undefined;
 
   try {
-    const decoded = Buffer.from(match[1], "base64").toString("utf-8");
-    return JSON.parse(decoded) as MocEditorData;
+    // Unescape template literal special chars: \` → `, \${ → ${
+    const raw = match[1]
+      .replace(/\\`/g, "`")
+      .replace(/\\\$/g, "$");
+    return JSON.parse(raw) as MocEditorData;
   } catch {
     return undefined;
   }

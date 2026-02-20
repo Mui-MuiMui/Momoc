@@ -188,8 +188,8 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     const baseName = fileName.replace(/^.*[\\/]/, "").replace(/\.moc$/, "");
     const componentName = baseName || "MockPage";
 
-    // Generate TSX from Craft.js state
-    const { imports, tsxSource } = craftStateToTsx(craftState as Record<string, unknown>, componentName);
+    // Generate TSX from Craft.js state (pass memos for @moc-memo comments)
+    const { imports, tsxSource } = craftStateToTsx(craftState as Record<string, unknown>, componentName, memos);
 
     // Build @moc-memo tags from full memos (simplified for AI readability)
     const mocMemos = memos
@@ -215,7 +215,6 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
 
     const metadata = {
       version: existingMeta?.version || MOC_VERSION,
-      id: existingMeta?.id || generateUuid(),
       intent: existingMeta?.intent || "",
       theme: existingMeta?.theme || DEFAULT_METADATA.theme,
       layout: existingMeta?.layout || DEFAULT_METADATA.layout,
@@ -373,10 +372,3 @@ function getNonce(): string {
   return text;
 }
 
-function generateUuid(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}

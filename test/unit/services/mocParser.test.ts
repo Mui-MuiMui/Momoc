@@ -3,7 +3,6 @@ import { parseMocFile, extractComponentName } from "../../../src/services/mocPar
 
 const sampleMoc = `/**
  * @moc-version 1.0.0
- * @moc-id a1b2c3d4-e5f6-7890-abcd-ef1234567890
  * @moc-intent Login form mockup
  * @moc-theme light
  * @moc-layout flow
@@ -25,13 +24,55 @@ export default function LoginForm() {
 }
 `;
 
+const sampleMocWithEditorData = `/**
+ * @moc-version 1.0.0
+ * @moc-intent Test page
+ * @moc-theme dark
+ * @moc-layout flow
+ * @moc-viewport tablet
+ */
+
+export default function TestPage() {
+  return <div />;
+}
+
+const __mocEditorData = \`
+{
+  "craftState": {
+    "ROOT": {
+      "type": { "resolvedName": "CraftContainer" },
+      "props": {},
+      "nodes": [],
+      "linkedNodes": {},
+      "parent": null
+    }
+  },
+  "memos": [
+    {
+      "id": "memo1",
+      "title": "Test memo",
+      "body": "This is a test",
+      "color": "#ff0",
+      "collapsed": false,
+      "x": 10,
+      "y": 20
+    }
+  ],
+  "viewport": {
+    "mode": "tablet",
+    "width": 768,
+    "height": 1024
+  }
+}
+\`;
+`;
+
 describe("mocParser", () => {
   describe("parseMocFile", () => {
     it("should parse metadata from .moc content", () => {
       const doc = parseMocFile(sampleMoc);
 
       expect(doc.metadata.version).toBe("1.0.0");
-      expect(doc.metadata.id).toBe("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
       expect(doc.metadata.intent).toBe("Login form mockup");
       expect(doc.metadata.theme).toBe("light");
       expect(doc.metadata.layout).toBe("flow");
@@ -75,7 +116,6 @@ describe("mocParser", () => {
       const doc = parseMocFile(content);
 
       expect(doc.metadata.version).toBe("1.0.0");
-      expect(doc.metadata.id).toBe("");
       expect(doc.metadata.memos).toHaveLength(0);
       expect(doc.tsxSource).toContain("export default function Test()");
     });
@@ -83,6 +123,71 @@ describe("mocParser", () => {
     it("should preserve raw content", () => {
       const doc = parseMocFile(sampleMoc);
       expect(doc.rawContent).toBe(sampleMoc);
+    });
+
+    it("should parse editor data from template literal format", () => {
+      const doc = parseMocFile(sampleMocWithEditorData);
+
+      expect(doc.editorData).toBeDefined();
+      expect(doc.editorData!.craftState).toBeDefined();
+      expect(doc.editorData!.craftState.ROOT).toBeDefined();
+      expect(doc.editorData!.memos).toHaveLength(1);
+      expect(doc.editorData!.memos[0].title).toBe("Test memo");
+      expect(doc.editorData!.viewport).toEqual({
+        mode: "tablet",
+        width: 768,
+        height: 1024,
+      });
+    });
+
+    it("should exclude editor data block from TSX source", () => {
+      const doc = parseMocFile(sampleMocWithEditorData);
+
+      expect(doc.tsxSource).toContain("export default function TestPage()");
+      expect(doc.tsxSource).not.toContain("__mocEditorData");
+    });
+
+    it("should handle escaped backtick and template expressions in editor data", () => {
+      // Build content with string concatenation to avoid backtick escaping issues in test source
+      const editorBlock = [
+        "const __mocEditorData = `",
+        "{",
+        '  "craftState": {',
+        '    "ROOT": {',
+        '      "type": { "resolvedName": "CraftContainer" },',
+        '      "props": { "className": "test with \\` backtick and \\${expr}" },',
+        '      "nodes": [],',
+        '      "linkedNodes": {},',
+        '      "parent": null',
+        "    }",
+        "  },",
+        '  "memos": []',
+        "}",
+        "`;",
+      ].join("\n");
+
+      const content = [
+        "/**",
+        " * @moc-version 1.0.0",
+        " * @moc-intent Escape test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function EscapeTest() {",
+        "  return <div />;",
+        "}",
+        "",
+        editorBlock,
+        "",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(doc.editorData).toBeDefined();
+      const root = doc.editorData!.craftState.ROOT as { props: Record<string, unknown> };
+      expect(root.props.className).toBe("test with ` backtick and ${expr}");
     });
   });
 

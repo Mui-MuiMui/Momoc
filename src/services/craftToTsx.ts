@@ -2,6 +2,8 @@
  * Converts Craft.js serialized state JSON into TSX source code and import statements.
  */
 
+import type { MocEditorMemo } from "../shared/types.js";
+
 interface CraftNodeData {
   type: { resolvedName: string } | string;
   props: Record<string, unknown>;
@@ -129,6 +131,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
 export function craftStateToTsx(
   craftState: CraftSerializedState,
   componentName = "MockPage",
+  memos?: MocEditorMemo[],
 ): { imports: string; tsxSource: string } {
   if (!craftState || !craftState.ROOT) {
     return { imports: "", tsxSource: `export default function ${componentName}() {\n  return <div />;\n}` };
@@ -157,6 +160,25 @@ export function craftStateToTsx(
     }
   }
 
+  function buildMocComments(nodeId: string, pad: string, props: Record<string, unknown>): string {
+    const comments: string[] = [];
+    comments.push(`${pad}{/* @moc-node ${nodeId} */}`);
+    const role = props?.role as string | undefined;
+    if (role) {
+      comments.push(`${pad}{/* @moc-role "${role}" */}`);
+    }
+    if (memos) {
+      const memo = memos.find((m) => m.targetNodeId === nodeId);
+      if (memo) {
+        const summary = memo.title ? (memo.body ? `${memo.title}: ${memo.body}` : memo.title) : memo.body;
+        if (summary) {
+          comments.push(`${pad}{/* @moc-memo "${summary}" */}`);
+        }
+      }
+    }
+    return comments.join("\n");
+  }
+
   function renderNode(nodeId: string, indent: number): string {
     const node = craftState[nodeId];
     if (!node) return "";
@@ -169,6 +191,8 @@ export function craftStateToTsx(
       // Unknown component - render as comment
       return `${pad}{/* Unknown: ${resolvedName} */}`;
     }
+
+    const mocComments = buildMocComments(nodeId, pad, node.props);
 
     // Determine the actual tag (CraftText can be h1-h6, span, p)
     let tag = mapping.tag;
@@ -222,29 +246,29 @@ export function craftStateToTsx(
         cardBody.push(`${pad}    </div>`);
       }
       if (cardBody.length > 0) {
-        return `${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${cardBody.join("\n")}\n${pad}</${tag}>`;
+        return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${cardBody.join("\n")}\n${pad}</${tag}>`;
       }
-      return `${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
     }
 
     // Table special case: render as static table
     if (resolvedName === "CraftTable") {
-      return renderTable(node.props, tag, propsStr, classNameAttr, styleAttr, pad);
+      return `${mocComments}\n${renderTable(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
     }
 
     // Self-closing for img
     if (resolvedName === "CraftImage") {
-      return `${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
     }
 
     // Self-closing for Separator
     if (resolvedName === "CraftSeparator") {
-      return `${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
     }
 
     // Self-closing for Input
     if (resolvedName === "CraftInput") {
-      return `${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
     }
 
     // Container with children
@@ -252,31 +276,31 @@ export function craftStateToTsx(
       const renderedChildren = children
         .map((id) => renderNode(id, indent + 1))
         .filter(Boolean);
-      return `${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
+      return `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
     }
 
     // Text content
     if (textContent) {
-      return `${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${escapeJsx(textContent)}</${tag}>`;
+      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${escapeJsx(textContent)}</${tag}>`;
     }
 
     // Empty container
     if (mapping.isContainer) {
-      return `${pad}<${tag}${classNameAttr}${styleAttr} />`;
+      return `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr} />`;
     }
 
     // Fallback self-closing
-    return `${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+    return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
   }
 
   // Collect imports from tree
   collectImports("ROOT");
 
-  // Render the tree starting from ROOT's children
+  // Render the tree starting from ROOT's children (indent 3 for Fragment wrapper)
   const rootNode = craftState.ROOT;
   const rootChildren = rootNode.nodes || [];
   const renderedBody = rootChildren
-    .map((id) => renderNode(id, 2))
+    .map((id) => renderNode(id, 3))
     .filter(Boolean)
     .join("\n");
 
@@ -294,11 +318,12 @@ export function craftStateToTsx(
   }
   const imports = importLines.join("\n");
 
-  // Build TSX source
+  // Build TSX source with Fragment wrapper and @moc-node ROOT comment
   let tsxSource: string;
   if (renderedBody) {
     const rootClassAttr = rootCombinedClass ? ` className="${rootCombinedClass}"` : "";
-    tsxSource = `export default function ${componentName}() {\n  return (\n    <div${rootClassAttr}${rootStyleAttr}>\n${renderedBody}\n    </div>\n  );\n}`;
+    const rootMocComments = buildMocComments("ROOT", "      ", rootNode.props);
+    tsxSource = `export default function ${componentName}() {\n  return (\n    <>\n${rootMocComments}\n      <div${rootClassAttr}${rootStyleAttr}>\n${renderedBody}\n      </div>\n    </>\n  );\n}`;
   } else {
     tsxSource = `export default function ${componentName}() {\n  return <div />;\n}`;
   }

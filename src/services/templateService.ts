@@ -32,22 +32,13 @@ export function getTemplateContent(
   templateId: string,
   componentName: string,
 ): string {
-  const uuid = generateUuid();
   switch (templateId) {
     case "login-form":
-      return loginFormTemplate(componentName, uuid);
+      return loginFormTemplate(componentName);
     case "dashboard":
-      return dashboardTemplate(componentName, uuid);
+      return dashboardTemplate(componentName);
     case "empty":
     default:
-      return v4Template(componentName, uuid);
+      return v4Template(componentName);
   }
-}
-
-function generateUuid(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 }

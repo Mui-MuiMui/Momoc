@@ -1,6 +1,5 @@
 export interface MocMetadata {
   version: string;
-  id: string;
   intent: string;
   theme: "light" | "dark";
   layout: "flow" | "absolute";
