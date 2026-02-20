@@ -11,6 +11,7 @@ const PROP_OPTIONS: Record<string, string[]> = {
   justifyContent: ["start", "center", "end", "between", "around", "evenly"],
   alignItems: ["start", "center", "end", "stretch", "baseline"],
   orientation: ["horizontal", "vertical"],
+  objectFit: ["cover", "contain", "fill", "none", "scale-down"],
 };
 
 /** Property names that have a smaller set of variant options per component. */

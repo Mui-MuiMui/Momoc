@@ -18,11 +18,13 @@ export function EditorLoader({
   lastSavedRef,
   lastCraftStateRef,
 }: EditorLoaderProps) {
-  const { actions } = useEditor();
+  const { actions, query } = useEditor();
   const { documentContent, setMemos, setViewportMode, setCustomViewportSize } = useEditorStore();
   const lastDeserializedRef = useRef<string>("");
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
+  const queryRef = useRef(query);
+  queryRef.current = query;
 
   useEffect(() => {
     if (!documentContent) return;
@@ -55,6 +57,21 @@ export function EditorLoader({
         return;
       }
 
+      // If craftState is unchanged, only update memos/viewport (skip deserialize)
+      if (craftStateStr === lastCraftStateRef.current) {
+        setMemos(memos);
+        lastDeserializedRef.current = documentContent;
+        return;
+      }
+
+      // Save current selection before deserialize (which calls clearEvents)
+      let prevSelected: string[] = [];
+      try {
+        prevSelected = queryRef.current.getEvent("selected").all();
+      } catch {
+        // No selection or query not ready
+      }
+
       // Suppress onNodesChange saves during deserialize
       loadingRef.current = true;
       actionsRef.current.deserialize(craftStateStr);
@@ -65,6 +82,23 @@ export function EditorLoader({
 
       // Allow saves again after a tick (deserialize triggers sync events)
       requestAnimationFrame(() => {
+        // Restore selection if nodes still exist
+        if (prevSelected.length > 0) {
+          try {
+            const validIds = prevSelected.filter((id) => {
+              try {
+                return !!queryRef.current.node(id).get();
+              } catch {
+                return false;
+              }
+            });
+            if (validIds.length > 0) {
+              actionsRef.current.selectNode(validIds);
+            }
+          } catch {
+            // Selection restore failed – not critical
+          }
+        }
         loadingRef.current = false;
       });
     } catch {

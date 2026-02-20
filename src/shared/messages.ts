@@ -10,7 +10,9 @@ export type ExtToWebMessage =
   | {
       type: "i18n:locale";
       payload: { locale: string; messages: Record<string, string> };
-    };
+    }
+  | { type: "capture:start" }
+  | { type: "resolve:imageUri:result"; payload: { src: string; uri: string } };
 
 export type WebToExtMessage =
   | { type: "doc:save"; payload: { content: string } }
@@ -25,4 +27,8 @@ export type WebToExtMessage =
   | {
       type: "tailwind:classesChanged";
       payload: { classes: string[] };
-    };
+    }
+  | { type: "command:exportImage" }
+  | { type: "capture:complete"; payload: { dataUrl: string } }
+  | { type: "capture:error"; payload: { error: string } }
+  | { type: "resolve:imageUri"; payload: { src: string } };

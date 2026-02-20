@@ -1,5 +1,6 @@
 import { CraftDiv } from "./html/CraftDiv";
 import { CraftText } from "./html/CraftText";
+import { CraftPlaceholderImage } from "./html/CraftPlaceholderImage";
 import { CraftImage } from "./html/CraftImage";
 import { CraftContainer } from "./layout/CraftContainer";
 import { CraftFreeCanvas } from "./layout/CraftFreeCanvas";
@@ -14,6 +15,7 @@ import { CraftTable } from "./shadcn/CraftTable";
 export const resolvers = {
   CraftDiv,
   CraftText,
+  CraftPlaceholderImage,
   CraftImage,
   CraftContainer,
   CraftFreeCanvas,
@@ -77,6 +79,13 @@ export const paletteItems: PaletteItem[] = [
     label: "Image",
     category: "html",
     icon: "Image",
+    defaultProps: {},
+  },
+  {
+    resolverKey: "CraftPlaceholderImage",
+    label: "Placeholder Image",
+    category: "html",
+    icon: "ImageOff",
     defaultProps: {},
   },
   // shadcn/ui

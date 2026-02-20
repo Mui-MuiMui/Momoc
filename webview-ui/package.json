@@ -1,7 +1,7 @@
 {
   "name": "webview-ui",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -23,6 +23,7 @@
     "@radix-ui/react-tooltip": "^1.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "html-to-image": "^1.11.13",
     "i18next": "^24.0.0",
     "lucide-react": "^0.469.0",
     "react": "^19.0.0",

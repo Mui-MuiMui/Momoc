@@ -17,6 +17,7 @@ async function getEsbuild(): Promise<typeof import("esbuild")> {
 export async function compileTsx(
   tsx: string,
   workspaceRoot: string,
+  additionalPlugins?: { name: string; setup: (build: unknown) => void }[],
 ): Promise<{ code: string; error?: string }> {
   try {
     const esbuild = await getEsbuild();
@@ -34,7 +35,7 @@ export async function compileTsx(
       jsx: "automatic",
       write: false,
       external: ["react", "react-dom", "react/jsx-runtime"],
-      plugins: [aliasPlugin(workspaceRoot)],
+      plugins: [...(additionalPlugins || []), aliasPlugin(workspaceRoot)],
     });
 
     if (result.errors.length > 0) {

@@ -2,7 +2,7 @@
   "name": "mocker",
   "displayName": "Mocker",
   "description": "Interactive Design-Code Lab - Build mockups with GUI, code, and AI agents",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "mocker",
   "license": "MIT",
   "icon": "resources/icons/icon.png",
@@ -66,6 +66,16 @@
       {
         "command": "mocker.exportFlatTsx",
         "title": "%command.exportFlatTsx%",
+        "category": "Mocker"
+      },
+      {
+        "command": "mocker.openBrowserPreview",
+        "title": "%command.openBrowserPreview%",
+        "category": "Mocker"
+      },
+      {
+        "command": "mocker.exportImage",
+        "title": "%command.exportImage%",
         "category": "Mocker"
       }
     ],

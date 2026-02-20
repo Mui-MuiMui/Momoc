@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "node:path";
 import { compileTsx } from "../services/esbuildService.js";
 import {
   isProjectInitialized,
@@ -60,6 +61,8 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       enableScripts: true,
       localResourceRoots: [
         vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview"),
+        vscode.Uri.joinPath(document.uri, ".."),
+        ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) ?? []),
       ],
     };
 
@@ -73,30 +76,31 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
     });
 
-    // Track edits we applied ourselves to avoid echoing them back
-    let suppressExternalChange = false;
+    // Track content we last applied to detect save echoes
+    let lastAppliedContent = "";
 
     const changeDocumentSubscription =
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (e.document.uri.toString() === document.uri.toString()) {
-          if (suppressExternalChange) {
-            suppressExternalChange = false;
-            return;
-          }
-          // On external change, re-parse and send webview-compatible JSON
-          const webviewJson = this.fileToWebviewJson(document.getText());
-          if (webviewJson) {
-            webviewPanel.webview.postMessage({
-              type: "doc:externalChange",
-              payload: { content: webviewJson },
-            });
-          }
+        if (e.document.uri.toString() !== document.uri.toString()) return;
+        if (e.contentChanges.length === 0) return;           // Non-content events
+        const currentText = document.getText();
+        if (currentText === lastAppliedContent) return;       // Echo from our own save
+        // Genuine external change – re-parse and send webview-compatible JSON
+        const webviewJson = this.fileToWebviewJson(currentText);
+        if (webviewJson) {
+          webviewPanel.webview.postMessage({
+            type: "doc:externalChange",
+            payload: { content: webviewJson },
+          });
         }
       });
 
     webviewPanel.webview.onDidReceiveMessage(async (message) => {
       if (message.type === "doc:save") {
-        suppressExternalChange = true;
+        const payload = message.payload as { content: string };
+        if (payload?.content) {
+          lastAppliedContent = this.webviewJsonToFile(payload.content, document.fileName);
+        }
       }
 
       // When the webview React app is ready, send initial data
@@ -322,6 +326,64 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         break;
       }
 
+      case "command:openBrowserPreview": {
+        await vscode.commands.executeCommand("mocker.openBrowserPreview");
+        break;
+      }
+
+      case "command:exportImage": {
+        webviewPanel.webview.postMessage({ type: "capture:start" });
+        break;
+      }
+
+      case "capture:complete": {
+        const { dataUrl } = message.payload as { dataUrl: string };
+
+        const defaultUri = vscode.Uri.file(
+          document.fileName.replace(/\.moc$/, ".png"),
+        );
+
+        const saveUri = await vscode.window.showSaveDialog({
+          defaultUri,
+          filters: { "PNG Image": ["png"] },
+        });
+
+        if (saveUri) {
+          const base64 = dataUrl.replace(/^data:image\/png;base64,/, "");
+          const buffer = Buffer.from(base64, "base64");
+          await vscode.workspace.fs.writeFile(saveUri, buffer);
+          vscode.window.showInformationMessage(
+            vscode.l10n.t("Image saved: {0}", saveUri.fsPath),
+          );
+        }
+        break;
+      }
+
+      case "capture:error": {
+        const { error } = message.payload as { error: string };
+        vscode.window.showErrorMessage(
+          vscode.l10n.t("Image capture failed: {0}", error),
+        );
+        break;
+      }
+
+      case "resolve:imageUri": {
+        const { src } = message.payload as { src: string };
+        let fileUri: vscode.Uri;
+        if (path.isAbsolute(src)) {
+          fileUri = vscode.Uri.file(src);
+        } else {
+          const docDir = vscode.Uri.joinPath(document.uri, "..");
+          fileUri = vscode.Uri.joinPath(docDir, src);
+        }
+        const webviewUri = webviewPanel.webview.asWebviewUri(fileUri);
+        webviewPanel.webview.postMessage({
+          type: "resolve:imageUri:result",
+          payload: { src, uri: webviewUri.toString() },
+        });
+        break;
+      }
+
       case "editor:ready":
         break;
     }
@@ -350,7 +412,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data: blob: https:; connect-src ${webview.cspSource};">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data: blob: https: http:; connect-src ${webview.cspSource} https: http: data: blob:;">
   <link rel="stylesheet" href="${styleUri}">
   <title>Mocker</title>
 </head>

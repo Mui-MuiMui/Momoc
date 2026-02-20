@@ -53,6 +53,11 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     textProp: "text",
     isContainer: false,
   },
+  CraftPlaceholderImage: {
+    tag: "img",
+    propsMap: ["src", "alt", "className"],
+    isContainer: false,
+  },
   CraftImage: {
     tag: "img",
     propsMap: ["src", "alt", "className"],
@@ -119,7 +124,8 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftBadge: { variant: "default", text: "Badge" },
   CraftSeparator: { orientation: "horizontal" },
   CraftText: { tag: "p", text: "Text" },
-  CraftImage: { alt: "Placeholder" },
+  CraftPlaceholderImage: { alt: "Placeholder", keepAspectRatio: false },
+  CraftImage: { alt: "", objectFit: "cover", keepAspectRatio: false },
   CraftLabel: { text: "Label" },
   CraftCard: { title: "Card Title", description: "" },
   CraftContainer: {
@@ -257,7 +263,7 @@ export function craftStateToTsx(
     }
 
     // Self-closing for img
-    if (resolvedName === "CraftImage") {
+    if (resolvedName === "CraftImage" || resolvedName === "CraftPlaceholderImage") {
       return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
     }
 
@@ -395,9 +401,11 @@ function buildContainerClasses(props: Record<string, unknown>): string {
 function buildStyleAttr(props: Record<string, unknown>): string {
   const w = props?.width as string | undefined;
   const h = props?.height as string | undefined;
+  const objectFit = props?.objectFit as string | undefined;
   const parts: string[] = [];
   if (w && w !== "auto") parts.push(`width: "${w}"`);
   if (h && h !== "auto") parts.push(`height: "${h}"`);
+  if (objectFit && objectFit !== "cover") parts.push(`objectFit: "${objectFit}"`);
   if (parts.length === 0) return "";
   return ` style={{ ${parts.join(", ")} }}`;
 }
