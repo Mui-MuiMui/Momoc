@@ -142,7 +142,6 @@ export function EditorCanvas() {
         const tag = (e.target as HTMLElement)?.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
         e.preventDefault();
-        e.stopImmediatePropagation();
         isSpaceHeld.current = true;
         if (!isPanning.current) setCursor("grab");
       }
@@ -156,12 +155,12 @@ export function EditorCanvas() {
     };
 
     container.addEventListener("mousedown", handleMouseDown, true);
-    window.addEventListener("keydown", handleKeyDown, true);
-    window.addEventListener("keyup", handleKeyUp, true);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     return () => {
       container.removeEventListener("mousedown", handleMouseDown, true);
-      window.removeEventListener("keydown", handleKeyDown, true);
-      window.removeEventListener("keyup", handleKeyUp, true);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       stopPan();
     };
   }, [setCursor, stopPan]);
@@ -203,8 +202,8 @@ export function EditorCanvas() {
           style={{
             display: "flex",
             justifyContent: "center",
-            padding: `${viewportHeight * zoom}px 80px`,
-            minHeight: `calc(100% + ${viewportHeight * zoom}px)`,
+            padding: "80px",
+            minHeight: "100%",
             width: "max-content",
             minWidth: "100%",
           }}
