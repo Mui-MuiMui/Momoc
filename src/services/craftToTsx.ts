@@ -245,6 +245,45 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["type", "className"],
     isContainer: false,
   },
+  // Phase 2: Complex components
+  CraftSelect: {
+    tag: "Select",
+    importFrom: "@/components/ui/select",
+    importName: "Select",
+    propsMap: ["placeholder", "className"],
+    isContainer: false,
+  },
+  CraftCalendar: {
+    tag: "Calendar",
+    importFrom: "@/components/ui/calendar",
+    importName: "Calendar",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftResizable: {
+    tag: "ResizablePanelGroup",
+    importFrom: "@/components/ui/resizable",
+    importName: "ResizablePanelGroup",
+    propsMap: ["direction", "className"],
+    isContainer: false,
+  },
+  CraftCarousel: {
+    tag: "Carousel",
+    importFrom: "@/components/ui/carousel",
+    importName: "Carousel",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftChart: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftForm: {
+    tag: "form",
+    propsMap: ["className"],
+    isContainer: false,
+  },
 };
 
 /** Default prop values to omit from generated TSX */
@@ -281,6 +320,13 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftTextarea: { placeholder: "Type your message here.", rows: 3, disabled: false },
   CraftToggle: { text: "Toggle", variant: "default", pressed: false },
   CraftToggleGroup: { items: "Bold,Italic,Underline", type: "single" },
+  // Phase 2
+  CraftSelect: { items: "Option 1,Option 2,Option 3", placeholder: "Select an option" },
+  CraftCalendar: {},
+  CraftResizable: { direction: "horizontal" },
+  CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
+  CraftChart: { chartType: "bar" },
+  CraftForm: {},
 };
 
 export function craftStateToTsx(

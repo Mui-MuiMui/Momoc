@@ -31,6 +31,12 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   ToggleGroup: {
     type: ["single", "multiple"],
   },
+  Chart: {
+    chartType: ["bar", "line", "pie"],
+  },
+  Resizable: {
+    direction: ["horizontal", "vertical"],
+  },
 };
 
 const INPUT_CLASS =

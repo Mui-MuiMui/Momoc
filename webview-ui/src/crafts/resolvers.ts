@@ -30,6 +30,13 @@ import { CraftTabs } from "./shadcn/CraftTabs";
 import { CraftTextarea } from "./shadcn/CraftTextarea";
 import { CraftToggle } from "./shadcn/CraftToggle";
 import { CraftToggleGroup } from "./shadcn/CraftToggleGroup";
+// Phase 2: Complex components
+import { CraftSelect } from "./shadcn/CraftSelect";
+import { CraftCalendar } from "./shadcn/CraftCalendar";
+import { CraftResizable } from "./shadcn/CraftResizable";
+import { CraftCarousel } from "./shadcn/CraftCarousel";
+import { CraftChart } from "./shadcn/CraftChart";
+import { CraftForm } from "./shadcn/CraftForm";
 
 export const resolvers = {
   CraftDiv,
@@ -64,6 +71,13 @@ export const resolvers = {
   CraftTextarea,
   CraftToggle,
   CraftToggleGroup,
+  // Phase 2
+  CraftSelect,
+  CraftCalendar,
+  CraftResizable,
+  CraftCarousel,
+  CraftChart,
+  CraftForm,
 };
 
 export type ResolverKey = keyof typeof resolvers;
@@ -305,6 +319,49 @@ export const paletteItems: PaletteItem[] = [
     label: "Toggle Group",
     category: "shadcn",
     icon: "Group",
+    defaultProps: {},
+  },
+  // Phase 2: Complex components
+  {
+    resolverKey: "CraftSelect",
+    label: "Select",
+    category: "shadcn",
+    icon: "ChevronDown",
+    defaultProps: {},
+  },
+  {
+    resolverKey: "CraftCalendar",
+    label: "Calendar",
+    category: "shadcn",
+    icon: "Calendar",
+    defaultProps: {},
+  },
+  {
+    resolverKey: "CraftResizable",
+    label: "Resizable",
+    category: "shadcn",
+    icon: "GripVertical",
+    defaultProps: {},
+  },
+  {
+    resolverKey: "CraftCarousel",
+    label: "Carousel",
+    category: "shadcn",
+    icon: "GalleryHorizontal",
+    defaultProps: {},
+  },
+  {
+    resolverKey: "CraftChart",
+    label: "Chart",
+    category: "shadcn",
+    icon: "BarChart3",
+    defaultProps: {},
+  },
+  {
+    resolverKey: "CraftForm",
+    label: "Form",
+    category: "shadcn",
+    icon: "FileInput",
     defaultProps: {},
   },
 ];

@@ -546,4 +546,28 @@ const FALLBACK_SOURCES: Record<string, string> = {
   const cls = \`flex items-center justify-center gap-1 \${className}\`.trim();
   return <div role="group" className={cls} {...rest}>{children}</div>;
 }`,
+
+  // Phase 2: Complex components
+  select: `export function Select(props: any) {
+  const { className = "", children, ...rest } = props;
+  return <div className={className} {...rest}>{children}</div>;
+}`,
+
+  calendar: `export function Calendar(props: any) {
+  const { className = "", ...rest } = props;
+  const cls = \`p-3 rounded-md border \${className}\`.trim();
+  return <div className={cls} {...rest}><div className="text-sm font-medium text-center">Calendar</div></div>;
+}`,
+
+  resizable: `export function ResizablePanelGroup(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = \`flex rounded-lg border \${className}\`.trim();
+  return <div className={cls} {...rest}>{children}</div>;
+}`,
+
+  carousel: `export function Carousel(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = \`relative w-full \${className}\`.trim();
+  return <div className={cls} {...rest}>{children}</div>;
+}`,
 };

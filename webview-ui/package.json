@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@craftjs/core": "^0.2.12",
+    "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-aspect-ratio": "^1.1.8",
     "@radix-ui/react-checkbox": "^1.3.3",
@@ -32,13 +33,20 @@
     "@radix-ui/react-tooltip": "^1.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "date-fns": "^4.1.0",
+    "embla-carousel-react": "^8.6.0",
     "html-to-image": "^1.11.13",
     "i18next": "^24.0.0",
     "lucide-react": "^0.469.0",
     "react": "^19.0.0",
+    "react-day-picker": "^9.13.2",
     "react-dom": "^19.0.0",
+    "react-hook-form": "^7.71.2",
     "react-i18next": "^15.0.0",
+    "react-resizable-panels": "^4.6.4",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^3.0.0",
+    "zod": "^4.3.6",
     "zustand": "^5.0.0"
   },
   "devDependencies": {
