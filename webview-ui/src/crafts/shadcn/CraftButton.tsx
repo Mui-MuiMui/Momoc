@@ -45,6 +45,8 @@ interface CraftButtonProps {
   overlayType?: "none" | "dialog" | "alert-dialog" | "sheet" | "drawer" | "popover" | "dropdown-menu";
   linkedMocPath?: string;
   sheetSide?: "top" | "right" | "bottom" | "left";
+  overlayWidth?: string;
+  overlayHeight?: string;
   tooltipText?: string;
   toastText?: string;
   width?: string;
@@ -60,6 +62,8 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
   overlayType = "none",
   linkedMocPath = "",
   sheetSide = "right",
+  overlayWidth = "",
+  overlayHeight = "",
   tooltipText = "",
   toastText = "",
   width = "auto",
@@ -116,6 +120,8 @@ CraftButton.craft = {
     overlayType: "none",
     linkedMocPath: "",
     sheetSide: "right",
+    overlayWidth: "",
+    overlayHeight: "",
     tooltipText: "",
     toastText: "",
     width: "auto",

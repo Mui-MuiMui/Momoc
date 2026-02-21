@@ -394,7 +394,7 @@ const CONTEXT_MENU_IMPORT = { from: "@/components/ui/context-menu", names: ["Con
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
-    overlayType: "none", linkedMocPath: "", sheetSide: "right", tooltipText: "", toastText: "" },
+    overlayType: "none", linkedMocPath: "", sheetSide: "right", overlayWidth: "", overlayHeight: "", tooltipText: "", toastText: "" },
   CraftInput: { type: "text", placeholder: "Enter text...", disabled: false, tooltipText: "" },
   CraftBadge: { variant: "default", text: "Badge", tooltipText: "" },
   CraftSeparator: { orientation: "horizontal" },
@@ -567,6 +567,14 @@ export function craftStateToTsx(
       ? `{/* linked: ${escapeJsx(linkedMocPath)} */}`
       : "{/* overlay content */}";
 
+    // Build style attribute for overlay size
+    const overlayWidth = props?.overlayWidth as string | undefined;
+    const overlayHeight = props?.overlayHeight as string | undefined;
+    const styleParts: string[] = [];
+    if (overlayWidth) styleParts.push(`maxWidth: "${overlayWidth}"`);
+    if (overlayHeight) styleParts.push(`maxHeight: "${overlayHeight}", overflow: "auto"`);
+    const styleAttr = styleParts.length > 0 ? ` style={{ ${styleParts.join(", ")} }}` : "";
+
     switch (overlayType) {
       case "dialog":
         return [
@@ -574,7 +582,7 @@ export function craftStateToTsx(
           `${pad}  <DialogTrigger asChild>`,
           rendered,
           `${pad}  </DialogTrigger>`,
-          `${pad}  <DialogContent>`,
+          `${pad}  <DialogContent${styleAttr}>`,
           `${pad}    ${contentComment}`,
           `${pad}  </DialogContent>`,
           `${pad}</Dialog>`,
@@ -585,7 +593,7 @@ export function craftStateToTsx(
           `${pad}  <AlertDialogTrigger asChild>`,
           rendered,
           `${pad}  </AlertDialogTrigger>`,
-          `${pad}  <AlertDialogContent>`,
+          `${pad}  <AlertDialogContent${styleAttr}>`,
           `${pad}    ${contentComment}`,
           `${pad}    <AlertDialogCancel>Cancel</AlertDialogCancel>`,
           `${pad}    <AlertDialogAction>Continue</AlertDialogAction>`,
@@ -600,7 +608,7 @@ export function craftStateToTsx(
           `${pad}  <SheetTrigger asChild>`,
           rendered,
           `${pad}  </SheetTrigger>`,
-          `${pad}  <SheetContent${sideAttr}>`,
+          `${pad}  <SheetContent${sideAttr}${styleAttr}>`,
           `${pad}    ${contentComment}`,
           `${pad}  </SheetContent>`,
           `${pad}</Sheet>`,
@@ -612,7 +620,7 @@ export function craftStateToTsx(
           `${pad}  <DrawerTrigger asChild>`,
           rendered,
           `${pad}  </DrawerTrigger>`,
-          `${pad}  <DrawerContent>`,
+          `${pad}  <DrawerContent${styleAttr}>`,
           `${pad}    ${contentComment}`,
           `${pad}  </DrawerContent>`,
           `${pad}</Drawer>`,
@@ -623,7 +631,7 @@ export function craftStateToTsx(
           `${pad}  <PopoverTrigger asChild>`,
           rendered,
           `${pad}  </PopoverTrigger>`,
-          `${pad}  <PopoverContent>`,
+          `${pad}  <PopoverContent${styleAttr}>`,
           `${pad}    ${contentComment}`,
           `${pad}  </PopoverContent>`,
           `${pad}</Popover>`,
@@ -634,7 +642,7 @@ export function craftStateToTsx(
           `${pad}  <DropdownMenuTrigger asChild>`,
           rendered,
           `${pad}  </DropdownMenuTrigger>`,
-          `${pad}  <DropdownMenuContent>`,
+          `${pad}  <DropdownMenuContent${styleAttr}>`,
           `${pad}    ${contentComment}`,
           `${pad}  </DropdownMenuContent>`,
           `${pad}</DropdownMenu>`,
