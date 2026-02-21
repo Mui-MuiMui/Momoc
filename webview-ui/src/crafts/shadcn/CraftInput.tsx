@@ -6,6 +6,7 @@ interface CraftInputProps {
   placeholder?: string;
   disabled?: boolean;
   tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
   width?: string;
   height?: string;
   className?: string;
@@ -16,6 +17,7 @@ export const CraftInput: UserComponent<CraftInputProps> = ({
   placeholder = "Enter text...",
   disabled = false,
   tooltipText = "",
+  tooltipSide = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -48,6 +50,7 @@ CraftInput.craft = {
     placeholder: "Enter text...",
     disabled: false,
     tooltipText: "",
+    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

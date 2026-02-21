@@ -5,6 +5,7 @@ interface CraftLabelProps {
   text?: string;
   htmlFor?: string;
   tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
   width?: string;
   height?: string;
   className?: string;
@@ -14,6 +15,7 @@ export const CraftLabel: UserComponent<CraftLabelProps> = ({
   text = "Label",
   htmlFor = "",
   tooltipText = "",
+  tooltipSide = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -53,6 +55,7 @@ CraftLabel.craft = {
     text: "Label",
     htmlFor: "",
     tooltipText: "",
+    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

@@ -49,6 +49,7 @@ interface CraftButtonProps {
   overlayHeight?: string;
   overlayClassName?: string;
   tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
   toastText?: string;
   width?: string;
   height?: string;
@@ -67,6 +68,7 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
   overlayHeight = "",
   overlayClassName = "",
   tooltipText = "",
+  tooltipSide = "",
   toastText = "",
   width = "auto",
   height = "auto",
@@ -103,11 +105,6 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
           {overlayLabel}
         </span>
       )}
-      {tooltipText && (
-        <span className="mt-1 rounded bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md border border-border">
-          {tooltipText}
-        </span>
-      )}
     </div>
   );
 };
@@ -126,6 +123,7 @@ CraftButton.craft = {
     overlayHeight: "",
     overlayClassName: "",
     tooltipText: "",
+    tooltipSide: "",
     toastText: "",
     width: "auto",
     height: "auto",

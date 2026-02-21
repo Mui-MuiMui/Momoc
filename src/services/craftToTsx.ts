@@ -394,14 +394,14 @@ const CONTEXT_MENU_IMPORT = { from: "@/components/ui/context-menu", names: ["Con
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
-    overlayType: "none", linkedMocPath: "", sheetSide: "right", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", toastText: "" },
-  CraftInput: { type: "text", placeholder: "Enter text...", disabled: false, tooltipText: "" },
-  CraftBadge: { variant: "default", text: "Badge", tooltipText: "" },
+    overlayType: "none", linkedMocPath: "", sheetSide: "right", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", tooltipSide: "", toastText: "" },
+  CraftInput: { type: "text", placeholder: "Enter text...", disabled: false, tooltipText: "", tooltipSide: "" },
+  CraftBadge: { variant: "default", text: "Badge", tooltipText: "", tooltipSide: "" },
   CraftSeparator: { orientation: "horizontal" },
   CraftText: { tag: "p", text: "Text" },
   CraftPlaceholderImage: { alt: "Placeholder", keepAspectRatio: false },
   CraftImage: { alt: "", objectFit: "cover", keepAspectRatio: false },
-  CraftLabel: { text: "Label", tooltipText: "" },
+  CraftLabel: { text: "Label", tooltipText: "", tooltipSide: "" },
   CraftCard: { title: "Card Title", description: "", contextMenuMocPath: "" },
   CraftContainer: {
     display: "flex", flexDirection: "column", justifyContent: "start",
@@ -543,13 +543,16 @@ export function craftStateToTsx(
     const tooltipText = props?.tooltipText as string | undefined;
     if (!tooltipText) return rendered;
 
+    const tooltipSide = props?.tooltipSide as string | undefined;
+    const sideAttr = tooltipSide ? ` side="${tooltipSide}"` : "";
+
     return [
       `${pad}<TooltipProvider>`,
       `${pad}  <Tooltip>`,
       `${pad}    <TooltipTrigger asChild>`,
       rendered,
       `${pad}    </TooltipTrigger>`,
-      `${pad}    <TooltipContent>`,
+      `${pad}    <TooltipContent${sideAttr}>`,
       `${pad}      <p>${escapeJsx(tooltipText)}</p>`,
       `${pad}    </TooltipContent>`,
       `${pad}  </Tooltip>`,

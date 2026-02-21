@@ -723,7 +723,7 @@ const FALLBACK_SOURCES: Record<string, string> = {
 
   // --- Overlay wrapper components (context-based for proper state sharing) ---
 
-  tooltip: `import { createContext, useContext, useState } from "react";
+  tooltip: `import { createContext, useContext, useState, isValidElement, cloneElement } from "react";
 const Ctx = createContext<any>(null);
 export function TooltipProvider(props: any) { return <>{props.children}</>; }
 export function Tooltip(props: any) {
@@ -732,12 +732,24 @@ export function Tooltip(props: any) {
 }
 export function TooltipTrigger(props: any) {
   const ctx = useContext(Ctx);
-  return <span onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)} style={{ display: "inline-block" }}>{props.children}</span>;
+  const handlers = { onMouseEnter: () => ctx?.setShow(true), onMouseLeave: () => ctx?.setShow(false) };
+  if (props.asChild && isValidElement(props.children)) {
+    return cloneElement(props.children as any, handlers);
+  }
+  return <span {...handlers} style={{ display: "inline-block" }}>{props.children}</span>;
 }
 export function TooltipContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.show) return null;
-  return <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-nowrap">{props.children}</div>;
+  const side = props.side || "top";
+  const pos: Record<string, string> = {
+    top: "left-1/2 -translate-x-1/2 bottom-full mb-2",
+    bottom: "left-1/2 -translate-x-1/2 top-full mt-2",
+    left: "top-1/2 -translate-y-1/2 right-full mr-2",
+    right: "top-1/2 -translate-y-1/2 left-full ml-2",
+  };
+  const cls = \`absolute \${pos[side] || pos.top} z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-nowrap \${props.className || ""}\`.trim();
+  return <div className={cls}>{props.children}</div>;
 }`,
 
   dialog: `import { createContext, useContext, useState } from "react";
