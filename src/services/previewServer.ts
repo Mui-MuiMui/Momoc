@@ -186,8 +186,8 @@ export async function startPreviewServer(
     return importLines.join("\n") + "\n" + processed;
   }
 
-  function sendReload(): void {
-    const data = JSON.stringify({ theme: currentTheme });
+  function sendReload(fullReload = false): void {
+    const data = JSON.stringify({ theme: currentTheme, fullReload });
     for (const res of sseClients) {
       res.write(`event: reload\ndata: ${data}\n\n`);
     }
@@ -348,6 +348,10 @@ export async function startPreviewServer(
     const es = new EventSource("/events");
     es.addEventListener("reload", (e) => {
       const data = JSON.parse(e.data);
+      if (data.fullReload) {
+        location.reload();
+        return;
+      }
       if (data.theme) {
         document.body.className = data.theme === "dark" ? "dark" : "";
       }
@@ -433,9 +437,11 @@ export async function startPreviewServer(
 
   // File watcher: recompile and notify on save (main file or linked .moc files)
   const watcher = vscode.workspace.onDidSaveTextDocument(async (doc) => {
-    if (doc.uri.fsPath === mocFilePath || linkedAbsPaths.has(doc.uri.fsPath)) {
+    const isLinkedFile = linkedAbsPaths.has(doc.uri.fsPath);
+    if (doc.uri.fsPath === mocFilePath || isLinkedFile) {
       await compileCurrentFile();
-      sendReload();
+      // Linked file changes require full page reload to bust ES module cache
+      sendReload(isLinkedFile);
     }
   });
 
