@@ -116,9 +116,11 @@ export async function startPreviewServer(
           await vscode.workspace.fs.readFile(linkedFileUri),
         );
         const linkedDoc = parseMocFile(linkedContent);
+        // Remove min-h-screen from linked components (they render inside overlays, not as full pages)
+        let linkedTsxSource = linkedDoc.tsxSource.replace(/\bmin-h-screen\b/g, "");
         const linkedTsx = linkedDoc.imports
-          ? `${linkedDoc.imports}\n${linkedDoc.tsxSource}`
-          : linkedDoc.tsxSource;
+          ? `${linkedDoc.imports}\n${linkedTsxSource}`
+          : linkedTsxSource;
         const linkedResult = await compileTsx(linkedTsx, workspaceRoot, [
           previewExternalPlugin(),
         ]);
@@ -727,7 +729,7 @@ export function DialogTrigger(props: any) {
 export function DialogContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  return <div className="fixed inset-0 z-50 flex items-center justify-center"><div className="fixed inset-0 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className="relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg">{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\\u2715</button></div></div>;
+  return <div className="fixed inset-0 z-50 flex items-center justify-center"><div className="fixed inset-0 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className="relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg">{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></div>;
 }`,
 
   "alert-dialog": `import { createContext, useContext, useState } from "react";
@@ -775,7 +777,7 @@ export function SheetContent(props: any) {
     bottom: "inset-x-0 bottom-0 border-t",
   };
   const pos = posMap[side] || posMap.right;
-  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={"fixed z-50 bg-background p-6 shadow-lg " + pos}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\\u2715</button></div></>;
+  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={"fixed z-50 bg-background p-6 shadow-lg " + pos}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
   drawer: `import { createContext, useContext, useState } from "react";
@@ -791,7 +793,7 @@ export function DrawerTrigger(props: any) {
 export function DrawerContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className="fixed inset-x-0 bottom-0 z-50 rounded-t-xl border-t bg-background p-6 shadow-lg">{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\\u2715</button></div></>;
+  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className="fixed inset-x-0 bottom-0 z-50 rounded-t-xl border-t bg-background p-6 shadow-lg">{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
   popover: `import { createContext, useContext, useState } from "react";
