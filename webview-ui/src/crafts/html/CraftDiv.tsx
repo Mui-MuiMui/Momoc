@@ -2,6 +2,7 @@ import { useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 
 interface CraftDivProps {
+  contextMenuMocPath?: string;
   width?: string;
   height?: string;
   className?: string;
@@ -9,6 +10,7 @@ interface CraftDivProps {
 }
 
 export const CraftDiv: UserComponent<CraftDivProps> = ({
+  contextMenuMocPath = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -23,7 +25,7 @@ export const CraftDiv: UserComponent<CraftDivProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("min-h-[40px] min-w-[40px] p-2", className)}
+      className={cn("min-h-[40px] min-w-[40px] p-2", contextMenuMocPath && "ring-1 ring-dashed ring-muted-foreground/30", className)}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {children}
@@ -34,6 +36,7 @@ export const CraftDiv: UserComponent<CraftDivProps> = ({
 CraftDiv.craft = {
   displayName: "Div",
   props: {
+    contextMenuMocPath: "",
     width: "auto",
     height: "auto",
     className: "",

@@ -85,12 +85,16 @@ export async function startPreviewServer(
     const mocDir = path.dirname(mocFilePath);
     const linkedPaths = new Set<string>();
 
-    // Scan all nodes for linkedMocPath
+    // Scan all nodes for linkedMocPath and contextMenuMocPath
     for (const node of Object.values(craftState)) {
       const n = node as { props?: Record<string, unknown> };
       const linkedPath = n?.props?.linkedMocPath as string | undefined;
       if (linkedPath) {
         linkedPaths.add(linkedPath);
+      }
+      const contextMenuPath = n?.props?.contextMenuMocPath as string | undefined;
+      if (contextMenuPath) {
+        linkedPaths.add(contextMenuPath);
       }
     }
 
@@ -135,6 +139,8 @@ export async function startPreviewServer(
     for (const name of Object.keys(FALLBACK_SOURCES)) {
       imports[`@/components/ui/${name}`] = `/ui/${name}.js`;
     }
+    // sonner toast — provide a no-op stub for preview
+    imports["sonner"] = "data:text/javascript,export function toast(){}";
     return JSON.stringify({ imports }, null, 4);
   }
 
@@ -421,6 +427,9 @@ function shadcnExternalPlugin() {
       build.onResolve({ filter: /^@\/components\/ui\// }, (args) => {
         return { path: args.path, external: true };
       });
+      build.onResolve({ filter: /^sonner$/ }, (args) => {
+        return { path: args.path, external: true };
+      });
     },
   };
 }
@@ -631,4 +640,53 @@ const FALLBACK_SOURCES: Record<string, string> = {
   const cls = \`relative w-full \${className}\`.trim();
   return <div className={cls} {...rest}>{children}</div>;
 }`,
+
+  // Overlay wrapper components
+  tooltip: `import { useState } from "react";
+export function TooltipProvider(props: any) { return <>{props.children}</>; }
+export function Tooltip(props: any) {
+  const [show, setShow] = useState(false);
+  return <div className="relative inline-block" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>{typeof props.children === "function" ? props.children({ open: show }) : props.children}{show && <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-50"><div data-slot="tooltip-content" className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md">{/* tooltip content injected */}</div></div>}</div>;
+}
+export function TooltipTrigger(props: any) { return <>{props.children}</>; }
+export function TooltipContent(props: any) { return <div className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md">{props.children}</div>; }`,
+
+  dialog: `import { useState } from "react";
+export function Dialog(props: any) {
+  const [open, setOpen] = useState(false);
+  return <div data-slot="dialog">{typeof props.children === "object" && Array.isArray(props.children) ? props.children.map((c: any, i: number) => {
+    if (c?.props?.["data-slot"] === "dialog-trigger" || c?.type?.displayName === "DialogTrigger") return <span key={i} onClick={() => setOpen(true)}>{c}</span>;
+    if (open) return <div key={i} className="fixed inset-0 z-50 flex items-center justify-center"><div className="fixed inset-0 bg-black/80" onClick={() => setOpen(false)} /><div className="relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg">{c}<button onClick={() => setOpen(false)} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">✕</button></div></div>;
+    return null;
+  }) : props.children}</div>;
+}
+export function DialogTrigger(props: any) { return <>{props.children}</>; }
+export function DialogContent(props: any) { return <div>{props.children}</div>; }`,
+
+  "alert-dialog": `import { useState } from "react";
+export function AlertDialog(props: any) { return <div>{props.children}</div>; }
+export function AlertDialogTrigger(props: any) { return <>{props.children}</>; }
+export function AlertDialogContent(props: any) { return <div className="w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg">{props.children}</div>; }
+export function AlertDialogAction(props: any) { return <button className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90">{props.children}</button>; }
+export function AlertDialogCancel(props: any) { return <button className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent hover:text-accent-foreground">{props.children}</button>; }`,
+
+  sheet: `export function Sheet(props: any) { return <div>{props.children}</div>; }
+export function SheetTrigger(props: any) { return <>{props.children}</>; }
+export function SheetContent(props: any) { return <div className="fixed inset-y-0 right-0 z-50 w-3/4 max-w-sm border-l bg-background p-6 shadow-lg">{props.children}</div>; }`,
+
+  drawer: `export function Drawer(props: any) { return <div>{props.children}</div>; }
+export function DrawerTrigger(props: any) { return <>{props.children}</>; }
+export function DrawerContent(props: any) { return <div className="fixed inset-x-0 bottom-0 z-50 rounded-t-lg border-t bg-background p-6 shadow-lg">{props.children}</div>; }`,
+
+  popover: `export function Popover(props: any) { return <div className="relative inline-block">{props.children}</div>; }
+export function PopoverTrigger(props: any) { return <>{props.children}</>; }
+export function PopoverContent(props: any) { return <div className="z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md">{props.children}</div>; }`,
+
+  "dropdown-menu": `export function DropdownMenu(props: any) { return <div className="relative inline-block">{props.children}</div>; }
+export function DropdownMenuTrigger(props: any) { return <>{props.children}</>; }
+export function DropdownMenuContent(props: any) { return <div className="z-50 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md">{props.children}</div>; }`,
+
+  "context-menu": `export function ContextMenu(props: any) { return <div>{props.children}</div>; }
+export function ContextMenuTrigger(props: any) { return <>{props.children}</>; }
+export function ContextMenuContent(props: any) { return <div className="z-50 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md">{props.children}</div>; }`,
 };

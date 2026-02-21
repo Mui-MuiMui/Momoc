@@ -3,7 +3,7 @@ import { cn } from "../../utils/cn";
 import { cva } from "class-variance-authority";
 
 const toggleVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground",
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -52,7 +52,11 @@ export const CraftToggle: UserComponent<CraftToggleProps> = ({
       type="button"
       aria-pressed={pressed}
       data-state={pressed ? "on" : "off"}
-      className={cn(toggleVariants({ variant }), className)}
+      className={cn(
+        toggleVariants({ variant }),
+        pressed ? "bg-accent text-accent-foreground" : "bg-transparent",
+        className,
+      )}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {text}

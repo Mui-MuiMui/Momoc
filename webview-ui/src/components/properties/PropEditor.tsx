@@ -14,6 +14,8 @@ const PROP_OPTIONS: Record<string, string[]> = {
   alignItems: ["start", "center", "end", "stretch", "baseline"],
   orientation: ["horizontal", "vertical"],
   objectFit: ["cover", "contain", "fill", "none", "scale-down"],
+  overlayType: ["none", "dialog", "alert-dialog", "sheet", "drawer", "popover", "dropdown-menu"],
+  sheetSide: ["top", "right", "bottom", "left"],
 };
 
 /** Property names that have a smaller set of variant options per component. */
@@ -51,7 +53,10 @@ const INPUT_CLASS =
   "rounded border border-[var(--vscode-input-border,#3c3c3c)] bg-[var(--vscode-input-background,#3c3c3c)] px-2 py-1 text-xs text-[var(--vscode-input-foreground,#ccc)] focus:outline-none focus:ring-1 focus:ring-[var(--vscode-focusBorder,#007fd4)]";
 
 /** Props that support multiline text input (rendered as textarea). */
-const MULTILINE_PROPS = new Set(["text", "title", "description", "placeholder", "label", "triggerText"]);
+const MULTILINE_PROPS = new Set(["text", "title", "description", "placeholder", "label", "triggerText", "tooltipText", "toastText"]);
+
+/** Props that use the .moc file browse UI (text input + browse button). */
+const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath"]);
 
 export function PropEditor() {
   const { selectedProps, actions, selectedNodeId, componentName } = useEditor(
@@ -78,9 +83,9 @@ export function PropEditor() {
     const listener = (event: MessageEvent) => {
       const msg = event.data;
       if (msg?.type === "browse:mocFile:result" && selectedNodeId) {
-        const { relativePath } = msg.payload as { relativePath: string };
+        const { relativePath, targetProp } = msg.payload as { relativePath: string; targetProp?: string };
         actions.setProp(selectedNodeId, (props: Record<string, unknown>) => {
-          props.linkedMocPath = relativePath;
+          props[targetProp || "linkedMocPath"] = relativePath;
         });
       }
     };
@@ -123,8 +128,8 @@ export function PropEditor() {
       {Object.entries(selectedProps).map(([key, value]) => {
         if (key === "children" || key === "className") return null;
 
-        // Custom UI for linkedMocPath
-        if (key === "linkedMocPath") {
+        // Custom UI for .moc file path props (linkedMocPath, contextMenuMocPath)
+        if (MOC_PATH_PROPS.has(key)) {
           return (
             <div key={key} className="flex flex-col gap-1">
               <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
@@ -143,7 +148,7 @@ export function PropEditor() {
                   onClick={() => {
                     getVsCodeApi().postMessage({
                       type: "browse:mocFile",
-                      payload: { currentPath: String(value ?? "") },
+                      payload: { currentPath: String(value ?? ""), targetProp: key },
                     });
                   }}
                   className="rounded border border-[var(--vscode-button-border,transparent)] bg-[var(--vscode-button-background,#0e639c)] px-2 py-1 text-xs text-[var(--vscode-button-foreground,#fff)] hover:opacity-90"

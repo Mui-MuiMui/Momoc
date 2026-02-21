@@ -284,7 +284,7 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: false,
   },
-  // Phase 4: Overlay components
+  // Phase 4: Overlay components (legacy standalone - render as Button for backward compat)
   CraftDialog: {
     tag: "Button",
     importFrom: "@/components/ui/button",
@@ -377,21 +377,37 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
   },
 };
 
+/** Overlay type to import configuration */
+const OVERLAY_IMPORTS: Record<string, { from: string; names: string[] }> = {
+  dialog: { from: "@/components/ui/dialog", names: ["Dialog", "DialogTrigger", "DialogContent"] },
+  "alert-dialog": { from: "@/components/ui/alert-dialog", names: ["AlertDialog", "AlertDialogTrigger", "AlertDialogContent", "AlertDialogAction", "AlertDialogCancel"] },
+  sheet: { from: "@/components/ui/sheet", names: ["Sheet", "SheetTrigger", "SheetContent"] },
+  drawer: { from: "@/components/ui/drawer", names: ["Drawer", "DrawerTrigger", "DrawerContent"] },
+  popover: { from: "@/components/ui/popover", names: ["Popover", "PopoverTrigger", "PopoverContent"] },
+  "dropdown-menu": { from: "@/components/ui/dropdown-menu", names: ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent"] },
+};
+
+const TOOLTIP_IMPORT = { from: "@/components/ui/tooltip", names: ["TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent"] };
+
+const CONTEXT_MENU_IMPORT = { from: "@/components/ui/context-menu", names: ["ContextMenu", "ContextMenuTrigger", "ContextMenuContent"] };
+
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
-  CraftButton: { variant: "default", size: "default", disabled: false, text: "Button" },
-  CraftInput: { type: "text", placeholder: "Enter text...", disabled: false },
-  CraftBadge: { variant: "default", text: "Badge" },
+  CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
+    overlayType: "none", linkedMocPath: "", sheetSide: "right", tooltipText: "", toastText: "" },
+  CraftInput: { type: "text", placeholder: "Enter text...", disabled: false, tooltipText: "" },
+  CraftBadge: { variant: "default", text: "Badge", tooltipText: "" },
   CraftSeparator: { orientation: "horizontal" },
   CraftText: { tag: "p", text: "Text" },
   CraftPlaceholderImage: { alt: "Placeholder", keepAspectRatio: false },
   CraftImage: { alt: "", objectFit: "cover", keepAspectRatio: false },
-  CraftLabel: { text: "Label" },
-  CraftCard: { title: "Card Title", description: "" },
+  CraftLabel: { text: "Label", tooltipText: "" },
+  CraftCard: { title: "Card Title", description: "", contextMenuMocPath: "" },
   CraftContainer: {
     display: "flex", flexDirection: "column", justifyContent: "start",
-    alignItems: "stretch", gap: "4", gridCols: 3,
+    alignItems: "stretch", gap: "4", gridCols: 3, contextMenuMocPath: "",
   },
+  CraftDiv: { contextMenuMocPath: "" },
   // Phase 1
   CraftAccordion: { items: "Item 1,Item 2,Item 3", type: "single" },
   CraftAlert: { title: "Alert", description: "This is an alert message.", variant: "default" },
@@ -418,7 +434,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
   CraftChart: { chartType: "bar" },
   CraftForm: {},
-  // Phase 4
+  // Phase 4 (legacy standalone)
   CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
   CraftAlertDialog: { triggerText: "Open Alert", linkedMocPath: "" },
   CraftSheet: { triggerText: "Open Sheet", side: "right", linkedMocPath: "" },
@@ -445,6 +461,13 @@ export function craftStateToTsx(
 
   const usedImports = new Map<string, Set<string>>();
 
+  function addImport(from: string, name: string): void {
+    if (!usedImports.has(from)) {
+      usedImports.set(from, new Set());
+    }
+    usedImports.get(from)!.add(name);
+  }
+
   function collectImports(nodeId: string): void {
     const node = craftState[nodeId];
     if (!node) return;
@@ -452,10 +475,40 @@ export function craftStateToTsx(
     const resolvedName = getResolvedName(node);
     const mapping = COMPONENT_MAP[resolvedName];
     if (mapping?.importFrom && mapping?.importName) {
-      if (!usedImports.has(mapping.importFrom)) {
-        usedImports.set(mapping.importFrom, new Set());
+      addImport(mapping.importFrom, mapping.importName);
+    }
+
+    // Collect overlay-related imports for CraftButton
+    if (resolvedName === "CraftButton") {
+      const overlayType = node.props?.overlayType as string | undefined;
+      if (overlayType && overlayType !== "none") {
+        const overlayImport = OVERLAY_IMPORTS[overlayType];
+        if (overlayImport) {
+          for (const name of overlayImport.names) {
+            addImport(overlayImport.from, name);
+          }
+        }
       }
-      usedImports.get(mapping.importFrom)!.add(mapping.importName);
+      const toastText = node.props?.toastText as string | undefined;
+      if (toastText) {
+        addImport("sonner", "toast");
+      }
+    }
+
+    // Collect tooltip imports for any component with tooltipText
+    const tooltipText = node.props?.tooltipText as string | undefined;
+    if (tooltipText) {
+      for (const name of TOOLTIP_IMPORT.names) {
+        addImport(TOOLTIP_IMPORT.from, name);
+      }
+    }
+
+    // Collect context menu imports for containers with contextMenuMocPath
+    const contextMenuMocPath = node.props?.contextMenuMocPath as string | undefined;
+    if (contextMenuMocPath) {
+      for (const name of CONTEXT_MENU_IMPORT.names) {
+        addImport(CONTEXT_MENU_IMPORT.from, name);
+      }
     }
 
     for (const childId of node.nodes || []) {
@@ -483,6 +536,130 @@ export function craftStateToTsx(
       }
     }
     return comments.join("\n");
+  }
+
+  /** Wrap rendered element with tooltip if tooltipText is set */
+  function wrapWithTooltip(rendered: string, props: Record<string, unknown>, pad: string): string {
+    const tooltipText = props?.tooltipText as string | undefined;
+    if (!tooltipText) return rendered;
+
+    return [
+      `${pad}<TooltipProvider>`,
+      `${pad}  <Tooltip>`,
+      `${pad}    <TooltipTrigger asChild>`,
+      rendered,
+      `${pad}    </TooltipTrigger>`,
+      `${pad}    <TooltipContent>`,
+      `${pad}      <p>${escapeJsx(tooltipText)}</p>`,
+      `${pad}    </TooltipContent>`,
+      `${pad}  </Tooltip>`,
+      `${pad}</TooltipProvider>`,
+    ].join("\n");
+  }
+
+  /** Wrap rendered element with overlay if CraftButton has overlayType set */
+  function wrapWithOverlay(rendered: string, props: Record<string, unknown>, pad: string): string {
+    const overlayType = props?.overlayType as string | undefined;
+    if (!overlayType || overlayType === "none") return rendered;
+
+    const linkedMocPath = props?.linkedMocPath as string | undefined;
+    const contentComment = linkedMocPath
+      ? `{/* linked: ${escapeJsx(linkedMocPath)} */}`
+      : "{/* overlay content */}";
+
+    switch (overlayType) {
+      case "dialog":
+        return [
+          `${pad}<Dialog>`,
+          `${pad}  <DialogTrigger asChild>`,
+          rendered,
+          `${pad}  </DialogTrigger>`,
+          `${pad}  <DialogContent>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </DialogContent>`,
+          `${pad}</Dialog>`,
+        ].join("\n");
+      case "alert-dialog":
+        return [
+          `${pad}<AlertDialog>`,
+          `${pad}  <AlertDialogTrigger asChild>`,
+          rendered,
+          `${pad}  </AlertDialogTrigger>`,
+          `${pad}  <AlertDialogContent>`,
+          `${pad}    ${contentComment}`,
+          `${pad}    <AlertDialogCancel>Cancel</AlertDialogCancel>`,
+          `${pad}    <AlertDialogAction>Continue</AlertDialogAction>`,
+          `${pad}  </AlertDialogContent>`,
+          `${pad}</AlertDialog>`,
+        ].join("\n");
+      case "sheet": {
+        const side = (props?.sheetSide as string) || "right";
+        const sideAttr = side !== "right" ? ` side="${side}"` : "";
+        return [
+          `${pad}<Sheet>`,
+          `${pad}  <SheetTrigger asChild>`,
+          rendered,
+          `${pad}  </SheetTrigger>`,
+          `${pad}  <SheetContent${sideAttr}>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </SheetContent>`,
+          `${pad}</Sheet>`,
+        ].join("\n");
+      }
+      case "drawer":
+        return [
+          `${pad}<Drawer>`,
+          `${pad}  <DrawerTrigger asChild>`,
+          rendered,
+          `${pad}  </DrawerTrigger>`,
+          `${pad}  <DrawerContent>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </DrawerContent>`,
+          `${pad}</Drawer>`,
+        ].join("\n");
+      case "popover":
+        return [
+          `${pad}<Popover>`,
+          `${pad}  <PopoverTrigger asChild>`,
+          rendered,
+          `${pad}  </PopoverTrigger>`,
+          `${pad}  <PopoverContent>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </PopoverContent>`,
+          `${pad}</Popover>`,
+        ].join("\n");
+      case "dropdown-menu":
+        return [
+          `${pad}<DropdownMenu>`,
+          `${pad}  <DropdownMenuTrigger asChild>`,
+          rendered,
+          `${pad}  </DropdownMenuTrigger>`,
+          `${pad}  <DropdownMenuContent>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </DropdownMenuContent>`,
+          `${pad}</DropdownMenu>`,
+        ].join("\n");
+      default:
+        return rendered;
+    }
+  }
+
+  /** Wrap rendered container with context menu if contextMenuMocPath is set */
+  function wrapWithContextMenu(rendered: string, props: Record<string, unknown>, pad: string): string {
+    const contextMenuMocPath = props?.contextMenuMocPath as string | undefined;
+    if (!contextMenuMocPath) return rendered;
+
+    const contentComment = `{/* linked: ${escapeJsx(contextMenuMocPath)} */}`;
+    return [
+      `${pad}<ContextMenu>`,
+      `${pad}  <ContextMenuTrigger asChild>`,
+      rendered,
+      `${pad}  </ContextMenuTrigger>`,
+      `${pad}  <ContextMenuContent>`,
+      `${pad}    ${contentComment}`,
+      `${pad}  </ContextMenuContent>`,
+      `${pad}</ContextMenu>`,
+    ].join("\n");
   }
 
   function renderNode(nodeId: string, indent: number): string {
@@ -532,6 +709,12 @@ export function craftStateToTsx(
     const children = node.nodes || [];
     const textContent = mapping.textProp ? (node.props?.[mapping.textProp] as string) : undefined;
 
+    // Toast comment for CraftButton
+    const toastText = resolvedName === "CraftButton" ? (node.props?.toastText as string | undefined) : undefined;
+    const toastComment = toastText ? `\n${pad}{/* toast: "${escapeJsx(toastText)}" */}` : "";
+
+    let rendered = "";
+
     // Card special case: render title/description
     if (resolvedName === "CraftCard") {
       const title = (node.props?.title as string) || "";
@@ -552,9 +735,13 @@ export function craftStateToTsx(
         cardBody.push(`${pad}    </div>`);
       }
       if (cardBody.length > 0) {
-        return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${cardBody.join("\n")}\n${pad}</${tag}>`;
+        rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${cardBody.join("\n")}\n${pad}</${tag}>`;
+      } else {
+        rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
       }
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      rendered = wrapWithContextMenu(rendered, node.props, pad);
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+      return rendered;
     }
 
     // Table special case: render as static table
@@ -574,7 +761,9 @@ export function craftStateToTsx(
 
     // Self-closing for Input
     if (resolvedName === "CraftInput") {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+      return rendered;
     }
 
     // Self-closing for Textarea
@@ -592,21 +781,40 @@ export function craftStateToTsx(
       const renderedChildren = children
         .map((id) => renderNode(id, indent + 1))
         .filter(Boolean);
-      return `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
+      rendered = `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
+      rendered = wrapWithContextMenu(rendered, node.props, pad);
+      return rendered;
     }
 
     // Text content
     if (textContent) {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${escapeJsx(textContent)}</${tag}>`;
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${escapeJsx(textContent)}</${tag}>${toastComment}`;
+      // Apply wrappers for CraftButton
+      if (resolvedName === "CraftButton") {
+        rendered = wrapWithOverlay(rendered, node.props, pad);
+        rendered = wrapWithTooltip(rendered, node.props, pad);
+      }
+      // Apply tooltip wrapper for Badge/Label
+      if (resolvedName === "CraftBadge" || resolvedName === "CraftLabel") {
+        rendered = wrapWithTooltip(rendered, node.props, pad);
+      }
+      return rendered;
     }
 
     // Empty container
     if (mapping.isContainer) {
-      return `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr} />`;
+      rendered = `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr} />`;
+      rendered = wrapWithContextMenu(rendered, node.props, pad);
+      return rendered;
     }
 
     // Fallback self-closing
-    return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+    rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+    if (resolvedName === "CraftButton") {
+      rendered = wrapWithOverlay(rendered, node.props, pad);
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+    }
+    return rendered;
   }
 
   // Collect imports from tree

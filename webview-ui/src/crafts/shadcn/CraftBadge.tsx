@@ -22,6 +22,7 @@ const badgeVariants = cva(
 interface CraftBadgeProps {
   text?: string;
   variant?: "default" | "secondary" | "destructive" | "outline";
+  tooltipText?: string;
   width?: string;
   height?: string;
   className?: string;
@@ -30,6 +31,7 @@ interface CraftBadgeProps {
 export const CraftBadge: UserComponent<CraftBadgeProps> = ({
   text = "Badge",
   variant = "default",
+  tooltipText = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -56,6 +58,7 @@ CraftBadge.craft = {
   props: {
     text: "Badge",
     variant: "default",
+    tooltipText: "",
     width: "auto",
     height: "auto",
     className: "",

@@ -4,6 +4,7 @@ import { cn } from "../../utils/cn";
 interface CraftCardProps {
   title?: string;
   description?: string;
+  contextMenuMocPath?: string;
   width?: string;
   height?: string;
   className?: string;
@@ -13,6 +14,7 @@ interface CraftCardProps {
 export const CraftCard: UserComponent<CraftCardProps> = ({
   title = "Card Title",
   description = "",
+  contextMenuMocPath = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -29,6 +31,7 @@ export const CraftCard: UserComponent<CraftCardProps> = ({
       }}
       className={cn(
         "rounded-xl border bg-card text-card-foreground shadow",
+        contextMenuMocPath && "ring-1 ring-dashed ring-muted-foreground/30",
         className,
       )}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
@@ -51,6 +54,7 @@ CraftCard.craft = {
   props: {
     title: "Card Title",
     description: "",
+    contextMenuMocPath: "",
     width: "auto",
     height: "auto",
     className: "",
