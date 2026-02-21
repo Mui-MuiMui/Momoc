@@ -68,65 +68,19 @@ const OVERLAY_CLASS_PRESETS: { label: string; value: string }[] = [
   { label: "Borderless", value: "border-0 shadow-lg rounded-xl p-6" },
 ];
 
-// --- Tailwind class editors (manipulate className) ---
-
-interface TailwindClassItem {
-  label: string;
-  options: string[];
-}
-
-const TAILWIND_FONT_ITEMS: TailwindClassItem[] = [
-  { label: "fontFamily", options: ["", "font-sans", "font-serif", "font-mono"] },
-  { label: "fontWeight", options: ["", "font-thin", "font-light", "font-normal", "font-medium", "font-semibold", "font-bold", "font-extrabold"] },
-  { label: "fontSize", options: ["", "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl", "text-3xl", "text-4xl"] },
-];
-
-const TAILWIND_COLOR_ITEMS: TailwindClassItem[] = [
-  { label: "textColor", options: ["", "text-foreground", "text-primary", "text-primary-foreground", "text-secondary-foreground", "text-muted-foreground", "text-destructive", "text-accent-foreground"] },
-  { label: "bgColor", options: ["", "bg-background", "bg-primary", "bg-secondary", "bg-destructive", "bg-accent", "bg-muted", "bg-card"] },
-];
-
-/** Which Tailwind class editor groups each component supports */
-const COMPONENT_TW_GROUPS: Record<string, string[]> = {
-  Text: ["font", "color"],
-  Button: ["font", "color"],
-  Label: ["font", "color"],
-  Badge: ["font", "color"],
-  Input: ["font", "color"],
-  Textarea: ["font", "color"],
-  Div: ["color"],
-  Container: ["color"],
-  Card: ["color"],
-};
-
-function findTailwindClass(className: string, options: string[]): string {
-  if (!className) return "";
-  for (const cls of className.split(/\s+/)) {
-    if (options.includes(cls)) return cls;
-  }
-  return "";
-}
-
-function setTailwindClass(className: string, options: string[], newValue: string): string {
-  const filtered = (className || "").split(/\s+/).filter((c) => c && !options.includes(c));
-  if (newValue) filtered.push(newValue);
-  return filtered.join(" ");
-}
-
 // --- Property grouping ---
 
-type PropGroup = "basic" | "overlay" | "interaction" | "size" | "layout" | "other";
+type PropGroup = "basic" | "overlay" | "interaction" | "layout" | "other";
 
 const GROUP_LABELS: Record<PropGroup, string> = {
   basic: "Basic",
   overlay: "Overlay",
   interaction: "Interaction",
-  size: "Size",
   layout: "Layout",
   other: "Other",
 };
 
-const GROUP_ORDER: PropGroup[] = ["basic", "overlay", "interaction", "size", "layout", "other"];
+const GROUP_ORDER: PropGroup[] = ["basic", "overlay", "interaction", "layout", "other"];
 
 const PROP_TO_GROUP: Record<string, PropGroup> = {
   // Basic
@@ -145,9 +99,8 @@ const PROP_TO_GROUP: Record<string, PropGroup> = {
   contextMenuMocPath: "overlay",
   // Interaction
   tooltipText: "interaction", toastText: "interaction",
-  // Size
-  width: "size", height: "size",
   // Layout
+  width: "layout", height: "layout",
   display: "layout", flexDirection: "layout", justifyContent: "layout",
   alignItems: "layout", gap: "layout", gridCols: "layout",
   orientation: "layout", objectFit: "layout", keepAspectRatio: "layout",
@@ -236,35 +189,6 @@ export function PropEditor() {
   const activeGroups = GROUP_ORDER.filter((g) => grouped.has(g));
   // If only 1 group, don't show group headers (flat layout)
   const showGroupHeaders = activeGroups.length > 1;
-
-  // Tailwind class editor groups for this component
-  const twGroupsForComponent = COMPONENT_TW_GROUPS[componentName] || [];
-
-  function renderTailwindEditor(item: TailwindClassItem) {
-    const currentClassName = String(selectedProps?.className ?? "");
-    const currentValue = findTailwindClass(currentClassName, item.options);
-    return (
-      <div key={`tw-${item.label}`} className="flex flex-col gap-1">
-        <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
-          {item.label}
-        </label>
-        <select
-          value={currentValue}
-          onChange={(e) => {
-            const newClassName = setTailwindClass(currentClassName, item.options, e.target.value);
-            handlePropChange("className", newClassName);
-          }}
-          className={`${INPUT_CLASS} w-full`}
-        >
-          {item.options.map((opt) => (
-            <option key={opt || "__default"} value={opt}>
-              {opt || "(default)"}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
-  }
 
   function renderProp(key: string, value: unknown) {
     // Custom UI for overlayClassName (preset select + text input)
@@ -429,66 +353,6 @@ export function PropEditor() {
           </div>
         );
       })}
-
-      {/* TailwindCSS section — className editing with categorized dropdowns */}
-      {twGroupsForComponent.length > 0 && (
-        <>
-          <div className="mt-1 border-t border-[var(--vscode-panel-border,#444)] pt-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)]">
-            TailwindCSS
-          </div>
-
-          {twGroupsForComponent.includes("font") && (
-            <div>
-              <button
-                type="button"
-                onClick={() => toggleGroup("tw-font")}
-                className="flex w-full items-center gap-1 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
-              >
-                <span className="text-[10px]">{collapsedGroups.has("tw-font") ? "\u25b6" : "\u25bc"}</span>
-                Font
-                <span className="ml-auto text-[10px] font-normal opacity-60">{TAILWIND_FONT_ITEMS.length}</span>
-              </button>
-              {!collapsedGroups.has("tw-font") && (
-                <div className="flex flex-col gap-2">
-                  {TAILWIND_FONT_ITEMS.map((item) => renderTailwindEditor(item))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {twGroupsForComponent.includes("color") && (
-            <div>
-              <button
-                type="button"
-                onClick={() => toggleGroup("tw-color")}
-                className="flex w-full items-center gap-1 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
-              >
-                <span className="text-[10px]">{collapsedGroups.has("tw-color") ? "\u25b6" : "\u25bc"}</span>
-                Color
-                <span className="ml-auto text-[10px] font-normal opacity-60">{TAILWIND_COLOR_ITEMS.length}</span>
-              </button>
-              {!collapsedGroups.has("tw-color") && (
-                <div className="flex flex-col gap-2">
-                  {TAILWIND_COLOR_ITEMS.map((item) => renderTailwindEditor(item))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
-              className
-            </label>
-            <input
-              type="text"
-              value={String(selectedProps.className ?? "")}
-              onChange={(e) => handlePropChange("className", e.target.value)}
-              className={`${INPUT_CLASS} w-full`}
-              placeholder="Tailwind classes..."
-            />
-          </div>
-        </>
-      )}
     </div>
   );
 }

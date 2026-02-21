@@ -16,6 +16,7 @@ const THEME_COLOR_OPTIONS = [
   "accent", "destructive", "card", "border", "white", "black",
 ];
 
+const FONT_FAMILY_OPTIONS = ["sans", "serif", "mono"];
 const FONT_WEIGHT_OPTIONS = ["normal", "medium", "semibold", "bold"];
 const BORDER_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "xl", "2xl", "full"];
 
@@ -175,6 +176,7 @@ export function TailwindEditor() {
   const themeTextGroup = THEME_COLOR_OPTIONS.map((c) => `text-${c}`);
   const themeBgGroup = THEME_COLOR_OPTIONS.map((c) => `bg-${c}`);
   const themeBorderGroup = THEME_COLOR_OPTIONS.map((c) => `border-${c}`);
+  const fontFamilyGroup = FONT_FAMILY_OPTIONS.map((f) => `font-${f}`);
   const fontWeightGroup = FONT_WEIGHT_OPTIONS.map((w) => `font-${w}`);
   const borderRadiusGroup = BORDER_RADIUS_OPTIONS.map((r) => `rounded-${r}`);
   const alignSelfGroup = ALIGN_SELF_OPTIONS.map((o) => o.cls);
@@ -302,6 +304,17 @@ export function TailwindEditor() {
         </div>
       </TailwindSection>
 
+      {/* ── Font ── */}
+      <TailwindCategory title="Font" />
+
+      <TailwindSection title="Font Family">
+        <div className="flex flex-wrap gap-1">
+          {FONT_FAMILY_OPTIONS.map((f) => (
+            <ClassButton key={f} label={f} active={activeSet.has(`font-${f}`)} onClick={() => setGroupClass(`font-${f}`, fontFamilyGroup)} />
+          ))}
+        </div>
+      </TailwindSection>
+
       <TailwindSection title="Font Size">
         <div className="mb-1 flex gap-1">
           <ModeToggle label="Preset" active={fontSizeMode === "preset"} onClick={() => setFontSizeMode("preset")} />
@@ -343,6 +356,17 @@ export function TailwindEditor() {
         )}
       </TailwindSection>
 
+      <TailwindSection title="Font Weight">
+        <div className="flex flex-wrap gap-1">
+          {FONT_WEIGHT_OPTIONS.map((w) => (
+            <ClassButton key={w} label={w} active={activeSet.has(`font-${w}`)} onClick={() => setGroupClass(`font-${w}`, fontWeightGroup)} />
+          ))}
+        </div>
+      </TailwindSection>
+
+      {/* ── Color ── */}
+      <TailwindCategory title="Color" />
+
       {/* Text Color: theme + palette */}
       <ColorSection
         title="Text Color"
@@ -376,13 +400,8 @@ export function TailwindEditor() {
         onApply={applyColor}
       />
 
-      <TailwindSection title="Font Weight">
-        <div className="flex flex-wrap gap-1">
-          {FONT_WEIGHT_OPTIONS.map((w) => (
-            <ClassButton key={w} label={w} active={activeSet.has(`font-${w}`)} onClick={() => setGroupClass(`font-${w}`, fontWeightGroup)} />
-          ))}
-        </div>
-      </TailwindSection>
+      {/* ── Border ── */}
+      <TailwindCategory title="Border" />
 
       <TailwindSection title="Border Radius">
         <div className="flex flex-wrap gap-1">
@@ -536,6 +555,14 @@ function SpacingSlider({
         </span>
       </div>
     </TailwindSection>
+  );
+}
+
+function TailwindCategory({ title }: { title: string }) {
+  return (
+    <div className="mt-1 border-t border-[var(--vscode-panel-border,#444)] pt-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)]">
+      {title}
+    </div>
   );
 }
 
