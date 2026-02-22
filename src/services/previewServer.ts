@@ -810,9 +810,40 @@ export function ToggleGroup(props: any) {
 }`,
 
   // Phase 2: Complex components
-  select: `export function Select(props: any) {
+  select: `import { cn } from "@/components/ui/_cn";
+import { createContext, useContext, useState } from "react";
+const SelectCtx = createContext<any>(null);
+export function Select(props: any) {
   const { className = "", children, ...rest } = props;
-  return <div className={className} {...rest}>{children}</div>;
+  const [value, setValue] = useState("");
+  const [open, setOpen] = useState(false);
+  return <SelectCtx.Provider value={{ value, setValue, open, setOpen }}><div className={cn("relative inline-block", className)} {...rest}>{children}</div></SelectCtx.Provider>;
+}
+export function SelectTrigger(props: any) {
+  const { className = "", children, ...rest } = props;
+  const ctx = useContext(SelectCtx);
+  const cls = cn("flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1", className);
+  return <button type="button" className={cls} onClick={() => ctx?.setOpen((o: boolean) => !o)} {...rest}>{children}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"/></svg></button>;
+}
+export function SelectContent(props: any) {
+  const { className = "", children, ...rest } = props;
+  const ctx = useContext(SelectCtx);
+  if (!ctx?.open) return null;
+  const cls = cn("absolute z-50 mt-1 max-h-60 w-full min-w-[8rem] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md", className);
+  return <div className={cls} {...rest}>{children}</div>;
+}
+export function SelectItem(props: any) {
+  const { value, className = "", children, ...rest } = props;
+  const ctx = useContext(SelectCtx);
+  const isSelected = ctx?.value === value;
+  const cls = cn("relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground", isSelected && "bg-accent", className);
+  return <div className={cls} onClick={() => { ctx?.setValue(value); ctx?.setOpen(false); }} {...rest}>{children}{isSelected && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-2 h-4 w-4"><path d="M20 6 9 17l-5-5"/></svg>}</div>;
+}
+export function SelectValue(props: any) {
+  const { placeholder = "", className = "" } = props;
+  const ctx = useContext(SelectCtx);
+  if (ctx?.value) return <span className={className}>{ctx.value}</span>;
+  return <span className={cn("text-muted-foreground", className)}>{placeholder}</span>;
 }`,
 
   calendar: `import { cn } from "@/components/ui/_cn";

@@ -497,6 +497,14 @@ export function craftStateToTsx(
       addImport("@/components/ui/label", "Label");
     }
 
+    // Collect select sub-component imports
+    if (resolvedName === "CraftSelect") {
+      addImport("@/components/ui/select", "SelectTrigger");
+      addImport("@/components/ui/select", "SelectContent");
+      addImport("@/components/ui/select", "SelectItem");
+      addImport("@/components/ui/select", "SelectValue");
+    }
+
     // Collect overlay-related imports for CraftButton
     if (resolvedName === "CraftButton") {
       const overlayType = node.props?.overlayType as string | undefined;
@@ -811,6 +819,12 @@ export function craftStateToTsx(
       return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
     }
 
+    // Select special case: render with SelectTrigger/Content/Item
+    if (resolvedName === "CraftSelect") {
+      rendered = `${mocComments}\n${renderSelect(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      return rendered;
+    }
+
     // RadioGroup special case: render with RadioGroupItem + Label
     if (resolvedName === "CraftRadioGroup") {
       rendered = `${mocComments}\n${renderRadioGroup(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
@@ -1121,6 +1135,31 @@ function renderRadioGroup(
       lines.push(`${pad}  </div>`);
     }
   }
+  lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
+function renderSelect(
+  props: Record<string, unknown>,
+  tag: string,
+  propsStr: string,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const items = ((props?.items as string) || "Option 1,Option 2,Option 3").split(",").map((s) => s.trim());
+  const placeholder = (props?.placeholder as string) || "Select an option";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>`);
+  lines.push(`${pad}  <SelectTrigger>`);
+  lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
+  lines.push(`${pad}  </SelectTrigger>`);
+  lines.push(`${pad}  <SelectContent>`);
+  for (const item of items) {
+    lines.push(`${pad}    <SelectItem value="${escapeAttr(item)}">${escapeJsx(item)}</SelectItem>`);
+  }
+  lines.push(`${pad}  </SelectContent>`);
   lines.push(`${pad}</${tag}>`);
   return lines.join("\n");
 }
