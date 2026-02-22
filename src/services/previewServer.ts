@@ -874,7 +874,7 @@ const Ctx = createContext<any>(null);
 export function TooltipProvider(props: any) { return <>{props.children}</>; }
 export function Tooltip(props: any) {
   const [show, setShow] = useState(false);
-  return <Ctx.Provider value={{ show, setShow }}><div className="relative">{props.children}</div></Ctx.Provider>;
+  return <Ctx.Provider value={{ show, setShow }}><div className="relative w-fit">{props.children}</div></Ctx.Provider>;
 }
 export function TooltipTrigger(props: any) {
   const ctx = useContext(Ctx);
