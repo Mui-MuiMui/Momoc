@@ -254,9 +254,9 @@ export function PropEditor() {
     });
   };
 
-  // Group properties
+  // Group properties — only show props registered in PROP_TO_GROUP (ignores legacy/unknown props)
   const propEntries = Object.entries(selectedProps).filter(
-    ([key]) => key !== "children" && key !== "className",
+    ([key]) => key !== "children" && key !== "className" && key in PROP_TO_GROUP,
   );
 
   const grouped = new Map<PropGroup, [string, unknown][]>();
