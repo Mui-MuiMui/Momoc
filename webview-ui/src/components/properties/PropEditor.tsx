@@ -258,6 +258,53 @@ export function PropEditor() {
       );
     }
 
+    // Custom UI for descriptions: per-item text input linked to items
+    if (key === "descriptions") {
+      const itemsRaw = selectedProps?.items;
+      const labels: string[] = typeof itemsRaw === "string"
+        ? itemsRaw.split(",").map((s: string) => s.trim()).filter(Boolean)
+        : [];
+      const descs = String(value ?? "").split(",");
+
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
+            {key}
+          </label>
+          {labels.length === 0 ? (
+            <span className="text-[11px] italic text-[var(--vscode-descriptionForeground,#888)]">
+              items が未設定です
+            </span>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              {labels.map((lbl, idx) => {
+                const currentDesc = (descs[idx] || "").trim();
+                return (
+                  <div key={idx} className="flex flex-col gap-0.5">
+                    <span className="truncate text-[11px] text-[var(--vscode-foreground,#ccc)]" title={lbl}>
+                      {lbl}
+                    </span>
+                    <input
+                      type="text"
+                      value={currentDesc}
+                      onChange={(e) => {
+                        const newDescs = [...descs];
+                        while (newDescs.length <= idx) newDescs.push("");
+                        newDescs[idx] = e.target.value;
+                        handlePropChange(key, newDescs.join(","));
+                      }}
+                      placeholder="説明文..."
+                      className={`${INPUT_CLASS} w-full`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     // Custom UI for linkedMocPaths: per-item .moc file browse
     if (key === "linkedMocPaths") {
       const itemsRaw = selectedProps?.items;
