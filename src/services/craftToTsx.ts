@@ -819,10 +819,9 @@ export function craftStateToTsx(
       return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
     }
 
-    // Select special case: render with SelectTrigger/Content/Item
+    // Select special case: render with SelectTrigger/Content/Item (tooltip handled internally)
     if (resolvedName === "CraftSelect") {
       rendered = `${mocComments}\n${renderSelect(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
       return rendered;
     }
 
@@ -1150,12 +1149,30 @@ function renderSelect(
 ): string {
   const items = ((props?.items as string) || "Option 1,Option 2,Option 3").split(",").map((s) => s.trim());
   const placeholder = (props?.placeholder as string) || "Select an option";
+  const tooltipText = props?.tooltipText as string | undefined;
+  const tooltipSide = props?.tooltipSide as string | undefined;
+  const sideAttr = tooltipSide ? ` side="${tooltipSide}"` : "";
 
   const lines: string[] = [];
   lines.push(`${pad}<${tag}>`);
-  lines.push(`${pad}  <SelectTrigger${classNameAttr}${styleAttr}>`);
-  lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
-  lines.push(`${pad}  </SelectTrigger>`);
+  if (tooltipText) {
+    lines.push(`${pad}  <TooltipProvider>`);
+    lines.push(`${pad}    <Tooltip>`);
+    lines.push(`${pad}      <TooltipTrigger asChild>`);
+    lines.push(`${pad}        <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}          <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
+    lines.push(`${pad}        </SelectTrigger>`);
+    lines.push(`${pad}      </TooltipTrigger>`);
+    lines.push(`${pad}      <TooltipContent${sideAttr}>`);
+    lines.push(`${pad}        <p>${escapeJsx(tooltipText)}</p>`);
+    lines.push(`${pad}      </TooltipContent>`);
+    lines.push(`${pad}    </Tooltip>`);
+    lines.push(`${pad}  </TooltipProvider>`);
+  } else {
+    lines.push(`${pad}  <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
+    lines.push(`${pad}  </SelectTrigger>`);
+  }
   lines.push(`${pad}  <SelectContent>`);
   for (const item of items) {
     lines.push(`${pad}    <SelectItem value="${escapeAttr(item)}">${escapeJsx(item)}</SelectItem>`);

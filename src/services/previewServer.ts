@@ -874,8 +874,7 @@ const Ctx = createContext<any>(null);
 export function TooltipProvider(props: any) { return <>{props.children}</>; }
 export function Tooltip(props: any) {
   const [show, setShow] = useState(false);
-  const tipRef = useRef<any>({ side: "top", className: "", children: null });
-  return <Ctx.Provider value={{ show, setShow, tipRef }}>{props.children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ show, setShow }}><div className="relative">{props.children}</div></Ctx.Provider>;
 }
 export function TooltipTrigger(props: any) {
   const ctx = useContext(Ctx);
@@ -889,25 +888,23 @@ export function TooltipTrigger(props: any) {
     el.addEventListener("focusout", hide);
     return () => { el.removeEventListener("focusin", show); el.removeEventListener("focusout", hide); };
   }, [props.trigger, ctx]);
-  const hoverProps = props.trigger === "focus" ? {} : { onMouseEnter: () => ctx?.setShow(true), onMouseLeave: () => ctx?.setShow(false) };
-  const tip = ctx?.tipRef?.current;
-  const tipEl = ctx?.show && tip?.children ? (() => {
-    const side = tip.side || "top";
-    const pos: Record<string, string> = {
-      top: "left-1/2 -translate-x-1/2 bottom-full mb-2",
-      bottom: "left-1/2 -translate-x-1/2 top-full mt-2",
-      left: "top-1/2 -translate-y-1/2 right-full mr-2",
-      right: "top-1/2 -translate-y-1/2 left-full ml-2",
-    };
-    const cls = \`absolute \${pos[side] || pos.top} z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-nowrap \${tip.className || ""}\`.trim();
-    return <div className={cls}>{tip.children}</div>;
-  })() : null;
-  return <div ref={ref} className="relative inline-block" {...hoverProps}>{props.children}{tipEl}</div>;
+  if (props.trigger === "focus") {
+    return <div ref={ref}>{props.children}</div>;
+  }
+  return <div onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)}>{props.children}</div>;
 }
 export function TooltipContent(props: any) {
   const ctx = useContext(Ctx);
-  if (ctx?.tipRef) { ctx.tipRef.current = { side: props.side, className: props.className, children: props.children }; }
-  return null;
+  if (!ctx?.show) return null;
+  const side = props.side || "top";
+  const pos: Record<string, string> = {
+    top: "left-1/2 -translate-x-1/2 bottom-full mb-2",
+    bottom: "left-1/2 -translate-x-1/2 top-full mt-2",
+    left: "top-1/2 -translate-y-1/2 right-full mr-2",
+    right: "top-1/2 -translate-y-1/2 left-full ml-2",
+  };
+  const cls = \`absolute \${pos[side] || pos.top} z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-nowrap \${props.className || ""}\`.trim();
+  return <div className={cls}>{props.children}</div>;
 }`,
 
   dialog: `import { createContext, useContext, useState } from "react";
