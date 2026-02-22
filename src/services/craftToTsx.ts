@@ -884,7 +884,10 @@ export function craftStateToTsx(
 
     // Text content
     if (textContent) {
-      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapeJsx(textContent)}</${tag}>`;
+      const escapedTextContent = textContent.includes("\n")
+        ? `{"${escapeJsString(textContent)}"}`
+        : escapeJsx(textContent);
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapedTextContent}</${tag}>`;
       // Apply wrappers for CraftButton
       if (resolvedName === "CraftButton") {
         rendered = wrapWithOverlay(rendered, node.props, pad);
