@@ -22,15 +22,15 @@ shadcn/ui 公式コンポーネントの実装状況と確認状態を管理す�
 | Input         | Implemented | [x]       |                                            |
 | Input Group   | TBD         | [ ]       | 欲しいが表現方法が課題                     |
 | Input OTP     | TBD         | [ ]       |                                            |
-| Textarea      | Implemented | [ ]       |                                            |
+| Textarea      | Implemented | [x]       |                                            |
 | Label         | Implemented | [x]       |                                            |
-| Checkbox      | Implemented | [ ]       |                                            |
-| Radio Group   | Implemented | [ ]       |                                            |
-| Select        | Implemented | [ ]       |                                            |
-| Native Select | Planned     | [ ]       | すみわけ的に欲しい                         |
+| Checkbox      | Implemented | [x]       |                                            |
+| Radio Group   | Implemented | [x]       |                                            |
+| Select        | Implemented | [x]       |                                            |
+| Native Select | Not Planned | [x]       | Selectで代用可能                           |
 | Combobox      | Planned     | [ ]       | Command ベースで構成                       |
-| Switch        | Implemented | [ ]       |                                            |
-| Slider        | Implemented | [ ]       |                                            |
+| Switch        | Implemented | [x]       |                                            |
+| Slider        | Implemented | [x]       | 横スライダーのみ他は要件等                 |
 | Toggle        | Implemented | [ ]       |                                            |
 | Toggle Group  | Implemented | [ ]       |                                            |
 | Form          | Implemented | [ ]       |                                            |
