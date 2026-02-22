@@ -101,6 +101,7 @@ const PROP_TO_GROUP: Record<string, PropGroup> = {
   icon: "basic", ratio: "basic", chartType: "basic", direction: "basic",
   totalPages: "basic", currentPage: "basic", triggerText: "basic",
   side: "basic", role: "basic", descriptions: "basic",
+  cardClassName: "basic", descriptionClassName: "basic",
   // Overlay
   overlayType: "overlay", linkedMocPath: "overlay", sheetSide: "overlay",
   overlayWidth: "overlay", overlayHeight: "overlay", overlayClassName: "overlay",

@@ -7,6 +7,8 @@ interface CraftRadioGroupProps {
   orientation?: "vertical" | "horizontal";
   variant?: "default" | "card";
   descriptions?: string;
+  cardClassName?: string;
+  descriptionClassName?: string;
   tooltipText?: string;
   tooltipSide?: "" | "top" | "right" | "bottom" | "left";
   width?: string;
@@ -20,6 +22,8 @@ export const CraftRadioGroup: UserComponent<CraftRadioGroupProps> = ({
   orientation = "vertical",
   variant = "default",
   descriptions = "",
+  cardClassName = "",
+  descriptionClassName = "",
   tooltipText = "",
   tooltipSide = "",
   width = "auto",
@@ -77,6 +81,7 @@ export const CraftRadioGroup: UserComponent<CraftRadioGroupProps> = ({
               key={item}
               className={cn(
                 "flex items-center gap-4 rounded-lg border p-4 cursor-pointer",
+                cardClassName,
                 item === value && "border-primary",
               )}
             >
@@ -84,7 +89,7 @@ export const CraftRadioGroup: UserComponent<CraftRadioGroupProps> = ({
               <div className="grid gap-1.5 leading-none">
                 <span className="font-medium">{item}</span>
                 {hasDesc && (
-                  <p className="text-sm text-muted-foreground">{desc}</p>
+                  <p className={cn("text-sm text-muted-foreground", descriptionClassName)}>{desc}</p>
                 )}
               </div>
             </label>
@@ -97,7 +102,7 @@ export const CraftRadioGroup: UserComponent<CraftRadioGroupProps> = ({
               {renderRadioButton(item)}
               <div className="grid gap-1.5 leading-none">
                 <label className="text-sm font-medium leading-none">{item}</label>
-                <p className="text-sm text-muted-foreground">{desc}</p>
+                <p className={cn("text-sm text-muted-foreground", descriptionClassName)}>{desc}</p>
               </div>
             </div>
           );
@@ -122,6 +127,8 @@ CraftRadioGroup.craft = {
     orientation: "vertical",
     variant: "default",
     descriptions: "",
+    cardClassName: "",
+    descriptionClassName: "",
     tooltipText: "",
     tooltipSide: "",
     width: "auto",
