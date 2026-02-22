@@ -66,8 +66,11 @@ const MULTILINE_PROPS = new Set(["text", "title", "description", "placeholder", 
 /** Props that use the .moc file browse UI (text input + browse button). */
 const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath"]);
 
-/** Props that use the color palette picker UI. */
-const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor", "checkedColor", "uncheckedColor"]);
+/** Props that use the color palette picker UI (stores hex values). */
+const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor"]);
+
+/** Props that use the Tailwind bg class palette picker UI (stores "bg-red-500" style class names). */
+const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName"]);
 
 /**
  * Tailwind CSS color palette (hex) — same data as TailwindEditor.tsx.
@@ -101,6 +104,13 @@ const CP: Record<string, Record<string, string>> = {
   pink:    { "50":"#fdf2f8","100":"#fce7f3","200":"#fbcfe8","300":"#f9a8d4","400":"#f472b6","500":"#ec4899","600":"#db2777","700":"#be185d","800":"#9d174d","900":"#831843","950":"#500724" },
   rose:    { "50":"#fff1f2","100":"#ffe4e6","200":"#fecdd3","300":"#fda4af","400":"#fb7185","500":"#f43f5e","600":"#e11d48","700":"#be123c","800":"#9f1239","900":"#881337","950":"#4c0519" },
 };
+
+/** Parse "bg-red-500" style Tailwind bg class → { family, shade } */
+function parseBgClass(value: string): { family: string; shade: string } | null {
+  const m = value.match(/^bg-(\w+)-(\d{2,3})$/);
+  if (!m || !CP[m[1]]) return null;
+  return { family: m[1], shade: m[2] };
+}
 
 /** Reverse lookup: hex value → { family, shade } */
 function findColorInfo(value: string): { family: string; shade: string } | null {
@@ -149,7 +159,6 @@ const PROP_TO_GROUP: Record<string, PropGroup> = {
   totalPages: "basic", currentPage: "basic", triggerText: "basic",
   side: "basic", role: "basic", descriptions: "basic",
   cardBorderColor: "basic", cardBgColor: "basic", descriptionColor: "basic",
-  checkedColor: "basic", uncheckedColor: "basic",
   checkedClassName: "basic", uncheckedClassName: "basic",
   // Overlay
   overlayType: "overlay", linkedMocPath: "overlay", sheetSide: "overlay",
@@ -395,6 +404,101 @@ export function PropEditor() {
           <div className="flex justify-between text-[8px] text-[var(--vscode-descriptionForeground,#666)]">
             <span>50</span><span>500</span><span>950</span>
           </div>
+        </div>
+      );
+    }
+
+    // Custom UI for Tailwind bg class palette props (checkedClassName, uncheckedClassName)
+    if (TAILWIND_BG_PALETTE_PROPS.has(key)) {
+      const currentValue = String(value ?? "");
+      const bgInfo = parseBgClass(currentValue);
+      const family = colorFamilies[key] || bgInfo?.family || "blue";
+      const setFamily = (f: string) => setColorFamilies((prev) => ({ ...prev, [key]: f }));
+      const isActive = (s: string) => currentValue === `bg-${family}-${s}`;
+
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
+            {key}
+          </label>
+          {/* Special colors: none / black / white */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => handlePropChange(key, "")}
+              className={`rounded px-1.5 py-0.5 text-[10px] transition-colors ${
+                !currentValue
+                  ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+                  : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+              }`}
+            >
+              none
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePropChange(key, currentValue === "bg-black" ? "" : "bg-black")}
+              title="black"
+              className={`h-3.5 w-3.5 rounded-sm border border-[var(--vscode-input-border,#555)] transition-all ${
+                currentValue === "bg-black" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+              }`}
+              style={{ backgroundColor: "#000" }}
+            />
+            <button
+              type="button"
+              onClick={() => handlePropChange(key, currentValue === "bg-white" ? "" : "bg-white")}
+              title="white"
+              className={`h-3.5 w-3.5 rounded-sm border border-[var(--vscode-input-border,#555)] transition-all ${
+                currentValue === "bg-white" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+              }`}
+              style={{ backgroundColor: "#fff" }}
+            />
+            {bgInfo && (
+              <span className="ml-auto shrink-0 text-[9px] text-[var(--vscode-descriptionForeground,#888)]">
+                {bgInfo.family}-{bgInfo.shade}
+              </span>
+            )}
+          </div>
+          {/* Palette family selector */}
+          <div className="flex flex-wrap gap-1">
+            {PALETTE_FAMILIES.map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFamily(f)}
+                title={f}
+                className={`h-3.5 w-3.5 rounded-sm transition-all ${
+                  family === f ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+                }`}
+                style={{ backgroundColor: CP[f]["500"] }}
+              />
+            ))}
+          </div>
+          {/* Shade swatches */}
+          <div className="flex gap-0.5">
+            {PALETTE_SHADES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => handlePropChange(key, isActive(s) ? "" : `bg-${family}-${s}`)}
+                title={`${family}-${s}`}
+                className={`h-4 flex-1 rounded-sm transition-all ${
+                  isActive(s) ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-y-125"
+                }`}
+                style={{ backgroundColor: CP[family][s] }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between text-[8px] text-[var(--vscode-descriptionForeground,#666)]">
+            <span>50</span><span>500</span><span>950</span>
+          </div>
+          {/* Editable text field for fine-tuning */}
+          <input
+            type="text"
+            value={currentValue}
+            onChange={(e) => handlePropChange(key, e.target.value)}
+            className={`${INPUT_CLASS} w-full`}
+            placeholder="bg-blue-500 ..."
+          />
         </div>
       );
     }

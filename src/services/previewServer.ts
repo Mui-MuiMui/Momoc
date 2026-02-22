@@ -775,7 +775,7 @@ export function Slider(props: any) {
   switch: `import { cn } from "@/components/ui/_cn";
 import { useState } from "react";
 export function Switch(props: any) {
-  const { className = "", checked: initialChecked = false, disabled, checkedColor = "", uncheckedColor = "", checkedClassName = "", uncheckedClassName = "", children, ...rest } = props;
+  const { className = "", checked: initialChecked = false, disabled, checkedClassName = "", uncheckedClassName = "", children, ...rest } = props;
   const [checked, setChecked] = useState(initialChecked);
   const toggle = () => !disabled && setChecked((v: boolean) => !v);
   const btnCls = cn("peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors", checked ? "bg-primary" : "bg-input", disabled && "cursor-not-allowed opacity-50", className, checked ? checkedClassName : uncheckedClassName);

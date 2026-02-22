@@ -8,8 +8,6 @@ interface CraftSwitchProps {
   width?: string;
   height?: string;
   className?: string;
-  checkedColor?: string;
-  uncheckedColor?: string;
   checkedClassName?: string;
   uncheckedClassName?: string;
 }
@@ -21,8 +19,6 @@ export const CraftSwitch: UserComponent<CraftSwitchProps> = ({
   width = "auto",
   height = "auto",
   className = "",
-  checkedColor = "",
-  uncheckedColor = "",
   checkedClassName = "",
   uncheckedClassName = "",
 }) => {
@@ -49,7 +45,6 @@ export const CraftSwitch: UserComponent<CraftSwitchProps> = ({
           className,
           checked ? checkedClassName : uncheckedClassName,
         )}
-        style={{ backgroundColor: checked ? (checkedColor || undefined) : (uncheckedColor || undefined) }}
       >
         <span
           className={cn(
@@ -76,8 +71,6 @@ CraftSwitch.craft = {
     width: "auto",
     height: "auto",
     className: "",
-    checkedColor: "",
-    uncheckedColor: "",
     checkedClassName: "",
     uncheckedClassName: "",
   },
