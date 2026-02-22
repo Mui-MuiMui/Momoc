@@ -723,7 +723,7 @@ const FALLBACK_SOURCES: Record<string, string> = {
 
   // --- Overlay wrapper components (context-based for proper state sharing) ---
 
-  tooltip: `import { createContext, useContext, useState } from "react";
+  tooltip: `import { createContext, useContext, useState, useRef, useEffect } from "react";
 const Ctx = createContext<any>(null);
 export function TooltipProvider(props: any) { return <>{props.children}</>; }
 export function Tooltip(props: any) {
@@ -732,8 +732,18 @@ export function Tooltip(props: any) {
 }
 export function TooltipTrigger(props: any) {
   const ctx = useContext(Ctx);
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || props.trigger !== "focus") return;
+    const show = () => ctx?.setShow(true);
+    const hide = () => ctx?.setShow(false);
+    el.addEventListener("focusin", show);
+    el.addEventListener("focusout", hide);
+    return () => { el.removeEventListener("focusin", show); el.removeEventListener("focusout", hide); };
+  }, [props.trigger, ctx]);
   if (props.trigger === "focus") {
-    return <span onFocus={() => ctx?.setShow(true)} onBlur={() => ctx?.setShow(false)} style={{ display: "inline-block" }}>{props.children}</span>;
+    return <span ref={ref} style={{ display: "inline-block" }}>{props.children}</span>;
   }
   return <span onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)} style={{ display: "inline-block" }}>{props.children}</span>;
 }
