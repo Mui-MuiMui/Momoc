@@ -410,7 +410,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftDiv: { contextMenuMocPath: "" },
   // Phase 1
   CraftAccordion: { items: "Item 1,Item 2,Item 3", type: "single", linkedMocPaths: "" },
-  CraftAlert: { title: "Alert", description: "This is an alert message.", variant: "default" },
+  CraftAlert: { title: "Alert", description: "This is an alert message.", variant: "default", icon: "AlertCircle" },
   CraftAspectRatio: { ratio: 1.78 },
   CraftAvatar: { src: "", fallback: "AB" },
   CraftBreadcrumb: { items: "Home,Products,Current" },
@@ -476,6 +476,12 @@ export function craftStateToTsx(
     const mapping = COMPONENT_MAP[resolvedName];
     if (mapping?.importFrom && mapping?.importName) {
       addImport(mapping.importFrom, mapping.importName);
+    }
+
+    // Collect lucide-react icon import for CraftAlert
+    if (resolvedName === "CraftAlert") {
+      const icon = (node.props?.icon as string) || "AlertCircle";
+      addImport("lucide-react", icon);
     }
 
     // Collect accordion sub-component imports
@@ -774,6 +780,23 @@ export function craftStateToTsx(
       }
       rendered = wrapWithContextMenu(rendered, node.props, pad);
       rendered = wrapWithTooltip(rendered, node.props, pad);
+      return rendered;
+    }
+
+    // Alert special case: render with icon, title, description
+    if (resolvedName === "CraftAlert") {
+      const title = (node.props?.title as string) || "";
+      const desc = (node.props?.description as string) || "";
+      const icon = (node.props?.icon as string) || "AlertCircle";
+      const alertBody: string[] = [];
+      alertBody.push(`${pad}  <${icon} className="h-4 w-4" />`);
+      if (title) {
+        alertBody.push(`${pad}  <h5 className="mb-1 font-medium leading-none tracking-tight">${escapeJsx(title)}</h5>`);
+      }
+      if (desc) {
+        alertBody.push(`${pad}  <div className="text-sm [&_p]:leading-relaxed">${escapeJsx(desc)}</div>`);
+      }
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${alertBody.join("\n")}\n${pad}</${tag}>`;
       return rendered;
     }
 

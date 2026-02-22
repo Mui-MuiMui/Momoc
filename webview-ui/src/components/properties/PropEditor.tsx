@@ -31,6 +31,7 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   Alert: {
     variant: ["default", "destructive"],
+    icon: ["AlertCircle", "AlertTriangle", "Info", "Terminal", "Bell", "CheckCircle2", "XCircle", "ShieldAlert"],
   },
   Toggle: {
     variant: ["default", "outline"],
@@ -93,7 +94,7 @@ const PROP_TO_GROUP: Record<string, PropGroup> = {
   items: "basic", value: "basic", rows: "basic", columns: "basic",
   hasHeader: "basic", src: "basic", alt: "basic", fallback: "basic",
   open: "basic", step: "basic", min: "basic", max: "basic",
-  ratio: "basic", chartType: "basic", direction: "basic",
+  icon: "basic", ratio: "basic", chartType: "basic", direction: "basic",
   totalPages: "basic", currentPage: "basic", triggerText: "basic",
   side: "basic", role: "basic",
   // Overlay

@@ -219,6 +219,8 @@ export async function startPreviewServer(
     for (const [, hash] of linkedHashes) {
       imports[`@moc-linked/${hash}`] = `/linked/${hash}.js`;
     }
+    // lucide-react icons
+    imports["lucide-react"] = "https://esm.sh/lucide-react@0.469.0?external=react";
     // sonner toast — fallback implementation for preview
     imports["sonner"] = "/ui/sonner.js";
     return JSON.stringify({ imports }, null, 4);
@@ -522,6 +524,9 @@ function previewExternalPlugin() {
       build.onResolve({ filter: /^sonner$/ }, (args) => {
         return { path: args.path, external: true };
       });
+      build.onResolve({ filter: /^lucide-react$/ }, (args) => {
+        return { path: args.path, external: true };
+      });
     },
   };
 }
@@ -639,9 +644,9 @@ export function AccordionContent(props: any) {
   const { className = "", variant = "default", children, ...rest } = props;
   const v: Record<string, string> = {
     default: "bg-background text-foreground",
-    destructive: "border-destructive/50 text-destructive dark:border-destructive",
+    destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
   };
-  const cls = \`relative w-full rounded-lg border px-4 py-3 text-sm \${v[variant] || v.default} \${className}\`.trim();
+  const cls = \`relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7 \${v[variant] || v.default} \${className}\`.trim();
   return <div role="alert" className={cls} {...rest}>{children}</div>;
 }`,
 
