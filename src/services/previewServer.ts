@@ -569,9 +569,9 @@ export function Button(props: any) {
 
   input: `import { cn } from "@/components/ui/_cn";
 export function Input(props: any) {
-  const { className = "", ...rest } = props;
-  const cls = cn("flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", className);
-  return <input className={cls} {...rest} />;
+  const { className = "", style, ...rest } = props;
+  const cls = cn("flex rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", !style?.width && "w-full", !style?.height && "h-9", className);
+  return <input className={cls} style={style} {...rest} />;
 }`,
 
   card: `import { cn } from "@/components/ui/_cn";
@@ -757,9 +757,9 @@ export function Switch(props: any) {
 
   textarea: `import { cn } from "@/components/ui/_cn";
 export function Textarea(props: any) {
-  const { className = "", ...rest } = props;
-  const cls = cn("flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", className);
-  return <textarea className={cls} {...rest} />;
+  const { className = "", style, ...rest } = props;
+  const cls = cn("flex rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", !style?.width && "w-full", !style?.height && "min-h-[60px]", className);
+  return <textarea className={cls} style={style} {...rest} />;
 }`,
 
   toggle: `import { cn } from "@/components/ui/_cn";
@@ -814,11 +814,11 @@ const Ctx = createContext<any>(null);
 export function TooltipProvider(props: any) { return <>{props.children}</>; }
 export function Tooltip(props: any) {
   const [show, setShow] = useState(false);
-  return <Ctx.Provider value={{ show, setShow }}><span className="relative inline-block w-fit">{props.children}</span></Ctx.Provider>;
+  return <Ctx.Provider value={{ show, setShow }}><div className="relative">{props.children}</div></Ctx.Provider>;
 }
 export function TooltipTrigger(props: any) {
   const ctx = useContext(Ctx);
-  const ref = useRef<HTMLSpanElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el || props.trigger !== "focus") return;
@@ -829,9 +829,9 @@ export function TooltipTrigger(props: any) {
     return () => { el.removeEventListener("focusin", show); el.removeEventListener("focusout", hide); };
   }, [props.trigger, ctx]);
   if (props.trigger === "focus") {
-    return <span ref={ref} style={{ display: "inline-block" }}>{props.children}</span>;
+    return <div ref={ref}>{props.children}</div>;
   }
-  return <span onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)} style={{ display: "inline-block" }}>{props.children}</span>;
+  return <div onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)}>{props.children}</div>;
 }
 export function TooltipContent(props: any) {
   const ctx = useContext(Ctx);
