@@ -146,6 +146,11 @@ export async function startPreviewServer(
         const linkedTsx = linkedDoc.imports
           ? `${linkedDoc.imports}\n${linkedTsxSource}`
           : linkedTsxSource;
+        // Skip compilation for empty .moc files (no TSX content)
+        if (!linkedTsx.trim()) {
+          console.warn(`[Mocker] Skipping empty linked .moc: ${relPath}`);
+          continue;
+        }
         const linkedResult = await compileTsx(linkedTsx, workspaceRoot, [
           previewExternalPlugin(),
         ]);
