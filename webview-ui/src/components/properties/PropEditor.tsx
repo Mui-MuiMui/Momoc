@@ -66,6 +66,39 @@ const MULTILINE_PROPS = new Set(["text", "title", "description", "placeholder", 
 /** Props that use the .moc file browse UI (text input + browse button). */
 const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath"]);
 
+/** Props that use the color palette picker UI. */
+const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor"]);
+
+/** Color palette for visual color picker. */
+const COLOR_PALETTE: { label: string; value: string }[] = [
+  // Standard (500)
+  { label: "Red", value: "#ef4444" },
+  { label: "Orange", value: "#f97316" },
+  { label: "Yellow", value: "#eab308" },
+  { label: "Green", value: "#22c55e" },
+  { label: "Teal", value: "#14b8a6" },
+  { label: "Cyan", value: "#06b6d4" },
+  { label: "Blue", value: "#3b82f6" },
+  { label: "Indigo", value: "#6366f1" },
+  { label: "Violet", value: "#8b5cf6" },
+  { label: "Pink", value: "#ec4899" },
+  { label: "Slate", value: "#64748b" },
+  { label: "Dark", value: "#1e293b" },
+  // Light (200)
+  { label: "Red Light", value: "#fecaca" },
+  { label: "Orange Light", value: "#fed7aa" },
+  { label: "Yellow Light", value: "#fef08a" },
+  { label: "Green Light", value: "#bbf7d0" },
+  { label: "Teal Light", value: "#99f6e4" },
+  { label: "Cyan Light", value: "#a5f3fc" },
+  { label: "Blue Light", value: "#bfdbfe" },
+  { label: "Indigo Light", value: "#c7d2fe" },
+  { label: "Violet Light", value: "#ddd6fe" },
+  { label: "Pink Light", value: "#fbcfe8" },
+  { label: "Slate Light", value: "#e2e8f0" },
+  { label: "White", value: "#ffffff" },
+];
+
 /** overlayClassName presets */
 const OVERLAY_CLASS_PRESETS: { label: string; value: string }[] = [
   { label: "(custom)", value: "" },
@@ -101,7 +134,7 @@ const PROP_TO_GROUP: Record<string, PropGroup> = {
   icon: "basic", ratio: "basic", chartType: "basic", direction: "basic",
   totalPages: "basic", currentPage: "basic", triggerText: "basic",
   side: "basic", role: "basic", descriptions: "basic",
-  cardClassName: "basic", descriptionClassName: "basic",
+  cardBorderColor: "basic", cardBgColor: "basic", descriptionColor: "basic",
   // Overlay
   overlayType: "overlay", linkedMocPath: "overlay", sheetSide: "overlay",
   overlayWidth: "overlay", overlayHeight: "overlay", overlayClassName: "overlay",
@@ -255,6 +288,44 @@ export function PropEditor() {
             className={`${INPUT_CLASS} w-full`}
             placeholder="Tailwind classes..."
           />
+        </div>
+      );
+    }
+
+    // Custom UI for color palette props (cardBorderColor, cardBgColor, descriptionColor)
+    if (COLOR_PALETTE_PROPS.has(key)) {
+      const currentValue = String(value ?? "");
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
+            {key}
+          </label>
+          <div className="flex flex-wrap gap-1">
+            <button
+              type="button"
+              onClick={() => handlePropChange(key, "")}
+              title="クリア"
+              className={`flex h-5 w-5 items-center justify-center rounded-sm border text-[10px] ${!currentValue ? "ring-1 ring-[var(--vscode-focusBorder,#007fd4)]" : "border-[var(--vscode-input-border,#3c3c3c)]"}`}
+              style={{ background: "var(--vscode-input-background, #3c3c3c)", color: "var(--vscode-input-foreground, #ccc)" }}
+            >
+              -
+            </button>
+            {COLOR_PALETTE.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() => handlePropChange(key, color.value)}
+                title={color.label}
+                className={`h-5 w-5 rounded-sm border ${currentValue === color.value ? "ring-1 ring-[var(--vscode-focusBorder,#007fd4)]" : "border-[var(--vscode-input-border,#3c3c3c)]"}`}
+                style={{ backgroundColor: color.value }}
+              />
+            ))}
+          </div>
+          {currentValue && (
+            <span className="text-[10px] text-[var(--vscode-descriptionForeground,#888)]">
+              {currentValue}
+            </span>
+          )}
         </div>
       );
     }

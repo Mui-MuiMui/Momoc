@@ -418,7 +418,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftCollapsible: { open: false },
   CraftPagination: { totalPages: 5, currentPage: 1 },
   CraftProgress: { value: 50 },
-  CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", orientation: "vertical", variant: "default", descriptions: "", cardClassName: "", descriptionClassName: "", tooltipText: "", tooltipSide: "" },
+  CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", orientation: "vertical", variant: "default", descriptions: "", cardBorderColor: "", cardBgColor: "", descriptionColor: "", tooltipText: "", tooltipSide: "" },
   CraftScrollArea: {},
   CraftSkeleton: { width: "100%", height: "20px" },
   CraftSlider: { value: 50, min: 0, max: 100, step: 1 },
@@ -1061,9 +1061,17 @@ function renderRadioGroup(
   const variant = (props?.variant as string) || "default";
   const descriptionsRaw = (props?.descriptions as string) || "";
   const descList = descriptionsRaw ? descriptionsRaw.split(",").map((s) => s.trim()) : [];
-  const cardClassName = (props?.cardClassName as string) || "";
-  const descriptionClassName = (props?.descriptionClassName as string) || "";
+  const cardBorderColor = (props?.cardBorderColor as string) || "";
+  const cardBgColor = (props?.cardBgColor as string) || "";
+  const descriptionColor = (props?.descriptionColor as string) || "";
   const isCard = variant === "card";
+
+  // Build inline style strings for card and description
+  const cardStyleParts: string[] = [];
+  if (cardBorderColor) cardStyleParts.push(`borderColor: "${cardBorderColor}"`);
+  if (cardBgColor) cardStyleParts.push(`backgroundColor: "${cardBgColor}"`);
+  const cardStyleAttr = cardStyleParts.length > 0 ? ` style={{ ${cardStyleParts.join(", ")} }}` : "";
+  const descStyleAttr = descriptionColor ? ` style={{ color: "${descriptionColor}" }}` : "";
 
   // Merge horizontal className into classNameAttr
   let finalClassNameAttr = classNameAttr;
@@ -1086,26 +1094,24 @@ function renderRadioGroup(
     const hasDesc = desc !== "";
 
     if (isCard) {
-      const cardCls = ["flex items-center gap-4 rounded-lg border p-4 cursor-pointer", cardClassName, "[&:has([data-state=checked])]:border-primary"].filter(Boolean).join(" ");
-      lines.push(`${pad}  <label htmlFor="${id}" className="${cardCls}">`);
+      const cardCls = "flex items-center gap-4 rounded-lg border p-4 cursor-pointer [&:has([data-state=checked])]:border-primary";
+      lines.push(`${pad}  <label htmlFor="${id}" className="${cardCls}"${cardStyleAttr}>`);
       lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
       if (hasDesc) {
-        const descCls = ["text-sm text-muted-foreground", descriptionClassName].filter(Boolean).join(" ");
         lines.push(`${pad}    <div className="grid gap-1.5 leading-none">`);
         lines.push(`${pad}      <span className="font-medium">${escapeJsx(label)}</span>`);
-        lines.push(`${pad}      <p className="${descCls}">${escapeJsx(desc)}</p>`);
+        lines.push(`${pad}      <p className="text-sm text-muted-foreground"${descStyleAttr}>${escapeJsx(desc)}</p>`);
         lines.push(`${pad}    </div>`);
       } else {
         lines.push(`${pad}    <span className="font-medium">${escapeJsx(label)}</span>`);
       }
       lines.push(`${pad}  </label>`);
     } else if (hasDesc) {
-      const descCls = ["text-sm text-muted-foreground", descriptionClassName].filter(Boolean).join(" ");
       lines.push(`${pad}  <div className="flex items-start space-x-2">`);
       lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
       lines.push(`${pad}    <div className="grid gap-1.5 leading-none">`);
       lines.push(`${pad}      <Label htmlFor="${id}">${escapeJsx(label)}</Label>`);
-      lines.push(`${pad}      <p className="${descCls}">${escapeJsx(desc)}</p>`);
+      lines.push(`${pad}      <p className="text-sm text-muted-foreground"${descStyleAttr}>${escapeJsx(desc)}</p>`);
       lines.push(`${pad}    </div>`);
       lines.push(`${pad}  </div>`);
     } else {
