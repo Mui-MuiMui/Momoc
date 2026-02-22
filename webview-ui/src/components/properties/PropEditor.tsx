@@ -42,6 +42,10 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Chart: {
     chartType: ["bar", "line", "pie"],
   },
+  RadioGroup: {
+    orientation: ["vertical", "horizontal"],
+    variant: ["default", "card"],
+  },
   Resizable: {
     direction: ["horizontal", "vertical"],
   },
@@ -96,7 +100,7 @@ const PROP_TO_GROUP: Record<string, PropGroup> = {
   open: "basic", step: "basic", min: "basic", max: "basic",
   icon: "basic", ratio: "basic", chartType: "basic", direction: "basic",
   totalPages: "basic", currentPage: "basic", triggerText: "basic",
-  side: "basic", role: "basic",
+  side: "basic", role: "basic", descriptions: "basic",
   // Overlay
   overlayType: "overlay", linkedMocPath: "overlay", sheetSide: "overlay",
   overlayWidth: "overlay", overlayHeight: "overlay", overlayClassName: "overlay",

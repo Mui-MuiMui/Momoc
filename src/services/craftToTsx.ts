@@ -418,7 +418,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftCollapsible: { open: false },
   CraftPagination: { totalPages: 5, currentPage: 1 },
   CraftProgress: { value: 50 },
-  CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", tooltipText: "", tooltipSide: "" },
+  CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", orientation: "vertical", variant: "default", descriptions: "", tooltipText: "", tooltipSide: "" },
   CraftScrollArea: {},
   CraftSkeleton: { width: "100%", height: "20px" },
   CraftSlider: { value: 50, min: 0, max: 100, step: 1 },
@@ -1057,15 +1057,58 @@ function renderRadioGroup(
   pad: string,
 ): string {
   const items = ((props?.items as string) || "Option A,Option B,Option C").split(",").map((s) => s.trim());
+  const orientation = (props?.orientation as string) || "vertical";
+  const variant = (props?.variant as string) || "default";
+  const descriptionsRaw = (props?.descriptions as string) || "";
+  const descList = descriptionsRaw ? descriptionsRaw.split(",").map((s) => s.trim()) : [];
+  const isCard = variant === "card";
+
+  // Merge horizontal className into classNameAttr
+  let finalClassNameAttr = classNameAttr;
+  if (orientation === "horizontal") {
+    // Extract existing className or create new one
+    const existingMatch = classNameAttr.match(/className="([^"]*)"/);
+    if (existingMatch) {
+      finalClassNameAttr = ` className="${existingMatch[1]} flex flex-row gap-4"`;
+    } else {
+      finalClassNameAttr = ` className="flex flex-row gap-4"`;
+    }
+  }
+
   const lines: string[] = [];
-  lines.push(`${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>`);
+  lines.push(`${pad}<${tag}${propsStr}${finalClassNameAttr}${styleAttr}>`);
   for (let i = 0; i < items.length; i++) {
     const label = items[i];
     const id = `r-${i + 1}`;
-    lines.push(`${pad}  <div className="flex items-center space-x-2">`);
-    lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
-    lines.push(`${pad}    <Label htmlFor="${id}">${escapeJsx(label)}</Label>`);
-    lines.push(`${pad}  </div>`);
+    const desc = descList[i] || "";
+    const hasDesc = desc !== "";
+
+    if (isCard) {
+      lines.push(`${pad}  <label htmlFor="${id}" className="flex items-center gap-4 rounded-lg border p-4 cursor-pointer [&:has([data-state=checked])]:border-primary">`);
+      lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
+      if (hasDesc) {
+        lines.push(`${pad}    <div className="grid gap-1.5 leading-none">`);
+        lines.push(`${pad}      <span className="font-medium">${escapeJsx(label)}</span>`);
+        lines.push(`${pad}      <p className="text-sm text-muted-foreground">${escapeJsx(desc)}</p>`);
+        lines.push(`${pad}    </div>`);
+      } else {
+        lines.push(`${pad}    <span className="font-medium">${escapeJsx(label)}</span>`);
+      }
+      lines.push(`${pad}  </label>`);
+    } else if (hasDesc) {
+      lines.push(`${pad}  <div className="flex items-start space-x-2">`);
+      lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
+      lines.push(`${pad}    <div className="grid gap-1.5 leading-none">`);
+      lines.push(`${pad}      <Label htmlFor="${id}">${escapeJsx(label)}</Label>`);
+      lines.push(`${pad}      <p className="text-sm text-muted-foreground">${escapeJsx(desc)}</p>`);
+      lines.push(`${pad}    </div>`);
+      lines.push(`${pad}  </div>`);
+    } else {
+      lines.push(`${pad}  <div className="flex items-center space-x-2">`);
+      lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
+      lines.push(`${pad}    <Label htmlFor="${id}">${escapeJsx(label)}</Label>`);
+      lines.push(`${pad}  </div>`);
+    }
   }
   lines.push(`${pad}</${tag}>`);
   return lines.join("\n");

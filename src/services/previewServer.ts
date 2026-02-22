@@ -739,7 +739,7 @@ export function RadioGroupItem(props: any) {
   const ctx = useContext(Ctx);
   const checked = ctx?.value === itemValue;
   return (
-    <button type="button" role="radio" aria-checked={checked} id={id}
+    <button type="button" role="radio" aria-checked={checked} data-state={checked ? "checked" : "unchecked"} id={id}
       onClick={() => ctx?.setValue(itemValue)}
       className={cn("aspect-square h-4 w-4 rounded-full border border-primary text-primary shadow focus:outline-none focus-visible:ring-1 focus-visible:ring-ring", checked && "bg-primary", className)}
       {...rest}
