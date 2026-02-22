@@ -49,6 +49,10 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Resizable: {
     direction: ["horizontal", "vertical"],
   },
+  Switch: {
+    variant: ["default", "card"],
+    size: ["default", "sm"],
+  },
   Dialog: {
     variant: ["default", "destructive", "outline", "secondary", "ghost", "link"],
   },
@@ -150,7 +154,7 @@ const GROUP_ORDER: PropGroup[] = ["basic", "overlay", "interaction", "layout", "
 const PROP_TO_GROUP: Record<string, PropGroup> = {
   // Basic
   text: "basic", label: "basic", title: "basic", description: "basic",
-  variant: "basic", size: "basic", type: "basic", disabled: "basic",
+  variant: "basic", size: "basic", type: "basic", disabled: "basic", invalid: "basic",
   checked: "basic", pressed: "basic", placeholder: "basic", htmlFor: "basic",
   items: "basic", value: "basic", rows: "basic", columns: "basic",
   hasHeader: "basic", src: "basic", alt: "basic", fallback: "basic",

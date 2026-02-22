@@ -803,16 +803,37 @@ export function Slider(props: any) {
   switch: `import { cn } from "@/components/ui/_cn";
 import { useState } from "react";
 export function Switch(props: any) {
-  const { className = "", checked: initialChecked = false, disabled, checkedClassName = "", uncheckedClassName = "", children, ...rest } = props;
+  const { className = "", checked: initialChecked = false, disabled, description = "", invalid = false, size = "default", variant = "default", checkedClassName = "", uncheckedClassName = "", children, ...rest } = props;
   const [checked, setChecked] = useState(initialChecked);
   const toggle = () => !disabled && setChecked((v: boolean) => !v);
-  const btnCls = cn("peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors", checked ? "bg-primary" : "bg-input", disabled && "cursor-not-allowed opacity-50", className, checked ? checkedClassName : uncheckedClassName);
-  return (
-    <label className={cn("flex items-center space-x-2", disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer")} onClick={toggle}>
-      <button type="button" role="switch" aria-checked={checked} disabled={disabled} className={btnCls} {...rest}>
-        <span className={\`pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform \${checked ? "translate-x-4" : "translate-x-0"}\`} />
-      </button>
+  const isSm = size === "sm";
+  const btnSize = isSm ? "h-4 w-7" : "h-5 w-9";
+  const thumbSize = isSm ? "h-3 w-3" : "h-4 w-4";
+  const thumbTranslate = isSm ? "translate-x-3" : "translate-x-4";
+  const btnCls = cn("peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors", btnSize, checked ? "bg-primary" : "bg-input", disabled && "cursor-not-allowed opacity-50", invalid && "ring-2 ring-destructive", className, checked ? checkedClassName : uncheckedClassName);
+  const switchBtn = (
+    <button type="button" role="switch" aria-checked={checked} aria-invalid={invalid ? "true" : undefined} disabled={disabled} className={btnCls} onClick={toggle} {...rest}>
+      <span className={cn("pointer-events-none block rounded-full bg-background shadow-lg ring-0 transition-transform", thumbSize, checked ? thumbTranslate : "translate-x-0")} />
+    </button>
+  );
+  const labelContent = (children || description) && (
+    <div className="flex flex-col">
       {children && <span className="text-sm font-medium leading-none select-none">{children}</span>}
+      {description && <p className="text-[0.8rem] text-muted-foreground">{description}</p>}
+    </div>
+  );
+  if (variant === "card") {
+    return (
+      <div className="flex w-full items-center justify-between gap-4 rounded-lg border p-4">
+        {labelContent}
+        {switchBtn}
+      </div>
+    );
+  }
+  return (
+    <label className={cn("flex items-center space-x-2", disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer")}>
+      {switchBtn}
+      {labelContent}
     </label>
   );
 }`,
