@@ -9,9 +9,9 @@ const POPULAR_ICONS = [
   "Heart", "Star", "Zap", "Flame",
 ];
 
-/** All PascalCase icon component names from lucide-react */
+/** All PascalCase icon component names from lucide-react (forwardRef components are objects, not functions) */
 const ALL_ICON_NAMES: string[] = Object.keys(LucideIcons)
-  .filter((key) => /^[A-Z]/.test(key) && typeof (LucideIcons as Record<string, unknown>)[key] === "function")
+  .filter((key) => /^[A-Z]/.test(key))
   .sort();
 
 const MAX_RESULTS = 50;
