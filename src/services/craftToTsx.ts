@@ -414,7 +414,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftAspectRatio: { ratio: 1.78 },
   CraftAvatar: { src: "", fallback: "AB" },
   CraftBreadcrumb: { items: "Home,Products,Current" },
-  CraftCheckbox: { label: "Accept terms", checked: false, disabled: false },
+  CraftCheckbox: { label: "Accept terms", checked: false, disabled: false, tooltipText: "", tooltipSide: "" },
   CraftCollapsible: { open: false },
   CraftPagination: { totalPages: 5, currentPage: 1 },
   CraftProgress: { value: 50 },
@@ -859,8 +859,8 @@ export function craftStateToTsx(
         rendered = wrapWithOverlay(rendered, node.props, pad);
         rendered = wrapWithTooltip(rendered, node.props, pad);
       }
-      // Apply tooltip wrapper for Badge/Label
-      if (resolvedName === "CraftBadge" || resolvedName === "CraftLabel") {
+      // Apply tooltip wrapper for Badge/Label/Checkbox
+      if (resolvedName === "CraftBadge" || resolvedName === "CraftLabel" || resolvedName === "CraftCheckbox") {
         rendered = wrapWithTooltip(rendered, node.props, pad);
       }
       return rendered;

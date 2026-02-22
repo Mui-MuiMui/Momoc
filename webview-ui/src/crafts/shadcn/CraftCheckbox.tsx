@@ -5,6 +5,8 @@ interface CraftCheckboxProps {
   label?: string;
   checked?: boolean;
   disabled?: boolean;
+  tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
   width?: string;
   height?: string;
   className?: string;
@@ -14,6 +16,8 @@ export const CraftCheckbox: UserComponent<CraftCheckboxProps> = ({
   label = "Accept terms",
   checked = false,
   disabled = false,
+  tooltipText = "",
+  tooltipSide = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -59,6 +63,8 @@ CraftCheckbox.craft = {
     label: "Accept terms",
     checked: false,
     disabled: false,
+    tooltipText: "",
+    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",
