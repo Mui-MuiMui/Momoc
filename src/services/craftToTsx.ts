@@ -395,7 +395,7 @@ const CONTEXT_MENU_IMPORT = { from: "@/components/ui/context-menu", names: ["Con
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
     overlayType: "none", linkedMocPath: "", sheetSide: "right", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", tooltipSide: "", toastText: "", toastPosition: "bottom-right" },
-  CraftInput: { type: "text", disabled: false, tooltipText: "", tooltipSide: "" },
+  CraftInput: { type: "text", disabled: false, tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
   CraftBadge: { variant: "default", text: "Badge", tooltipText: "", tooltipSide: "" },
   CraftSeparator: { orientation: "horizontal" },
   CraftText: { tag: "p", text: "Text" },
@@ -539,17 +539,20 @@ export function craftStateToTsx(
   }
 
   /** Wrap rendered element with tooltip if tooltipText is set */
-  function wrapWithTooltip(rendered: string, props: Record<string, unknown>, pad: string): string {
+  function wrapWithTooltip(rendered: string, props: Record<string, unknown>, pad: string, tooltipTrigger?: string): string {
     const tooltipText = props?.tooltipText as string | undefined;
     if (!tooltipText) return rendered;
 
     const tooltipSide = props?.tooltipSide as string | undefined;
     const sideAttr = tooltipSide ? ` side="${tooltipSide}"` : "";
+    const triggerTag = tooltipTrigger === "focus"
+      ? `<TooltipTrigger asChild trigger="focus">`
+      : `<TooltipTrigger asChild>`;
 
     return [
       `${pad}<TooltipProvider>`,
       `${pad}  <Tooltip>`,
-      `${pad}    <TooltipTrigger asChild>`,
+      `${pad}    ${triggerTag}`,
       rendered,
       `${pad}    </TooltipTrigger>`,
       `${pad}    <TooltipContent${sideAttr}>`,
@@ -785,7 +788,8 @@ export function craftStateToTsx(
     // Self-closing for Input
     if (resolvedName === "CraftInput") {
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
+      const inputTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
+      rendered = wrapWithTooltip(rendered, node.props, pad, inputTooltipTrigger);
       return rendered;
     }
 

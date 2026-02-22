@@ -732,6 +732,9 @@ export function Tooltip(props: any) {
 }
 export function TooltipTrigger(props: any) {
   const ctx = useContext(Ctx);
+  if (props.trigger === "focus") {
+    return <span onFocus={() => ctx?.setShow(true)} onBlur={() => ctx?.setShow(false)} style={{ display: "inline-block" }}>{props.children}</span>;
+  }
   return <span onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)} style={{ display: "inline-block" }}>{props.children}</span>;
 }
 export function TooltipContent(props: any) {

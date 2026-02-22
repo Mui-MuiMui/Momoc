@@ -7,6 +7,7 @@ interface CraftInputProps {
   disabled?: boolean;
   tooltipText?: string;
   tooltipSide?: "" | "top" | "right" | "bottom" | "left";
+  tooltipTrigger?: "hover" | "focus";
   width?: string;
   height?: string;
   className?: string;
@@ -18,6 +19,7 @@ export const CraftInput: UserComponent<CraftInputProps> = ({
   disabled = false,
   tooltipText = "",
   tooltipSide = "",
+  tooltipTrigger = "hover",
   width = "auto",
   height = "auto",
   className = "",
@@ -51,6 +53,7 @@ CraftInput.craft = {
     disabled: false,
     tooltipText: "",
     tooltipSide: "",
+    tooltipTrigger: "hover",
     width: "auto",
     height: "auto",
     className: "",
