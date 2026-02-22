@@ -4,6 +4,8 @@ import { cn } from "../../utils/cn";
 interface CraftRadioGroupProps {
   items?: string;
   value?: string;
+  tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
   width?: string;
   height?: string;
   className?: string;
@@ -12,6 +14,8 @@ interface CraftRadioGroupProps {
 export const CraftRadioGroup: UserComponent<CraftRadioGroupProps> = ({
   items = "Option A,Option B,Option C",
   value = "Option A",
+  tooltipText = "",
+  tooltipSide = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -60,6 +64,8 @@ CraftRadioGroup.craft = {
   props: {
     items: "Option A,Option B,Option C",
     value: "Option A",
+    tooltipText: "",
+    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

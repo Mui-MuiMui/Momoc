@@ -418,7 +418,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftCollapsible: { open: false },
   CraftPagination: { totalPages: 5, currentPage: 1 },
   CraftProgress: { value: 50 },
-  CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A" },
+  CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", tooltipText: "", tooltipSide: "" },
   CraftScrollArea: {},
   CraftSkeleton: { width: "100%", height: "20px" },
   CraftSlider: { value: 50, min: 0, max: 100, step: 1 },
@@ -489,6 +489,12 @@ export function craftStateToTsx(
       addImport("@/components/ui/accordion", "AccordionItem");
       addImport("@/components/ui/accordion", "AccordionTrigger");
       addImport("@/components/ui/accordion", "AccordionContent");
+    }
+
+    // Collect radio group sub-component imports
+    if (resolvedName === "CraftRadioGroup") {
+      addImport("@/components/ui/radio-group", "RadioGroupItem");
+      addImport("@/components/ui/label", "Label");
     }
 
     // Collect overlay-related imports for CraftButton
@@ -805,6 +811,13 @@ export function craftStateToTsx(
       return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
     }
 
+    // RadioGroup special case: render with RadioGroupItem + Label
+    if (resolvedName === "CraftRadioGroup") {
+      rendered = `${mocComments}\n${renderRadioGroup(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+      return rendered;
+    }
+
     // Table special case: render as static table
     if (resolvedName === "CraftTable") {
       return `${mocComments}\n${renderTable(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
@@ -1031,6 +1044,29 @@ function renderTable(
     lines.push(`${pad}  </tbody>`);
   }
 
+  lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
+function renderRadioGroup(
+  props: Record<string, unknown>,
+  tag: string,
+  propsStr: string,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const items = ((props?.items as string) || "Option A,Option B,Option C").split(",").map((s) => s.trim());
+  const lines: string[] = [];
+  lines.push(`${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>`);
+  for (let i = 0; i < items.length; i++) {
+    const label = items[i];
+    const id = `r-${i + 1}`;
+    lines.push(`${pad}  <div className="flex items-center space-x-2">`);
+    lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
+    lines.push(`${pad}    <Label htmlFor="${id}">${escapeJsx(label)}</Label>`);
+    lines.push(`${pad}  </div>`);
+  }
   lines.push(`${pad}</${tag}>`);
   return lines.join("\n");
 }

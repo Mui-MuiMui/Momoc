@@ -726,10 +726,27 @@ export function Progress(props: any) {
 }`,
 
   "radio-group": `import { cn } from "@/components/ui/_cn";
+import { createContext, useContext, useState } from "react";
+const Ctx = createContext<any>(null);
 export function RadioGroup(props: any) {
-  const { className = "", children, ...rest } = props;
+  const { className = "", style, value: initialValue = "", children, defaultValue, onValueChange, ...rest } = props;
+  const [value, setValue] = useState(initialValue || defaultValue || "");
   const cls = cn("grid gap-2", className);
-  return <div role="radiogroup" className={cls} {...rest}>{children}</div>;
+  return <Ctx.Provider value={{ value, setValue }}><div role="radiogroup" className={cls} style={style} {...rest}>{children}</div></Ctx.Provider>;
+}
+export function RadioGroupItem(props: any) {
+  const { value: itemValue, id, className = "", ...rest } = props;
+  const ctx = useContext(Ctx);
+  const checked = ctx?.value === itemValue;
+  return (
+    <button type="button" role="radio" aria-checked={checked} id={id}
+      onClick={() => ctx?.setValue(itemValue)}
+      className={cn("aspect-square h-4 w-4 rounded-full border border-primary text-primary shadow focus:outline-none focus-visible:ring-1 focus-visible:ring-ring", checked && "bg-primary", className)}
+      {...rest}
+    >
+      {checked && <span className="flex items-center justify-center"><span className="h-2 w-2 rounded-full bg-primary-foreground" /></span>}
+    </button>
+  );
 }`,
 
   "scroll-area": `import { cn } from "@/components/ui/_cn";
