@@ -219,6 +219,8 @@ export async function startPreviewServer(
     for (const [, hash] of linkedHashes) {
       imports[`@moc-linked/${hash}`] = `/linked/${hash}.js`;
     }
+    // tailwind-merge for className conflict resolution (cn utility)
+    imports["tailwind-merge"] = "https://esm.sh/tailwind-merge@2";
     // lucide-react icons
     imports["lucide-react"] = "https://esm.sh/lucide-react@0.469.0?external=react";
     // sonner toast — fallback implementation for preview
@@ -527,6 +529,9 @@ function previewExternalPlugin() {
       build.onResolve({ filter: /^lucide-react$/ }, (args) => {
         return { path: args.path, external: true };
       });
+      build.onResolve({ filter: /^tailwind-merge$/ }, (args) => {
+        return { path: args.path, external: true };
+      });
     },
   };
 }
@@ -535,7 +540,14 @@ function previewExternalPlugin() {
 // Compiled to ESM JS at server startup, served at /ui/<name>.js
 
 const FALLBACK_SOURCES: Record<string, string> = {
-  button: `export function Button(props: any) {
+  // Shared cn utility (tailwind-merge wrapper) — used by other fallback components
+  _cn: `import { twMerge } from "tailwind-merge";
+export function cn(...inputs: (string | undefined | null | false)[]) {
+  return twMerge(inputs.filter(Boolean).join(" "));
+}`,
+
+  button: `import { cn } from "@/components/ui/_cn";
+export function Button(props: any) {
   const { className = "", variant = "default", size = "default", children, ...rest } = props;
   const v: Record<string, string> = {
     default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
@@ -551,29 +563,33 @@ const FALLBACK_SOURCES: Record<string, string> = {
     lg: "h-10 rounded-md px-8",
     icon: "h-9 w-9",
   };
-  const cls = \`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors \${v[variant] || v.default} \${s[size] || s.default} \${className}\`.trim();
+  const cls = cn("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors", v[variant] || v.default, s[size] || s.default, className);
   return <button className={cls} {...rest}>{children}</button>;
 }`,
 
-  input: `export function Input(props: any) {
+  input: `import { cn } from "@/components/ui/_cn";
+export function Input(props: any) {
   const { className = "", ...rest } = props;
-  const cls = \`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 \${className}\`.trim();
+  const cls = cn("flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", className);
   return <input className={cls} {...rest} />;
 }`,
 
-  card: `export function Card(props: any) {
+  card: `import { cn } from "@/components/ui/_cn";
+export function Card(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`rounded-xl border bg-card text-card-foreground shadow \${className}\`.trim();
+  const cls = cn("rounded-xl border bg-card text-card-foreground shadow", className);
   return <div className={cls} {...rest}>{children}</div>;
 }`,
 
-  label: `export function Label(props: any) {
+  label: `import { cn } from "@/components/ui/_cn";
+export function Label(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`text-sm font-medium leading-none \${className}\`.trim();
+  const cls = cn("text-sm font-medium leading-none", className);
   return <label className={cls} {...rest}>{children}</label>;
 }`,
 
-  badge: `export function Badge(props: any) {
+  badge: `import { cn } from "@/components/ui/_cn";
+export function Badge(props: any) {
   const { className = "", variant = "default", children, ...rest } = props;
   const v: Record<string, string> = {
     default: "border-transparent bg-primary text-primary-foreground shadow",
@@ -581,26 +597,28 @@ const FALLBACK_SOURCES: Record<string, string> = {
     destructive: "border-transparent bg-destructive text-destructive-foreground shadow",
     outline: "text-foreground",
   };
-  const cls = \`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors \${v[variant] || v.default} \${className}\`.trim();
+  const cls = cn("inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors", v[variant] || v.default, className);
   return <span className={cls} {...rest}>{children}</span>;
 }`,
 
-  separator: `export function Separator(props: any) {
+  separator: `import { cn } from "@/components/ui/_cn";
+export function Separator(props: any) {
   const { className = "", orientation = "horizontal", ...rest } = props;
-  const cls = orientation === "horizontal"
-    ? \`shrink-0 bg-border h-[1px] w-full \${className}\`.trim()
-    : \`shrink-0 bg-border h-full w-[1px] \${className}\`.trim();
+  const base = orientation === "horizontal" ? "shrink-0 bg-border h-[1px] w-full" : "shrink-0 bg-border h-full w-[1px]";
+  const cls = cn(base, className);
   return <div role="separator" className={cls} {...rest} />;
 }`,
 
-  table: `export function Table(props: any) {
+  table: `import { cn } from "@/components/ui/_cn";
+export function Table(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`w-full caption-bottom text-sm \${className}\`.trim();
+  const cls = cn("w-full caption-bottom text-sm", className);
   return <div className="relative w-full overflow-auto"><table className={cls} {...rest}>{children}</table></div>;
 }`,
 
   // Phase 1: Simple components
-  accordion: `import { createContext, useContext, useState } from "react";
+  accordion: `import { cn } from "@/components/ui/_cn";
+import { createContext, useContext, useState } from "react";
 const AccCtx = createContext<any>(null);
 const ItemCtx = createContext<string>("");
 export function Accordion(props: any) {
@@ -614,12 +632,12 @@ export function Accordion(props: any) {
       return type === "multiple" ? [...prev, value] : [value];
     });
   };
-  const cls = \`w-full \${className}\`.trim();
+  const cls = cn("w-full", className);
   return <AccCtx.Provider value={{ openItems, toggle }}><div className={cls} {...rest}>{children}</div></AccCtx.Provider>;
 }
 export function AccordionItem(props: any) {
   const { value, className = "", children, ...rest } = props;
-  const cls = \`border-b \${className}\`.trim();
+  const cls = cn("border-b", className);
   return <ItemCtx.Provider value={value}><div className={cls} {...rest}>{children}</div></ItemCtx.Provider>;
 }
 export function AccordionTrigger(props: any) {
@@ -627,7 +645,7 @@ export function AccordionTrigger(props: any) {
   const ctx = useContext(AccCtx);
   const value = useContext(ItemCtx);
   const isOpen = ctx?.openItems?.includes(value);
-  const cls = \`flex w-full items-center justify-between py-4 text-sm font-medium transition-all hover:underline \${className}\`.trim();
+  const cls = cn("flex w-full items-center justify-between py-4 text-sm font-medium transition-all hover:underline", className);
   return <button type="button" className={cls} onClick={() => ctx?.toggle(value)} {...rest}>{children}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={\`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 \${isOpen ? "rotate-180" : ""}\`}><path d="m6 9 6 6 6-6"/></svg></button>;
 }
 export function AccordionContent(props: any) {
@@ -636,28 +654,31 @@ export function AccordionContent(props: any) {
   const value = useContext(ItemCtx);
   const isOpen = ctx?.openItems?.includes(value);
   if (!isOpen) return null;
-  const cls = \`overflow-hidden text-sm pb-4 pt-0 \${className}\`.trim();
+  const cls = cn("overflow-hidden text-sm pb-4 pt-0", className);
   return <div className={cls} {...rest}>{children}</div>;
 }`,
 
-  alert: `export function Alert(props: any) {
+  alert: `import { cn } from "@/components/ui/_cn";
+export function Alert(props: any) {
   const { className = "", variant = "default", children, ...rest } = props;
   const v: Record<string, string> = {
     default: "bg-background text-foreground",
     destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
   };
-  const cls = \`relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7 \${v[variant] || v.default} \${className}\`.trim();
+  const cls = cn("relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7", v[variant] || v.default, className);
   return <div role="alert" className={cls} {...rest}>{children}</div>;
 }`,
 
-  "aspect-ratio": `export function AspectRatio(props: any) {
+  "aspect-ratio": `import { cn } from "@/components/ui/_cn";
+export function AspectRatio(props: any) {
   const { className = "", ratio = 16/9, children, ...rest } = props;
-  return <div className={\`relative w-full \${className}\`.trim()} style={{ paddingBottom: \`\${(1/ratio)*100}%\` }} {...rest}><div className="absolute inset-0">{children}</div></div>;
+  return <div className={cn("relative w-full", className)} style={{ paddingBottom: \`\${(1/ratio)*100}%\` }} {...rest}><div className="absolute inset-0">{children}</div></div>;
 }`,
 
-  avatar: `export function Avatar(props: any) {
+  avatar: `import { cn } from "@/components/ui/_cn";
+export function Avatar(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full \${className}\`.trim();
+  const cls = cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className);
   return <span className={cls} {...rest}>{children}</span>;
 }`,
 
@@ -666,9 +687,10 @@ export function AccordionContent(props: any) {
   return <nav aria-label="breadcrumb" className={className} {...rest}>{children}</nav>;
 }`,
 
-  checkbox: `export function Checkbox(props: any) {
+  checkbox: `import { cn } from "@/components/ui/_cn";
+export function Checkbox(props: any) {
   const { className = "", checked, disabled, ...rest } = props;
-  const cls = \`peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 \${checked ? "bg-primary text-primary-foreground" : ""} \${className}\`.trim();
+  const cls = cn("peer h-4 w-4 shrink-0 rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", checked ? "bg-primary text-primary-foreground" : "", className);
   return <button type="button" role="checkbox" aria-checked={checked} disabled={disabled} className={cls} {...rest} />;
 }`,
 
@@ -677,47 +699,54 @@ export function AccordionContent(props: any) {
   return <div className={className} {...rest}>{children}</div>;
 }`,
 
-  pagination: `export function Pagination(props: any) {
+  pagination: `import { cn } from "@/components/ui/_cn";
+export function Pagination(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`mx-auto flex w-full justify-center \${className}\`.trim();
+  const cls = cn("mx-auto flex w-full justify-center", className);
   return <nav role="navigation" aria-label="pagination" className={cls} {...rest}>{children}</nav>;
 }`,
 
-  progress: `export function Progress(props: any) {
+  progress: `import { cn } from "@/components/ui/_cn";
+export function Progress(props: any) {
   const { className = "", value = 0, ...rest } = props;
-  const cls = \`relative h-2 w-full overflow-hidden rounded-full bg-primary/20 \${className}\`.trim();
+  const cls = cn("relative h-2 w-full overflow-hidden rounded-full bg-primary/20", className);
   return <div role="progressbar" className={cls} {...rest}><div className="h-full w-full flex-1 bg-primary transition-all" style={{ transform: \`translateX(-\${100 - (value || 0)}%)\` }} /></div>;
 }`,
 
-  "radio-group": `export function RadioGroup(props: any) {
+  "radio-group": `import { cn } from "@/components/ui/_cn";
+export function RadioGroup(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`grid gap-2 \${className}\`.trim();
+  const cls = cn("grid gap-2", className);
   return <div role="radiogroup" className={cls} {...rest}>{children}</div>;
 }`,
 
-  "scroll-area": `export function ScrollArea(props: any) {
+  "scroll-area": `import { cn } from "@/components/ui/_cn";
+export function ScrollArea(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`relative overflow-auto \${className}\`.trim();
+  const cls = cn("relative overflow-auto", className);
   return <div className={cls} {...rest}>{children}</div>;
 }`,
 
-  skeleton: `export function Skeleton(props: any) {
+  skeleton: `import { cn } from "@/components/ui/_cn";
+export function Skeleton(props: any) {
   const { className = "", ...rest } = props;
-  const cls = \`animate-pulse rounded-md bg-primary/10 \${className}\`.trim();
+  const cls = cn("animate-pulse rounded-md bg-primary/10", className);
   return <div className={cls} {...rest} />;
 }`,
 
-  slider: `export function Slider(props: any) {
+  slider: `import { cn } from "@/components/ui/_cn";
+export function Slider(props: any) {
   const { className = "", value = [50], min = 0, max = 100, ...rest } = props;
   const v = Array.isArray(value) ? value[0] : value;
   const pct = ((v - min) / (max - min)) * 100;
-  const cls = \`relative flex w-full touch-none select-none items-center \${className}\`.trim();
+  const cls = cn("relative flex w-full touch-none select-none items-center", className);
   return <div className={cls} {...rest}><div className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-primary/20"><div className="absolute h-full bg-primary" style={{ width: \`\${pct}%\` }} /></div></div>;
 }`,
 
-  switch: `export function Switch(props: any) {
+  switch: `import { cn } from "@/components/ui/_cn";
+export function Switch(props: any) {
   const { className = "", checked, disabled, ...rest } = props;
-  const cls = \`peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors \${checked ? "bg-primary" : "bg-input"} \${disabled ? "cursor-not-allowed opacity-50" : ""} \${className}\`.trim();
+  const cls = cn("peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-sm transition-colors", checked ? "bg-primary" : "bg-input", disabled ? "cursor-not-allowed opacity-50" : "", className);
   return <button type="button" role="switch" aria-checked={checked} disabled={disabled} className={cls} {...rest}><span className={\`pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform \${checked ? "translate-x-4" : "translate-x-0"}\`} /></button>;
 }`,
 
@@ -726,25 +755,28 @@ export function AccordionContent(props: any) {
   return <div className={className} {...rest}>{children}</div>;
 }`,
 
-  textarea: `export function Textarea(props: any) {
+  textarea: `import { cn } from "@/components/ui/_cn";
+export function Textarea(props: any) {
   const { className = "", ...rest } = props;
-  const cls = \`flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 \${className}\`.trim();
+  const cls = cn("flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50", className);
   return <textarea className={cls} {...rest} />;
 }`,
 
-  toggle: `export function Toggle(props: any) {
+  toggle: `import { cn } from "@/components/ui/_cn";
+export function Toggle(props: any) {
   const { className = "", variant = "default", pressed, children, ...rest } = props;
   const v: Record<string, string> = {
     default: "bg-transparent",
     outline: "border border-input bg-transparent shadow-sm",
   };
-  const cls = \`inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground h-9 px-3 min-w-9 \${pressed ? "bg-accent text-accent-foreground" : ""} \${v[variant] || v.default} \${className}\`.trim();
+  const cls = cn("inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground h-9 px-3 min-w-9", pressed ? "bg-accent text-accent-foreground" : "", v[variant] || v.default, className);
   return <button type="button" aria-pressed={pressed} className={cls} {...rest}>{children}</button>;
 }`,
 
-  "toggle-group": `export function ToggleGroup(props: any) {
+  "toggle-group": `import { cn } from "@/components/ui/_cn";
+export function ToggleGroup(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`flex items-center justify-center gap-1 \${className}\`.trim();
+  const cls = cn("flex items-center justify-center gap-1", className);
   return <div role="group" className={cls} {...rest}>{children}</div>;
 }`,
 
@@ -754,21 +786,24 @@ export function AccordionContent(props: any) {
   return <div className={className} {...rest}>{children}</div>;
 }`,
 
-  calendar: `export function Calendar(props: any) {
+  calendar: `import { cn } from "@/components/ui/_cn";
+export function Calendar(props: any) {
   const { className = "", ...rest } = props;
-  const cls = \`p-3 rounded-md border \${className}\`.trim();
+  const cls = cn("p-3 rounded-md border", className);
   return <div className={cls} {...rest}><div className="text-sm font-medium text-center">Calendar</div></div>;
 }`,
 
-  resizable: `export function ResizablePanelGroup(props: any) {
+  resizable: `import { cn } from "@/components/ui/_cn";
+export function ResizablePanelGroup(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`flex rounded-lg border \${className}\`.trim();
+  const cls = cn("flex rounded-lg border", className);
   return <div className={cls} {...rest}>{children}</div>;
 }`,
 
-  carousel: `export function Carousel(props: any) {
+  carousel: `import { cn } from "@/components/ui/_cn";
+export function Carousel(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = \`relative w-full \${className}\`.trim();
+  const cls = cn("relative w-full", className);
   return <div className={cls} {...rest}>{children}</div>;
 }`,
 
