@@ -234,7 +234,7 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     tag: "Toggle",
     importFrom: "@/components/ui/toggle",
     importName: "Toggle",
-    propsMap: ["variant", "pressed", "className"],
+    propsMap: ["variant", "pressed", "size", "disabled", "className"],
     textProp: "text",
     isContainer: false,
   },
@@ -425,7 +425,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftSwitch: { label: "Toggle", checked: false, disabled: false, description: "", invalid: false, size: "default", variant: "default", checkedClassName: "", uncheckedClassName: "", cardBorderColor: "", cardBgColor: "", descriptionColor: "", labelColor: "", tooltipText: "", tooltipSide: "" },
   CraftTabs: { items: "Tab 1,Tab 2,Tab 3" },
   CraftTextarea: { disabled: false, tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
-  CraftToggle: { text: "Toggle", variant: "default", pressed: false },
+  CraftToggle: { text: "Toggle", variant: "default", pressed: false, size: "default", disabled: false, icon: "", tooltipText: "", tooltipSide: "" },
   CraftToggleGroup: { items: "Bold,Italic,Underline", type: "single" },
   // Phase 2
   CraftSelect: { items: "Option 1,Option 2,Option 3", placeholder: "Select an option", tooltipText: "", tooltipSide: "" },
@@ -482,6 +482,12 @@ export function craftStateToTsx(
     if (resolvedName === "CraftAlert") {
       const icon = (node.props?.icon as string) || "AlertCircle";
       addImport("lucide-react", icon);
+    }
+
+    // Collect lucide-react icon import for CraftToggle
+    if (resolvedName === "CraftToggle") {
+      const icon = node.props?.icon as string | undefined;
+      if (icon) addImport("lucide-react", icon);
     }
 
     // Collect accordion sub-component imports
@@ -879,6 +885,20 @@ export function craftStateToTsx(
         .filter(Boolean);
       rendered = `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
       rendered = wrapWithContextMenu(rendered, node.props, pad);
+      return rendered;
+    }
+
+    // CraftToggle: icon を子要素として描画
+    if (resolvedName === "CraftToggle") {
+      const icon = node.props?.icon as string | undefined;
+      const escapedText = textContent
+        ? (textContent.includes("\n") ? `{"${escapeJsString(textContent)}"}` : escapeJsx(textContent))
+        : "";
+      const inner = icon
+        ? `\n${pad}  <${icon} className="h-4 w-4" />${escapedText ? `\n${pad}  ${escapedText}` : ""}\n${pad}`
+        : escapedText;
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${inner}</${tag}>`;
+      rendered = wrapWithTooltip(rendered, node.props, pad);
       return rendered;
     }
 

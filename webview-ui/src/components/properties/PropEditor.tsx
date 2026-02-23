@@ -35,6 +35,7 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   Toggle: {
     variant: ["default", "outline"],
+    size: ["default", "sm", "lg"],
   },
   ToggleGroup: {
     type: ["single", "multiple"],
