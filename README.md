@@ -1,5 +1,5 @@
 # Mocker
-Visual Frontend Web UI Builder for VSCode
+Visual Frontend Web UI Builder for VSCode  
 [English](#mockerenglish)
 
 ## 概要
@@ -61,7 +61,7 @@ UIの整理 ←この段階でver1.0.0程度を見込んでいます。
 
 ---
 # Mocker(English)
-Visual Frontend Web UI Builder for VSCode
+Visual Frontend Web UI Builder for VSCode  
 [日本語](#mocker)
 
 ## Overview
