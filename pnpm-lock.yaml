@@ -39,6 +39,9 @@ importers:
       esbuild:
         specifier: ^0.25.0
         version: 0.25.12
+      esbuild-wasm:
+        specifier: ^0.27.3
+        version: 0.27.3
       eslint:
         specifier: ^9.0.0
         version: 9.39.2(jiti@2.6.1)
@@ -2320,6 +2323,11 @@ packages:
 
   es-toolkit@1.44.0:
     resolution: {integrity: sha512-6penXeZalaV88MM3cGkFZZfOoLGWshWWfdy0tWw/RlVVyhvMaWSBTOvXNeiW3e5FwdS5ePW0LGEu17zT139ktg==}
+
+  esbuild-wasm@0.27.3:
+    resolution: {integrity: sha512-AUXuOxZ145/5Az+lIqk6TdJbxKTyDGkXMJpTExmBdbnHR6n6qAFx+F4oG9ORpVYJ9dQYeQAqzv51TO4DFKsbXw==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   esbuild@0.25.12:
     resolution: {integrity: sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg==}
@@ -6385,6 +6393,8 @@ snapshots:
       is-symbol: 1.1.1
 
   es-toolkit@1.44.0: {}
+
+  esbuild-wasm@0.27.3: {}
 
   esbuild@0.25.12:
     optionalDependencies:

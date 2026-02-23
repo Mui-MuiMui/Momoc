@@ -1,17 +1,24 @@
+import { readFileSync } from "fs";
 import * as path from "path";
+import * as esbuild from "esbuild-wasm";
 
-let esbuildModule: typeof import("esbuild") | null = null;
+let initialized = false;
 
-async function getEsbuild(): Promise<typeof import("esbuild")> {
-  if (esbuildModule) return esbuildModule;
-  try {
-    esbuildModule = await import("esbuild");
-    return esbuildModule;
-  } catch {
-    throw new Error(
-      "esbuild is not available. Dynamic TSX compilation requires esbuild to be installed in the workspace.",
-    );
+async function ensureInitialized(): Promise<void> {
+  if (initialized) return;
+  // esbuild-wasm の browser.js は worker:false 時に 'self' を参照する。
+  // Node.js の CJS スコープでは self がグローバルに見えないため polyfill する。
+  if (typeof (globalThis as Record<string, unknown>)["self"] === "undefined") {
+    (globalThis as Record<string, unknown>)["self"] = globalThis;
   }
+  // __dirname はバンドル後 out/ を指すため out/esbuild.wasm を読み込む。
+  const wasmPath = path.join(__dirname, "esbuild.wasm");
+  const wasmBuffer = readFileSync(wasmPath);
+  await esbuild.initialize({
+    wasmModule: new WebAssembly.Module(wasmBuffer),
+    worker: false,
+  });
+  initialized = true;
 }
 
 export async function compileTsx(
@@ -20,7 +27,7 @@ export async function compileTsx(
   additionalPlugins?: { name: string; setup: (build: unknown) => void }[],
 ): Promise<{ code: string; error?: string }> {
   try {
-    const esbuild = await getEsbuild();
+    await ensureInitialized();
     const result = await esbuild.build({
       stdin: {
         contents: tsx,

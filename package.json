@@ -2,7 +2,7 @@
   "name": "mocker",
   "displayName": "Mocker",
   "description": "Interactive Design-Code Lab - Build mockups with GUI, code, and AI agents",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "publisher": "mui-muimui",
   "license": "MIT",
   "repository": {
@@ -145,6 +145,7 @@
     "@vscode/vsce": "^3.0.0",
     "concurrently": "^9.0.0",
     "esbuild": "^0.25.0",
+    "esbuild-wasm": "^0.27.3",
     "eslint": "^9.0.0",
     "eslint-plugin-react": "^7.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",
@@ -156,8 +157,6 @@
     "ts-morph": "^25.0.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
+    "onlyBuiltDependencies": []
   }
 }
