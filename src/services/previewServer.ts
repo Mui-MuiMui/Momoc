@@ -15,6 +15,20 @@ interface PreviewSession {
 
 const activeSessions = new Map<string, PreviewSession>();
 
+async function findAvailablePort(basePort: number): Promise<number> {
+  const net = await import("net");
+  for (let port = basePort; port < basePort + 10; port++) {
+    const available = await new Promise<boolean>((resolve) => {
+      const srv = net.createServer();
+      srv.once("error", () => resolve(false));
+      srv.once("listening", () => srv.close(() => resolve(true)));
+      srv.listen(port, "127.0.0.1");
+    });
+    if (available) return port;
+  }
+  return 0; // fallback to random port
+}
+
 export async function startPreviewServer(
   mocFilePath: string,
   workspaceRoot: string,
@@ -446,9 +460,12 @@ export async function startPreviewServer(
     res.end("Not Found");
   });
 
-  // Listen on random port
+  // Listen on configured port (or random if not set)
+  const config = vscode.workspace.getConfiguration("mocker");
+  const basePort = config.get<number>("previewBasePort");
+  const port = basePort !== undefined ? await findAvailablePort(basePort) : 0;
   await new Promise<void>((resolve) => {
-    server.listen(0, "127.0.0.1", () => resolve());
+    server.listen(port, "127.0.0.1", () => resolve());
   });
   const addr = server.address() as { port: number };
   const serverUrl = `http://127.0.0.1:${addr.port}`;

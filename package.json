@@ -103,6 +103,18 @@
           "group": "mocker@1"
         }
       ]
+    },
+    "configuration": {
+      "title": "Mocker",
+      "properties": {
+        "mocker.previewBasePort": {
+          "type": "number",
+          "default": 51000,
+          "minimum": 1024,
+          "maximum": 65535,
+          "description": "プレビューサーバーのベースポート番号。未設定の場合はランダムポートを使用します。ポートが使用中の場合は +1 ずつ空きポートを探します（最大10回試行）。"
+        }
+      }
     }
   },
   "l10n": "./l10n",
