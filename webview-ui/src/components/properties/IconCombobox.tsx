@@ -69,7 +69,7 @@ export function IconCombobox({ value, onChange }: IconComboboxProps) {
                 type="button"
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  onChange(name);
+                  onChange(name === value ? "" : name);
                   setOpen(false);
                 }}
                 className={`flex w-full items-center gap-2 px-2 py-1 text-xs hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)] ${

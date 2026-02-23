@@ -60,24 +60,28 @@ export const CraftToggle: UserComponent<CraftToggleProps> = ({
     : null;
 
   return (
-    <button
+    <div
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      type="button"
-      aria-pressed={pressed}
-      data-state={pressed ? "on" : "off"}
-      disabled={disabled}
-      className={cn(
-        toggleVariants({ variant, size }),
-        pressed ? "bg-accent text-accent-foreground" : "bg-transparent",
-        className,
-      )}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ display: "inline-flex", width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
-      {IconComponent && <IconComponent className="h-4 w-4" />}
-      {text}
-    </button>
+      <button
+        type="button"
+        aria-pressed={pressed}
+        data-state={pressed ? "on" : "off"}
+        disabled={disabled}
+        className={cn(
+          toggleVariants({ variant, size }),
+          pressed ? "bg-accent text-accent-foreground" : "bg-transparent",
+          className,
+        )}
+        style={{ width: "100%", height: "100%" }}
+      >
+        {IconComponent && <IconComponent className="h-4 w-4" />}
+        {text}
+      </button>
+    </div>
   );
 };
 

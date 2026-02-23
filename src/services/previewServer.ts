@@ -858,8 +858,10 @@ export function Textarea(props: any) {
 
   toggle: `import { cn } from "@/components/ui/_cn";
 import * as Icons from "lucide-react";
+import { useState } from "react";
 export function Toggle(props: any) {
-  const { className = "", variant = "default", size = "default", pressed, disabled, icon, children, ...rest } = props;
+  const { className = "", variant = "default", size = "default", pressed: initialPressed, disabled, icon, children, ...rest } = props;
+  const [pressed, setPressed] = useState(initialPressed ?? false);
   const v: Record<string, string> = {
     default: "bg-transparent",
     outline: "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground",
@@ -871,7 +873,7 @@ export function Toggle(props: any) {
   };
   const IconComponent = icon ? (Icons as any)[icon] : null;
   const cls = cn("inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50", pressed ? "bg-accent text-accent-foreground" : "", s[size] || s.default, v[variant] || v.default, className);
-  return <button type="button" aria-pressed={pressed} disabled={disabled} className={cls} {...rest}>{IconComponent && <IconComponent className="h-4 w-4" />}{children}</button>;
+  return <button type="button" aria-pressed={pressed} disabled={disabled} onClick={() => setPressed((p: boolean) => !p)} className={cls} {...rest}>{IconComponent && <IconComponent className="h-4 w-4" />}{children}</button>;
 }`,
 
   "toggle-group": `import { cn } from "@/components/ui/_cn";
