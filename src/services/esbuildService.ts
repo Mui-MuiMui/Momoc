@@ -6,8 +6,11 @@ let initialized = false;
 
 async function ensureInitialized(): Promise<void> {
   if (initialized) return;
-  // esbuild-wasm は alias で browser.js にリダイレクト済み。
-  // browser.js は wasmModule と worker:false を受け付ける。
+  // esbuild-wasm の browser.js は worker:false 時に 'self' を参照する。
+  // Node.js の CJS スコープでは self がグローバルに見えないため polyfill する。
+  if (typeof (globalThis as Record<string, unknown>)["self"] === "undefined") {
+    (globalThis as Record<string, unknown>)["self"] = globalThis;
+  }
   // __dirname はバンドル後 out/ を指すため out/esbuild.wasm を読み込む。
   const wasmPath = path.join(__dirname, "esbuild.wasm");
   const wasmBuffer = readFileSync(wasmPath);
