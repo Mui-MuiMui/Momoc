@@ -1,4 +1,4 @@
-import { pathToFileURL } from "url";
+import { readFileSync } from "fs";
 import * as path from "path";
 import * as esbuild from "esbuild-wasm";
 
@@ -6,9 +6,14 @@ let initialized = false;
 
 async function ensureInitialized(): Promise<void> {
   if (initialized) return;
+  // esbuild-wasm は alias で browser.js にリダイレクト済み。
+  // browser.js は wasmModule と worker:false を受け付ける。
+  // __dirname はバンドル後 out/ を指すため out/esbuild.wasm を読み込む。
   const wasmPath = path.join(__dirname, "esbuild.wasm");
+  const wasmBuffer = readFileSync(wasmPath);
   await esbuild.initialize({
-    wasmURL: pathToFileURL(wasmPath).href,
+    wasmModule: new WebAssembly.Module(wasmBuffer),
+    worker: false,
   });
   initialized = true;
 }
