@@ -19,7 +19,7 @@ export function EditorLoader({
   lastCraftStateRef,
 }: EditorLoaderProps) {
   const { actions, query } = useEditor();
-  const { documentContent, setMemos, setViewportMode, setCustomViewportSize } = useEditorStore();
+  const { documentContent, setMemos, setViewportMode, setCustomViewportSize, setIntent } = useEditorStore();
   const lastDeserializedRef = useRef<string>("");
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
@@ -50,6 +50,7 @@ export function EditorLoader({
             setCustomViewportSize(v.width, v.height);
           }
         }
+        if (typeof parsed.intent === "string") setIntent(parsed.intent);
       } else if (parsed.ROOT) {
         // Old format: raw Craft.js JSON (backward compat)
         craftStateStr = documentContent;
@@ -107,7 +108,7 @@ export function EditorLoader({
     }
     // Only re-run when documentContent changes (actions is accessed via ref)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, setMemos, setViewportMode, setCustomViewportSize]);
+  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, setMemos, setViewportMode, setCustomViewportSize, setIntent]);
 
   return null;
 }

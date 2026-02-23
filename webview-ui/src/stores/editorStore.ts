@@ -29,6 +29,7 @@ interface EditorState {
   selectedNodeId: string | null;
   memos: Memo[];
   zoom: number;
+  intent: string;
 
   setLayoutMode: (mode: LayoutMode) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -43,6 +44,7 @@ interface EditorState {
   updateMemo: (id: string, updates: Partial<Memo>) => void;
   removeMemo: (id: string) => void;
   setZoom: (zoom: number) => void;
+  setIntent: (intent: string) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -57,6 +59,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectedNodeId: null,
   memos: [],
   zoom: 1,
+  intent: "",
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
   setThemeMode: (mode) => set({ themeMode: mode }),
@@ -76,4 +79,5 @@ export const useEditorStore = create<EditorState>((set) => ({
   removeMemo: (id) =>
     set((state) => ({ memos: state.memos.filter((m) => m.id !== id) })),
   setZoom: (zoom) => set({ zoom }),
+  setIntent: (intent) => set({ intent }),
 }));

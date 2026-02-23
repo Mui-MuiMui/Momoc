@@ -37,6 +37,8 @@ export function Toolbar() {
     customViewportHeight,
     setCustomViewportSize,
     isDirty,
+    intent,
+    setIntent,
   } = useEditorStore();
   const [pendingLayout, setPendingLayout] = useState<"flow" | "absolute" | null>(null);
   const [showCustomSize, setShowCustomSize] = useState(false);
@@ -222,6 +224,21 @@ export function Toolbar() {
             </div>
           </div>
         )}
+      </div>
+
+      <Divider />
+
+      <div className="flex items-center gap-1.5 px-1">
+        <span className="text-xs text-[var(--vscode-descriptionForeground)] whitespace-nowrap">
+          {t("toolbar.intentLabel")}
+        </span>
+        <input
+          type="text"
+          value={intent}
+          onChange={(e) => setIntent(e.target.value)}
+          placeholder={t("toolbar.intentPlaceholder")}
+          className="h-6 min-w-[160px] max-w-[320px] rounded border border-[var(--vscode-input-border)] bg-[var(--vscode-input-background)] px-2 text-xs text-[var(--vscode-input-foreground)] placeholder:text-[var(--vscode-input-placeholderForeground)] focus:outline-none focus:ring-1 focus:ring-[var(--vscode-focusBorder)]"
+        />
       </div>
 
       <Divider />

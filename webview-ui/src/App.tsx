@@ -26,7 +26,7 @@ export default function App() {
   const loadingRef = useRef(false);
   const lastCraftStateRef = useRef<string>("");
 
-  /** Build combined save payload (craftState + memos + canvas size) */
+  /** Build combined save payload (craftState + memos + canvas size + intent) */
   const buildSaveContent = useCallback((craftStateStr: string) => {
     const s = useEditorStore.getState();
     const craftState = JSON.parse(craftStateStr);
@@ -39,6 +39,7 @@ export default function App() {
         width: s.customViewportWidth,
         height: s.customViewportHeight,
       },
+      intent: s.intent,
     });
   }, []);
 
@@ -102,6 +103,16 @@ export default function App() {
     prevMemosRef.current = memos;
     scheduleSave();
   }, [memos, scheduleSave]);
+
+  // Watch intent changes and trigger save
+  const intent = useEditorStore((s) => s.intent);
+  const prevIntentRef = useRef(intent);
+  useEffect(() => {
+    if (loadingRef.current) return;
+    if (prevIntentRef.current === intent) return;
+    prevIntentRef.current = intent;
+    scheduleSave();
+  }, [intent, scheduleSave]);
 
   // Watch canvas size changes and trigger save
   const viewportMode = useEditorStore((s) => s.viewportMode);

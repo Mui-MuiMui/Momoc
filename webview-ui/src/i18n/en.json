@@ -15,6 +15,8 @@
   "toolbar.unsaved": "Unsaved changes",
   "toolbar.browserPreview": "Open in Browser",
   "toolbar.exportImage": "Export as Image",
+  "toolbar.intentLabel": "Intent",
+  "toolbar.intentPlaceholder": "Describe the purpose of this page...",
   "palette.title": "Components",
   "palette.shadcn": "shadcn/ui",
   "palette.html": "HTML Elements",
