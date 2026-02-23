@@ -1,9 +1,9 @@
 import { useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 
-interface CraftInputProps {
-  type?: "text" | "email" | "password" | "number" | "tel" | "url" | "search";
+interface CraftTextareaProps {
   placeholder?: string;
+  rows?: number;
   disabled?: boolean;
   tooltipText?: string;
   tooltipSide?: "" | "top" | "right" | "bottom" | "left";
@@ -13,9 +13,9 @@ interface CraftInputProps {
   className?: string;
 }
 
-export const CraftInput: UserComponent<CraftInputProps> = ({
-  type = "text",
-  placeholder = "Enter text...",
+export const CraftTextarea: UserComponent<CraftTextareaProps> = ({
+  placeholder = "Type your message here.",
+  rows = 3,
   disabled = false,
   tooltipText = "",
   tooltipSide = "",
@@ -33,27 +33,27 @@ export const CraftInput: UserComponent<CraftInputProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      style={{ width: width !== "auto" ? width : undefined }}
+      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
-      <input
-        type={type}
+      <textarea
         placeholder={placeholder}
+        rows={rows}
         disabled={disabled}
         className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+          "flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+          height !== "auto" && "h-full",
           className,
         )}
-        style={{ height: height !== "auto" ? height : undefined }}
       />
     </div>
   );
 };
 
-CraftInput.craft = {
-  displayName: "Input",
+CraftTextarea.craft = {
+  displayName: "Textarea",
   props: {
-    type: "text",
-    placeholder: "Enter text...",
+    placeholder: "Type your message here.",
+    rows: 3,
     disabled: false,
     tooltipText: "",
     tooltipSide: "",

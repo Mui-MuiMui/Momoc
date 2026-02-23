@@ -28,11 +28,30 @@ const buttonVariants = cva(
   },
 );
 
+const OVERLAY_LABELS: Record<string, string> = {
+  dialog: "Dialog",
+  "alert-dialog": "Alert",
+  sheet: "Sheet",
+  drawer: "Drawer",
+  popover: "Popover",
+  "dropdown-menu": "Menu",
+};
+
 interface CraftButtonProps {
   text?: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
   disabled?: boolean;
+  overlayType?: "none" | "dialog" | "alert-dialog" | "sheet" | "drawer" | "popover" | "dropdown-menu";
+  linkedMocPath?: string;
+  sheetSide?: "top" | "right" | "bottom" | "left";
+  overlayWidth?: string;
+  overlayHeight?: string;
+  overlayClassName?: string;
+  tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
+  toastText?: string;
+  toastPosition?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
   width?: string;
   height?: string;
   className?: string;
@@ -43,6 +62,16 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
   variant = "default",
   size = "default",
   disabled = false,
+  overlayType = "none",
+  linkedMocPath = "",
+  sheetSide = "right",
+  overlayWidth = "",
+  overlayHeight = "",
+  overlayClassName = "",
+  tooltipText = "",
+  tooltipSide = "",
+  toastText = "",
+  toastPosition = "bottom-right",
   width = "auto",
   height = "auto",
   className = "",
@@ -51,18 +80,34 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
     connectors: { connect, drag },
   } = useNode();
 
+  const overlayLabel = overlayType !== "none" ? OVERLAY_LABELS[overlayType] : null;
+
   return (
-    <button
+    <div
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn(buttonVariants({ variant, size }), className)}
-      disabled={disabled}
-      type="button"
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      className="relative inline-flex flex-col items-start"
     >
-      {text}
-    </button>
+      <button
+        className={cn(buttonVariants({ variant, size }), className)}
+        disabled={disabled}
+        type="button"
+        style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      >
+        {text}
+        {linkedMocPath && (
+          <span className="ml-1 opacity-60" title={linkedMocPath}>
+            &#128279;
+          </span>
+        )}
+      </button>
+      {overlayLabel && (
+        <span className="absolute -right-1 -top-2 rounded bg-blue-600 px-1 py-0.5 text-[9px] leading-none text-white shadow">
+          {overlayLabel}
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -73,6 +118,16 @@ CraftButton.craft = {
     variant: "default",
     size: "default",
     disabled: false,
+    overlayType: "none",
+    linkedMocPath: "",
+    sheetSide: "right",
+    overlayWidth: "",
+    overlayHeight: "",
+    overlayClassName: "",
+    tooltipText: "",
+    tooltipSide: "",
+    toastText: "",
+    toastPosition: "bottom-right",
     width: "auto",
     height: "auto",
     className: "",

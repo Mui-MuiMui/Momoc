@@ -17,8 +17,8 @@ export function ComponentPalette() {
     html: true,
   });
 
-  const filteredItems = paletteItems.filter((item) =>
-    item.label.toLowerCase().includes(search.toLowerCase()),
+  const filteredItems = paletteItems.filter(
+    (item) => item.enabled !== false && item.label.toLowerCase().includes(search.toLowerCase()),
   );
 
   const categories = [

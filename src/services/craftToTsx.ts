@@ -115,23 +115,339 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: false,
   },
+  // Phase 1: Simple components
+  CraftAccordion: {
+    tag: "Accordion",
+    importFrom: "@/components/ui/accordion",
+    importName: "Accordion",
+    propsMap: ["type", "className"],
+    isContainer: false,
+  },
+  CraftAlert: {
+    tag: "Alert",
+    importFrom: "@/components/ui/alert",
+    importName: "Alert",
+    propsMap: ["variant", "className"],
+    isContainer: false,
+  },
+  CraftAspectRatio: {
+    tag: "AspectRatio",
+    importFrom: "@/components/ui/aspect-ratio",
+    importName: "AspectRatio",
+    propsMap: ["ratio", "className"],
+    isContainer: true,
+  },
+  CraftAvatar: {
+    tag: "Avatar",
+    importFrom: "@/components/ui/avatar",
+    importName: "Avatar",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftBreadcrumb: {
+    tag: "Breadcrumb",
+    importFrom: "@/components/ui/breadcrumb",
+    importName: "Breadcrumb",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftCheckbox: {
+    tag: "Checkbox",
+    importFrom: "@/components/ui/checkbox",
+    importName: "Checkbox",
+    propsMap: ["checked", "disabled", "checkedColor", "uncheckedColor", "className"],
+    textProp: "label",
+    isContainer: false,
+  },
+  CraftCollapsible: {
+    tag: "Collapsible",
+    importFrom: "@/components/ui/collapsible",
+    importName: "Collapsible",
+    propsMap: ["open", "className"],
+    isContainer: true,
+  },
+  CraftPagination: {
+    tag: "Pagination",
+    importFrom: "@/components/ui/pagination",
+    importName: "Pagination",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftProgress: {
+    tag: "Progress",
+    importFrom: "@/components/ui/progress",
+    importName: "Progress",
+    propsMap: ["value", "className"],
+    isContainer: false,
+  },
+  CraftRadioGroup: {
+    tag: "RadioGroup",
+    importFrom: "@/components/ui/radio-group",
+    importName: "RadioGroup",
+    propsMap: ["value", "className"],
+    isContainer: false,
+  },
+  CraftScrollArea: {
+    tag: "ScrollArea",
+    importFrom: "@/components/ui/scroll-area",
+    importName: "ScrollArea",
+    propsMap: ["className"],
+    isContainer: true,
+  },
+  CraftSkeleton: {
+    tag: "Skeleton",
+    importFrom: "@/components/ui/skeleton",
+    importName: "Skeleton",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftSlider: {
+    tag: "Slider",
+    importFrom: "@/components/ui/slider",
+    importName: "Slider",
+    propsMap: ["value", "min", "max", "step", "fillClassName", "trackClassName", "className", "tooltipText", "tooltipSide"],
+    isContainer: false,
+  },
+  CraftSwitch: {
+    tag: "Switch",
+    importFrom: "@/components/ui/switch",
+    importName: "Switch",
+    propsMap: ["checked", "disabled", "description", "invalid", "size", "variant", "checkedClassName", "uncheckedClassName", "cardBorderColor", "cardBgColor", "descriptionColor", "labelColor", "className", "tooltipText", "tooltipSide"],
+    textProp: "label",
+    isContainer: false,
+  },
+  CraftTabs: {
+    tag: "Tabs",
+    importFrom: "@/components/ui/tabs",
+    importName: "Tabs",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftTextarea: {
+    tag: "Textarea",
+    importFrom: "@/components/ui/textarea",
+    importName: "Textarea",
+    propsMap: ["placeholder", "rows", "disabled", "className"],
+    isContainer: false,
+  },
+  CraftToggle: {
+    tag: "Toggle",
+    importFrom: "@/components/ui/toggle",
+    importName: "Toggle",
+    propsMap: ["variant", "pressed", "className"],
+    textProp: "text",
+    isContainer: false,
+  },
+  CraftToggleGroup: {
+    tag: "ToggleGroup",
+    importFrom: "@/components/ui/toggle-group",
+    importName: "ToggleGroup",
+    propsMap: ["type", "className"],
+    isContainer: false,
+  },
+  // Phase 2: Complex components
+  CraftSelect: {
+    tag: "Select",
+    importFrom: "@/components/ui/select",
+    importName: "Select",
+    propsMap: ["placeholder", "className"],
+    isContainer: false,
+  },
+  CraftCalendar: {
+    tag: "Calendar",
+    importFrom: "@/components/ui/calendar",
+    importName: "Calendar",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftResizable: {
+    tag: "ResizablePanelGroup",
+    importFrom: "@/components/ui/resizable",
+    importName: "ResizablePanelGroup",
+    propsMap: ["direction", "className"],
+    isContainer: false,
+  },
+  CraftCarousel: {
+    tag: "Carousel",
+    importFrom: "@/components/ui/carousel",
+    importName: "Carousel",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftChart: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftForm: {
+    tag: "form",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  // Phase 4: Overlay components (legacy standalone - render as Button for backward compat)
+  CraftDialog: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["variant", "className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftAlertDialog: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftSheet: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftDrawer: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftDropdownMenu: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftContextMenu: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftPopover: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftHoverCard: {
+    tag: "span",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftNavigationMenu: {
+    tag: "nav",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftMenubar: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftCommand: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  CraftTooltip: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
+  CraftSonner: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["className"],
+    textProp: "triggerText",
+    isContainer: false,
+  },
 };
+
+/** Overlay type to import configuration */
+const OVERLAY_IMPORTS: Record<string, { from: string; names: string[] }> = {
+  dialog: { from: "@/components/ui/dialog", names: ["Dialog", "DialogTrigger", "DialogContent"] },
+  "alert-dialog": { from: "@/components/ui/alert-dialog", names: ["AlertDialog", "AlertDialogTrigger", "AlertDialogContent", "AlertDialogAction", "AlertDialogCancel"] },
+  sheet: { from: "@/components/ui/sheet", names: ["Sheet", "SheetTrigger", "SheetContent"] },
+  drawer: { from: "@/components/ui/drawer", names: ["Drawer", "DrawerTrigger", "DrawerContent"] },
+  popover: { from: "@/components/ui/popover", names: ["Popover", "PopoverTrigger", "PopoverContent"] },
+  "dropdown-menu": { from: "@/components/ui/dropdown-menu", names: ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent"] },
+};
+
+const TOOLTIP_IMPORT = { from: "@/components/ui/tooltip", names: ["TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent"] };
+
+const CONTEXT_MENU_IMPORT = { from: "@/components/ui/context-menu", names: ["ContextMenu", "ContextMenuTrigger", "ContextMenuContent"] };
 
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
-  CraftButton: { variant: "default", size: "default", disabled: false, text: "Button" },
-  CraftInput: { type: "text", placeholder: "Enter text...", disabled: false },
-  CraftBadge: { variant: "default", text: "Badge" },
+  CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
+    overlayType: "none", linkedMocPath: "", sheetSide: "right", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", tooltipSide: "", toastText: "", toastPosition: "bottom-right" },
+  CraftInput: { type: "text", disabled: false, tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
+  CraftBadge: { variant: "default", text: "Badge", tooltipText: "", tooltipSide: "" },
   CraftSeparator: { orientation: "horizontal" },
   CraftText: { tag: "p", text: "Text" },
   CraftPlaceholderImage: { alt: "Placeholder", keepAspectRatio: false },
   CraftImage: { alt: "", objectFit: "cover", keepAspectRatio: false },
-  CraftLabel: { text: "Label" },
-  CraftCard: { title: "Card Title", description: "" },
+  CraftLabel: { text: "Label", tooltipText: "", tooltipSide: "" },
+  CraftCard: { title: "Card Title", description: "", contextMenuMocPath: "" },
   CraftContainer: {
     display: "flex", flexDirection: "column", justifyContent: "start",
-    alignItems: "stretch", gap: "4", gridCols: 3,
+    alignItems: "stretch", gap: "4", gridCols: 3, contextMenuMocPath: "",
   },
+  CraftDiv: { contextMenuMocPath: "" },
+  // Phase 1
+  CraftAccordion: { items: "Item 1,Item 2,Item 3", type: "single", linkedMocPaths: "" },
+  CraftAlert: { title: "Alert", description: "This is an alert message.", variant: "default", icon: "AlertCircle" },
+  CraftAspectRatio: { ratio: 1.78 },
+  CraftAvatar: { src: "", fallback: "AB" },
+  CraftBreadcrumb: { items: "Home,Products,Current" },
+  CraftCheckbox: { label: "Accept terms", checked: false, disabled: false, tooltipText: "", tooltipSide: "" },
+  CraftCollapsible: { open: false },
+  CraftPagination: { totalPages: 5, currentPage: 1 },
+  CraftProgress: { value: 50 },
+  CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", orientation: "vertical", variant: "default", descriptions: "", cardBorderColor: "", cardBgColor: "", descriptionColor: "", tooltipText: "", tooltipSide: "" },
+  CraftScrollArea: {},
+  CraftSkeleton: { width: "100%", height: "20px" },
+  CraftSlider: { value: 50, min: 0, max: 100, step: 1, fillClassName: "", trackClassName: "", tooltipText: "", tooltipSide: "" },
+  CraftSwitch: { label: "Toggle", checked: false, disabled: false, description: "", invalid: false, size: "default", variant: "default", checkedClassName: "", uncheckedClassName: "", cardBorderColor: "", cardBgColor: "", descriptionColor: "", labelColor: "", tooltipText: "", tooltipSide: "" },
+  CraftTabs: { items: "Tab 1,Tab 2,Tab 3" },
+  CraftTextarea: { disabled: false, tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
+  CraftToggle: { text: "Toggle", variant: "default", pressed: false },
+  CraftToggleGroup: { items: "Bold,Italic,Underline", type: "single" },
+  // Phase 2
+  CraftSelect: { items: "Option 1,Option 2,Option 3", placeholder: "Select an option", tooltipText: "", tooltipSide: "" },
+  CraftCalendar: {},
+  CraftResizable: { direction: "horizontal" },
+  CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
+  CraftChart: { chartType: "bar" },
+  CraftForm: {},
+  // Phase 4 (legacy standalone)
+  CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
+  CraftAlertDialog: { triggerText: "Open Alert", linkedMocPath: "" },
+  CraftSheet: { triggerText: "Open Sheet", side: "right", linkedMocPath: "" },
+  CraftDrawer: { triggerText: "Open Drawer", linkedMocPath: "" },
+  CraftDropdownMenu: { triggerText: "Open Menu", linkedMocPath: "" },
+  CraftContextMenu: { linkedMocPath: "" },
+  CraftPopover: { triggerText: "Open Popover", linkedMocPath: "" },
+  CraftHoverCard: { triggerText: "Hover me", linkedMocPath: "" },
+  CraftNavigationMenu: { items: "Home,About,Services,Contact", linkedMocPath: "" },
+  CraftMenubar: { items: "File,Edit,View,Help", linkedMocPath: "" },
+  CraftCommand: { placeholder: "Type a command or search...", items: "Calendar,Search,Settings", linkedMocPath: "" },
+  CraftTooltip: { triggerText: "Hover", text: "Tooltip text" },
+  CraftSonner: { triggerText: "Show Toast", text: "Event has been created." },
 };
 
 export function craftStateToTsx(
@@ -145,6 +461,13 @@ export function craftStateToTsx(
 
   const usedImports = new Map<string, Set<string>>();
 
+  function addImport(from: string, name: string): void {
+    if (!usedImports.has(from)) {
+      usedImports.set(from, new Set());
+    }
+    usedImports.get(from)!.add(name);
+  }
+
   function collectImports(nodeId: string): void {
     const node = craftState[nodeId];
     if (!node) return;
@@ -152,10 +475,67 @@ export function craftStateToTsx(
     const resolvedName = getResolvedName(node);
     const mapping = COMPONENT_MAP[resolvedName];
     if (mapping?.importFrom && mapping?.importName) {
-      if (!usedImports.has(mapping.importFrom)) {
-        usedImports.set(mapping.importFrom, new Set());
+      addImport(mapping.importFrom, mapping.importName);
+    }
+
+    // Collect lucide-react icon import for CraftAlert
+    if (resolvedName === "CraftAlert") {
+      const icon = (node.props?.icon as string) || "AlertCircle";
+      addImport("lucide-react", icon);
+    }
+
+    // Collect accordion sub-component imports
+    if (resolvedName === "CraftAccordion") {
+      addImport("@/components/ui/accordion", "AccordionItem");
+      addImport("@/components/ui/accordion", "AccordionTrigger");
+      addImport("@/components/ui/accordion", "AccordionContent");
+    }
+
+    // Collect radio group sub-component imports
+    if (resolvedName === "CraftRadioGroup") {
+      addImport("@/components/ui/radio-group", "RadioGroupItem");
+      addImport("@/components/ui/label", "Label");
+    }
+
+    // Collect select sub-component imports
+    if (resolvedName === "CraftSelect") {
+      addImport("@/components/ui/select", "SelectTrigger");
+      addImport("@/components/ui/select", "SelectContent");
+      addImport("@/components/ui/select", "SelectItem");
+      addImport("@/components/ui/select", "SelectValue");
+    }
+
+    // Collect overlay-related imports for CraftButton
+    if (resolvedName === "CraftButton") {
+      const overlayType = node.props?.overlayType as string | undefined;
+      if (overlayType && overlayType !== "none") {
+        const overlayImport = OVERLAY_IMPORTS[overlayType];
+        if (overlayImport) {
+          for (const name of overlayImport.names) {
+            addImport(overlayImport.from, name);
+          }
+        }
       }
-      usedImports.get(mapping.importFrom)!.add(mapping.importName);
+      const toastText = node.props?.toastText as string | undefined;
+      if (toastText) {
+        addImport("sonner", "toast");
+      }
+    }
+
+    // Collect tooltip imports for any component with tooltipText
+    const tooltipText = node.props?.tooltipText as string | undefined;
+    if (tooltipText) {
+      for (const name of TOOLTIP_IMPORT.names) {
+        addImport(TOOLTIP_IMPORT.from, name);
+      }
+    }
+
+    // Collect context menu imports for containers with contextMenuMocPath
+    const contextMenuMocPath = node.props?.contextMenuMocPath as string | undefined;
+    if (contextMenuMocPath) {
+      for (const name of CONTEXT_MENU_IMPORT.names) {
+        addImport(CONTEXT_MENU_IMPORT.from, name);
+      }
     }
 
     for (const childId of node.nodes || []) {
@@ -183,6 +563,148 @@ export function craftStateToTsx(
       }
     }
     return comments.join("\n");
+  }
+
+  /** Wrap rendered element with tooltip if tooltipText is set */
+  function wrapWithTooltip(rendered: string, props: Record<string, unknown>, pad: string, tooltipTrigger?: string): string {
+    const tooltipText = props?.tooltipText as string | undefined;
+    if (!tooltipText) return rendered;
+
+    const tooltipSide = props?.tooltipSide as string | undefined;
+    const sideAttr = tooltipSide ? ` side="${tooltipSide}"` : "";
+    const triggerTag = tooltipTrigger === "focus"
+      ? `<TooltipTrigger asChild trigger="focus">`
+      : `<TooltipTrigger asChild>`;
+
+    return [
+      `${pad}<TooltipProvider>`,
+      `${pad}  <Tooltip>`,
+      `${pad}    ${triggerTag}`,
+      rendered,
+      `${pad}    </TooltipTrigger>`,
+      `${pad}    <TooltipContent${sideAttr}>`,
+      `${pad}      <p>${escapeJsx(tooltipText)}</p>`,
+      `${pad}    </TooltipContent>`,
+      `${pad}  </Tooltip>`,
+      `${pad}</TooltipProvider>`,
+    ].join("\n");
+  }
+
+  /** Wrap rendered element with overlay if CraftButton has overlayType set */
+  function wrapWithOverlay(rendered: string, props: Record<string, unknown>, pad: string): string {
+    const overlayType = props?.overlayType as string | undefined;
+    if (!overlayType || overlayType === "none") return rendered;
+
+    const linkedMocPath = props?.linkedMocPath as string | undefined;
+    const contentComment = linkedMocPath
+      ? `{/* linked: ${escapeJsx(linkedMocPath)} */}`
+      : "{/* overlay content */}";
+
+    // Build style attribute for overlay size
+    const overlayWidth = props?.overlayWidth as string | undefined;
+    const overlayHeight = props?.overlayHeight as string | undefined;
+    const styleParts: string[] = [];
+    if (overlayWidth) styleParts.push(`maxWidth: "${overlayWidth}"`);
+    if (overlayHeight) styleParts.push(`maxHeight: "${overlayHeight}", overflow: "auto"`);
+    const styleAttr = styleParts.length > 0 ? ` style={{ ${styleParts.join(", ")} }}` : "";
+
+    // Build className attribute for overlay content styling
+    const overlayClassName = props?.overlayClassName as string | undefined;
+    const classAttr = overlayClassName ? ` className="${escapeAttr(overlayClassName)}"` : "";
+
+    switch (overlayType) {
+      case "dialog":
+        return [
+          `${pad}<Dialog>`,
+          `${pad}  <DialogTrigger asChild>`,
+          rendered,
+          `${pad}  </DialogTrigger>`,
+          `${pad}  <DialogContent${classAttr}${styleAttr}>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </DialogContent>`,
+          `${pad}</Dialog>`,
+        ].join("\n");
+      case "alert-dialog":
+        return [
+          `${pad}<AlertDialog>`,
+          `${pad}  <AlertDialogTrigger asChild>`,
+          rendered,
+          `${pad}  </AlertDialogTrigger>`,
+          `${pad}  <AlertDialogContent${classAttr}${styleAttr}>`,
+          `${pad}    ${contentComment}`,
+          `${pad}    <AlertDialogCancel>Cancel</AlertDialogCancel>`,
+          `${pad}    <AlertDialogAction>Continue</AlertDialogAction>`,
+          `${pad}  </AlertDialogContent>`,
+          `${pad}</AlertDialog>`,
+        ].join("\n");
+      case "sheet": {
+        const side = (props?.sheetSide as string) || "right";
+        const sideAttr = side !== "right" ? ` side="${side}"` : "";
+        return [
+          `${pad}<Sheet>`,
+          `${pad}  <SheetTrigger asChild>`,
+          rendered,
+          `${pad}  </SheetTrigger>`,
+          `${pad}  <SheetContent${sideAttr}${classAttr}${styleAttr}>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </SheetContent>`,
+          `${pad}</Sheet>`,
+        ].join("\n");
+      }
+      case "drawer":
+        return [
+          `${pad}<Drawer>`,
+          `${pad}  <DrawerTrigger asChild>`,
+          rendered,
+          `${pad}  </DrawerTrigger>`,
+          `${pad}  <DrawerContent${classAttr}${styleAttr}>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </DrawerContent>`,
+          `${pad}</Drawer>`,
+        ].join("\n");
+      case "popover":
+        return [
+          `${pad}<Popover>`,
+          `${pad}  <PopoverTrigger asChild>`,
+          rendered,
+          `${pad}  </PopoverTrigger>`,
+          `${pad}  <PopoverContent${classAttr}${styleAttr}>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </PopoverContent>`,
+          `${pad}</Popover>`,
+        ].join("\n");
+      case "dropdown-menu":
+        return [
+          `${pad}<DropdownMenu>`,
+          `${pad}  <DropdownMenuTrigger asChild>`,
+          rendered,
+          `${pad}  </DropdownMenuTrigger>`,
+          `${pad}  <DropdownMenuContent${classAttr}${styleAttr}>`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </DropdownMenuContent>`,
+          `${pad}</DropdownMenu>`,
+        ].join("\n");
+      default:
+        return rendered;
+    }
+  }
+
+  /** Wrap rendered container with context menu if contextMenuMocPath is set */
+  function wrapWithContextMenu(rendered: string, props: Record<string, unknown>, pad: string): string {
+    const contextMenuMocPath = props?.contextMenuMocPath as string | undefined;
+    if (!contextMenuMocPath) return rendered;
+
+    const contentComment = `{/* linked: ${escapeJsx(contextMenuMocPath)} */}`;
+    return [
+      `${pad}<ContextMenu>`,
+      `${pad}  <ContextMenuTrigger asChild>`,
+      rendered,
+      `${pad}  </ContextMenuTrigger>`,
+      `${pad}  <ContextMenuContent>`,
+      `${pad}    ${contentComment}`,
+      `${pad}  </ContextMenuContent>`,
+      `${pad}</ContextMenu>`,
+    ].join("\n");
   }
 
   function renderNode(nodeId: string, indent: number): string {
@@ -232,6 +754,20 @@ export function craftStateToTsx(
     const children = node.nodes || [];
     const textContent = mapping.textProp ? (node.props?.[mapping.textProp] as string) : undefined;
 
+    // Toast onClick for CraftButton
+    const toastText = resolvedName === "CraftButton" ? (node.props?.toastText as string | undefined) : undefined;
+    let toastOnClick = "";
+    if (toastText) {
+      const toastPosition = (node.props?.toastPosition as string | undefined) || "bottom-right";
+      if (toastPosition !== "bottom-right") {
+        toastOnClick = ` onClick={() => toast("${escapeJsString(toastText)}", { position: "${toastPosition}" })}`;
+      } else {
+        toastOnClick = ` onClick={() => toast("${escapeJsString(toastText)}")}`;
+      }
+    }
+
+    let rendered = "";
+
     // Card special case: render title/description
     if (resolvedName === "CraftCard") {
       const title = (node.props?.title as string) || "";
@@ -252,9 +788,48 @@ export function craftStateToTsx(
         cardBody.push(`${pad}    </div>`);
       }
       if (cardBody.length > 0) {
-        return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${cardBody.join("\n")}\n${pad}</${tag}>`;
+        rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${cardBody.join("\n")}\n${pad}</${tag}>`;
+      } else {
+        rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
       }
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      rendered = wrapWithContextMenu(rendered, node.props, pad);
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+      return rendered;
+    }
+
+    // Alert special case: render with icon, title, description
+    if (resolvedName === "CraftAlert") {
+      const title = (node.props?.title as string) || "";
+      const desc = (node.props?.description as string) || "";
+      const icon = (node.props?.icon as string) || "AlertCircle";
+      const alertBody: string[] = [];
+      alertBody.push(`${pad}  <${icon} className="h-4 w-4" />`);
+      if (title) {
+        alertBody.push(`${pad}  <h5 className="mb-1 font-medium leading-none tracking-tight">${escapeJsx(title)}</h5>`);
+      }
+      if (desc) {
+        alertBody.push(`${pad}  <div className="text-sm [&_p]:leading-relaxed">${escapeJsx(desc)}</div>`);
+      }
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${alertBody.join("\n")}\n${pad}</${tag}>`;
+      return rendered;
+    }
+
+    // Accordion special case: render with AccordionItem/Trigger/Content
+    if (resolvedName === "CraftAccordion") {
+      return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+    }
+
+    // Select special case: render with SelectTrigger/Content/Item (tooltip handled internally)
+    if (resolvedName === "CraftSelect") {
+      rendered = `${mocComments}\n${renderSelect(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      return rendered;
+    }
+
+    // RadioGroup special case: render with RadioGroupItem + Label
+    if (resolvedName === "CraftRadioGroup") {
+      rendered = `${mocComments}\n${renderRadioGroup(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+      return rendered;
     }
 
     // Table special case: render as static table
@@ -274,7 +849,27 @@ export function craftStateToTsx(
 
     // Self-closing for Input
     if (resolvedName === "CraftInput") {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      const inputTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
+      rendered = wrapWithTooltip(rendered, node.props, pad, inputTooltipTrigger);
+      return rendered;
+    }
+
+    // Self-closing for Textarea
+    if (resolvedName === "CraftTextarea") {
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      const textareaTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
+      rendered = wrapWithTooltip(rendered, node.props, pad, textareaTooltipTrigger);
+      return rendered;
+    }
+
+    // Self-closing for Progress, Slider, Skeleton
+    if (resolvedName === "CraftProgress" || resolvedName === "CraftSlider" || resolvedName === "CraftSkeleton") {
+      let rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      if (resolvedName === "CraftSlider") {
+        rendered = wrapWithTooltip(rendered, node.props, pad);
+      }
+      return rendered;
     }
 
     // Container with children
@@ -282,21 +877,46 @@ export function craftStateToTsx(
       const renderedChildren = children
         .map((id) => renderNode(id, indent + 1))
         .filter(Boolean);
-      return `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
+      rendered = `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
+      rendered = wrapWithContextMenu(rendered, node.props, pad);
+      return rendered;
     }
 
     // Text content
     if (textContent) {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${escapeJsx(textContent)}</${tag}>`;
+      const escapedTextContent = textContent.includes("\n")
+        ? `{"${escapeJsString(textContent)}"}`
+        : escapeJsx(textContent);
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapedTextContent}</${tag}>`;
+      // Apply wrappers for CraftButton
+      if (resolvedName === "CraftButton") {
+        rendered = wrapWithOverlay(rendered, node.props, pad);
+        rendered = wrapWithTooltip(rendered, node.props, pad);
+      }
+      // Apply tooltip wrapper for Badge/Label/Checkbox/Switch
+      if (resolvedName === "CraftBadge" || resolvedName === "CraftLabel" || resolvedName === "CraftCheckbox" || resolvedName === "CraftSwitch") {
+        rendered = wrapWithTooltip(rendered, node.props, pad);
+      }
+      return rendered;
     }
 
     // Empty container
     if (mapping.isContainer) {
-      return `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr} />`;
+      rendered = `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr} />`;
+      rendered = wrapWithContextMenu(rendered, node.props, pad);
+      return rendered;
     }
 
     // Fallback self-closing
-    return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+    rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr} />`;
+    if (resolvedName === "CraftButton") {
+      rendered = wrapWithOverlay(rendered, node.props, pad);
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+    }
+    if (resolvedName === "CraftSwitch") {
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+    }
+    return rendered;
   }
 
   // Collect imports from tree
@@ -452,10 +1072,170 @@ function renderTable(
   return lines.join("\n");
 }
 
+function renderRadioGroup(
+  props: Record<string, unknown>,
+  tag: string,
+  propsStr: string,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const items = ((props?.items as string) || "Option A,Option B,Option C").split(",").map((s) => s.trim());
+  const orientation = (props?.orientation as string) || "vertical";
+  const variant = (props?.variant as string) || "default";
+  const descriptionsRaw = (props?.descriptions as string) || "";
+  const descList = descriptionsRaw ? descriptionsRaw.split(",").map((s) => s.trim()) : [];
+  const cardBorderColor = (props?.cardBorderColor as string) || "";
+  const cardBgColor = (props?.cardBgColor as string) || "";
+  const descriptionColor = (props?.descriptionColor as string) || "";
+  const isCard = variant === "card";
+
+  // Build inline style strings for card and description
+  const cardStyleParts: string[] = [];
+  if (cardBorderColor) cardStyleParts.push(`borderColor: "${cardBorderColor}"`);
+  if (cardBgColor) cardStyleParts.push(`backgroundColor: "${cardBgColor}"`);
+  const cardStyleAttr = cardStyleParts.length > 0 ? ` style={{ ${cardStyleParts.join(", ")} }}` : "";
+  const descStyleAttr = descriptionColor ? ` style={{ color: "${descriptionColor}" }}` : "";
+
+  // Merge horizontal className into classNameAttr
+  let finalClassNameAttr = classNameAttr;
+  if (orientation === "horizontal") {
+    // Extract existing className or create new one
+    const existingMatch = classNameAttr.match(/className="([^"]*)"/);
+    if (existingMatch) {
+      finalClassNameAttr = ` className="${existingMatch[1]} flex flex-row gap-4"`;
+    } else {
+      finalClassNameAttr = ` className="flex flex-row gap-4"`;
+    }
+  }
+
+  const lines: string[] = [];
+  lines.push(`${pad}<${tag}${propsStr}${finalClassNameAttr}${styleAttr}>`);
+  for (let i = 0; i < items.length; i++) {
+    const label = items[i];
+    const id = `r-${i + 1}`;
+    const desc = descList[i] || "";
+    const hasDesc = desc !== "";
+
+    if (isCard) {
+      const cardCls = "flex items-center gap-4 rounded-lg border p-4 cursor-pointer [&:has([data-state=checked])]:border-primary";
+      lines.push(`${pad}  <label htmlFor="${id}" className="${cardCls}"${cardStyleAttr}>`);
+      lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
+      if (hasDesc) {
+        lines.push(`${pad}    <div className="grid gap-1.5 leading-none">`);
+        lines.push(`${pad}      <span className="font-medium">${escapeJsx(label)}</span>`);
+        lines.push(`${pad}      <p className="text-sm text-muted-foreground"${descStyleAttr}>${escapeJsx(desc)}</p>`);
+        lines.push(`${pad}    </div>`);
+      } else {
+        lines.push(`${pad}    <span className="font-medium">${escapeJsx(label)}</span>`);
+      }
+      lines.push(`${pad}  </label>`);
+    } else if (hasDesc) {
+      lines.push(`${pad}  <div className="flex items-start space-x-2">`);
+      lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
+      lines.push(`${pad}    <div className="grid gap-1.5 leading-none">`);
+      lines.push(`${pad}      <Label htmlFor="${id}">${escapeJsx(label)}</Label>`);
+      lines.push(`${pad}      <p className="text-sm text-muted-foreground"${descStyleAttr}>${escapeJsx(desc)}</p>`);
+      lines.push(`${pad}    </div>`);
+      lines.push(`${pad}  </div>`);
+    } else {
+      lines.push(`${pad}  <div className="flex items-center space-x-2">`);
+      lines.push(`${pad}    <RadioGroupItem value="${escapeAttr(label)}" id="${id}" />`);
+      lines.push(`${pad}    <Label htmlFor="${id}">${escapeJsx(label)}</Label>`);
+      lines.push(`${pad}  </div>`);
+    }
+  }
+  lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
+function renderSelect(
+  props: Record<string, unknown>,
+  tag: string,
+  propsStr: string,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const items = ((props?.items as string) || "Option 1,Option 2,Option 3").split(",").map((s) => s.trim());
+  const placeholder = (props?.placeholder as string) || "Select an option";
+  const tooltipText = props?.tooltipText as string | undefined;
+  const tooltipSide = props?.tooltipSide as string | undefined;
+  const sideAttr = tooltipSide ? ` side="${tooltipSide}"` : "";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<${tag}>`);
+  if (tooltipText) {
+    lines.push(`${pad}  <TooltipProvider>`);
+    lines.push(`${pad}    <Tooltip>`);
+    lines.push(`${pad}      <TooltipTrigger asChild>`);
+    lines.push(`${pad}        <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}          <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
+    lines.push(`${pad}        </SelectTrigger>`);
+    lines.push(`${pad}      </TooltipTrigger>`);
+    lines.push(`${pad}      <TooltipContent${sideAttr}>`);
+    lines.push(`${pad}        <p>${escapeJsx(tooltipText)}</p>`);
+    lines.push(`${pad}      </TooltipContent>`);
+    lines.push(`${pad}    </Tooltip>`);
+    lines.push(`${pad}  </TooltipProvider>`);
+  } else {
+    lines.push(`${pad}  <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
+    lines.push(`${pad}  </SelectTrigger>`);
+  }
+  lines.push(`${pad}  <SelectContent>`);
+  for (const item of items) {
+    lines.push(`${pad}    <SelectItem value="${escapeAttr(item)}">${escapeJsx(item)}</SelectItem>`);
+  }
+  lines.push(`${pad}  </SelectContent>`);
+  lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
+function renderAccordion(
+  props: Record<string, unknown>,
+  tag: string,
+  propsStr: string,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const items = ((props?.items as string) || "Item 1,Item 2,Item 3").split(",").map((s) => s.trim());
+  const linkedMocPaths = ((props?.linkedMocPaths as string) || "").split(",").map((s) => s.trim());
+  const type = (props?.type as string) || "single";
+  const collapsibleAttr = type === "single" ? " collapsible" : "";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}${collapsibleAttr}>`);
+
+  for (let i = 0; i < items.length; i++) {
+    const label = items[i];
+    const mocPath = linkedMocPaths[i] || "";
+    const value = `item-${i + 1}`;
+    lines.push(`${pad}  <AccordionItem value="${value}">`);
+    lines.push(`${pad}    <AccordionTrigger>${escapeJsx(label)}</AccordionTrigger>`);
+    lines.push(`${pad}    <AccordionContent>`);
+    if (mocPath) {
+      lines.push(`${pad}      {/* linked: ${escapeJsx(mocPath)} */}`);
+    } else {
+      lines.push(`${pad}      <p>${escapeJsx(label)} content</p>`);
+    }
+    lines.push(`${pad}    </AccordionContent>`);
+    lines.push(`${pad}  </AccordionItem>`);
+  }
+
+  lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
 function escapeJsx(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/{/g, "&#123;").replace(/}/g, "&#125;");
 }
 
 function escapeAttr(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeJsString(text: string): string {
+  return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n").replace(/\r/g, "\\r");
 }

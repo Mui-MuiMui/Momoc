@@ -16,6 +16,7 @@ const THEME_COLOR_OPTIONS = [
   "accent", "destructive", "card", "border", "white", "black",
 ];
 
+const FONT_FAMILY_OPTIONS = ["sans", "serif", "mono"];
 const FONT_WEIGHT_OPTIONS = ["normal", "medium", "semibold", "bold"];
 const BORDER_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "xl", "2xl", "full"];
 
@@ -103,18 +104,21 @@ function parsePaletteClass(cls: string): { prefix: string; family: string; shade
 }
 
 export function TailwindEditor() {
-  const { selectedNodeId, currentClassName, actions } = useEditor((state) => {
+  const { selectedNodeId, currentClassName, hasClassName, actions } = useEditor((state) => {
     const nodeId = state.events.selected?.values().next().value;
-    if (!nodeId) return { selectedNodeId: null, currentClassName: "" };
+    if (!nodeId) return { selectedNodeId: null, currentClassName: "", hasClassName: true };
 
     const node = state.nodes[nodeId];
+    const craftProps = (node?.data?.type as any)?.craft?.props ?? null;
     return {
       selectedNodeId: nodeId,
       currentClassName: (node?.data?.props?.className as string) || "",
+      hasClassName: craftProps ? "className" in craftProps : true,
     };
   });
 
   const [rawInput, setRawInput] = useState(currentClassName);
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [paddingDir, setPaddingDir] = useState(0);
   const [marginDir, setMarginDir] = useState(0);
   const [fontSizeMode, setFontSizeMode] = useState<"preset" | "slider">("preset");
@@ -127,9 +131,19 @@ export function TailwindEditor() {
   }, [selectedNodeId, currentClassName]);
 
   if (!selectedNodeId) return null;
+  if (!hasClassName) return null;
 
   const classes = rawInput.split(/\s+/).filter(Boolean);
   const activeSet = new Set(classes);
+
+  const toggleCategory = (cat: string) => {
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  };
 
   const updateClassName = (newClassName: string) => {
     setRawInput(newClassName);
@@ -175,6 +189,7 @@ export function TailwindEditor() {
   const themeTextGroup = THEME_COLOR_OPTIONS.map((c) => `text-${c}`);
   const themeBgGroup = THEME_COLOR_OPTIONS.map((c) => `bg-${c}`);
   const themeBorderGroup = THEME_COLOR_OPTIONS.map((c) => `border-${c}`);
+  const fontFamilyGroup = FONT_FAMILY_OPTIONS.map((f) => `font-${f}`);
   const fontWeightGroup = FONT_WEIGHT_OPTIONS.map((w) => `font-${w}`);
   const borderRadiusGroup = BORDER_RADIUS_OPTIONS.map((r) => `rounded-${r}`);
   const alignSelfGroup = ALIGN_SELF_OPTIONS.map((o) => o.cls);
@@ -229,168 +244,181 @@ export function TailwindEditor() {
         />
       </div>
 
-      <SpacingSlider
-        title="Padding"
-        directions={PADDING_DIRS}
-        dirIndex={paddingDir}
-        onDirChange={setPaddingDir}
-        value={currentPaddingIdx}
-        onChange={(idx) => setSpacingValue(currentPaddingPrefix, idx)}
-      />
+      <TailwindCategory title="Layout" collapsed={collapsedCategories.has("layout")} onToggle={() => toggleCategory("layout")}>
+        <SpacingSlider
+          title="Padding"
+          directions={PADDING_DIRS}
+          dirIndex={paddingDir}
+          onDirChange={setPaddingDir}
+          value={currentPaddingIdx}
+          onChange={(idx) => setSpacingValue(currentPaddingPrefix, idx)}
+        />
 
-      <SpacingSlider
-        title="Margin"
-        directions={MARGIN_DIRS}
-        dirIndex={marginDir}
-        onDirChange={setMarginDir}
-        value={currentMarginIdx}
-        onChange={(idx) => setSpacingValue(currentMarginPrefix, idx)}
-      />
+        <SpacingSlider
+          title="Margin"
+          directions={MARGIN_DIRS}
+          dirIndex={marginDir}
+          onDirChange={setMarginDir}
+          value={currentMarginIdx}
+          onChange={(idx) => setSpacingValue(currentMarginPrefix, idx)}
+        />
 
-      <TailwindSection title="Text Align">
-        <div className="flex gap-1">
-          {TEXT_ALIGN_OPTIONS.map((o) => (
-            <ClassButton
-              key={o.textCls}
-              label={o.label}
-              active={activeSet.has(o.textCls)}
-              onClick={() => {
-                const filtered = classes.filter((c) => !ALL_TEXT_ALIGN_CLASSES.includes(c));
-                if (activeSet.has(o.textCls)) {
-                  updateClassName(filtered.join(" "));
-                } else {
-                  updateClassName([...filtered, o.textCls, o.justifyCls].join(" "));
-                }
-              }}
-            />
-          ))}
-        </div>
-      </TailwindSection>
-
-      <TailwindSection title="Align Self">
-        <div className="flex flex-wrap gap-1">
-          {ALIGN_SELF_OPTIONS.map((o) => (
-            <ClassButton
-              key={o.cls}
-              label={o.label}
-              active={activeSet.has(o.cls)}
-              onClick={() => setGroupClass(o.cls, alignSelfGroup)}
-            />
-          ))}
-        </div>
-      </TailwindSection>
-
-      <TailwindSection title="Content V-Align">
-        <div className="flex flex-wrap gap-1">
-          {CONTENT_VALIGN_OPTIONS.map((o) => (
-            <ClassButton
-              key={o.cls}
-              label={o.label}
-              active={activeSet.has(o.cls)}
-              onClick={() => {
-                const filtered = classes.filter((c) => !contentVAlignGroup.includes(c));
-                if (activeSet.has(o.cls)) {
-                  const noFlex = filtered.filter((c) => c !== "flex");
-                  updateClassName(noFlex.join(" "));
-                } else {
-                  const withFlex = filtered.includes("flex") ? filtered : ["flex", ...filtered];
-                  updateClassName([...withFlex, o.cls].join(" "));
-                }
-              }}
-            />
-          ))}
-        </div>
-      </TailwindSection>
-
-      <TailwindSection title="Font Size">
-        <div className="mb-1 flex gap-1">
-          <ModeToggle label="Preset" active={fontSizeMode === "preset"} onClick={() => setFontSizeMode("preset")} />
-          <ModeToggle label="Slider" active={fontSizeMode === "slider"} onClick={() => setFontSizeMode("slider")} />
-        </div>
-        {fontSizeMode === "preset" ? (
-          <div className="flex flex-wrap gap-1">
-            {FONT_SIZE_SCALE.map((s) => (
+        <TailwindSection title="Text Align">
+          <div className="flex gap-1">
+            {TEXT_ALIGN_OPTIONS.map((o) => (
               <ClassButton
-                key={s}
-                label={s}
-                active={activeSet.has(`text-${s}`)}
-                onClick={() => setGroupClass(`text-${s}`, fontSizeGroup)}
+                key={o.textCls}
+                label={o.label}
+                active={activeSet.has(o.textCls)}
+                onClick={() => {
+                  const filtered = classes.filter((c) => !ALL_TEXT_ALIGN_CLASSES.includes(c));
+                  if (activeSet.has(o.textCls)) {
+                    updateClassName(filtered.join(" "));
+                  } else {
+                    updateClassName([...filtered, o.textCls, o.justifyCls].join(" "));
+                  }
+                }}
               />
             ))}
           </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={-1}
-              max={FONT_SIZE_SCALE.length - 1}
-              value={currentFontSizeIdx}
-              onChange={(e) => {
-                const idx = Number(e.target.value);
-                const filtered = classes.filter((c) => !fontSizeGroup.includes(c));
-                if (idx < 0) {
-                  updateClassName(filtered.join(" "));
-                } else {
-                  updateClassName([...filtered, `text-${FONT_SIZE_SCALE[idx]}`].join(" "));
-                }
-              }}
-              className="flex-1 accent-[var(--vscode-button-background,#0e639c)]"
-            />
-            <span className="w-10 text-right text-[10px] text-[var(--vscode-foreground,#ccc)]">
-              {currentFontSizeIdx >= 0 ? FONT_SIZE_SCALE[currentFontSizeIdx] : "—"}
-            </span>
+        </TailwindSection>
+
+        <TailwindSection title="Align Self">
+          <div className="flex flex-wrap gap-1">
+            {ALIGN_SELF_OPTIONS.map((o) => (
+              <ClassButton
+                key={o.cls}
+                label={o.label}
+                active={activeSet.has(o.cls)}
+                onClick={() => setGroupClass(o.cls, alignSelfGroup)}
+              />
+            ))}
           </div>
-        )}
-      </TailwindSection>
+        </TailwindSection>
 
-      {/* Text Color: theme + palette */}
-      <ColorSection
-        title="Text Color"
-        prefix="text"
-        activeSet={activeSet}
-        paletteFamily={textPaletteFamily}
-        onFamilyChange={setTextPaletteFamily}
-        findPaletteColor={findPaletteColor}
-        onApply={applyColor}
-      />
+        <TailwindSection title="Content V-Align">
+          <div className="flex flex-wrap gap-1">
+            {CONTENT_VALIGN_OPTIONS.map((o) => (
+              <ClassButton
+                key={o.cls}
+                label={o.label}
+                active={activeSet.has(o.cls)}
+                onClick={() => {
+                  const filtered = classes.filter((c) => !contentVAlignGroup.includes(c));
+                  if (activeSet.has(o.cls)) {
+                    const noFlex = filtered.filter((c) => c !== "flex");
+                    updateClassName(noFlex.join(" "));
+                  } else {
+                    const withFlex = filtered.includes("flex") ? filtered : ["flex", ...filtered];
+                    updateClassName([...withFlex, o.cls].join(" "));
+                  }
+                }}
+              />
+            ))}
+          </div>
+        </TailwindSection>
+      </TailwindCategory>
 
-      {/* Background: theme + palette */}
-      <ColorSection
-        title="Background"
-        prefix="bg"
-        activeSet={activeSet}
-        paletteFamily={bgPaletteFamily}
-        onFamilyChange={setBgPaletteFamily}
-        findPaletteColor={findPaletteColor}
-        onApply={applyColor}
-      />
+      <TailwindCategory title="Font" collapsed={collapsedCategories.has("font")} onToggle={() => toggleCategory("font")}>
+        <TailwindSection title="Font Family">
+          <div className="flex flex-wrap gap-1">
+            {FONT_FAMILY_OPTIONS.map((f) => (
+              <ClassButton key={f} label={f} active={activeSet.has(`font-${f}`)} onClick={() => setGroupClass(`font-${f}`, fontFamilyGroup)} />
+            ))}
+          </div>
+        </TailwindSection>
 
-      {/* Border Color: theme + palette */}
-      <ColorSection
-        title="Border Color"
-        prefix="border"
-        activeSet={activeSet}
-        paletteFamily={borderPaletteFamily}
-        onFamilyChange={setBorderPaletteFamily}
-        findPaletteColor={findPaletteColor}
-        onApply={applyColor}
-      />
+        <TailwindSection title="Font Size">
+          <div className="mb-1 flex gap-1">
+            <ModeToggle label="Preset" active={fontSizeMode === "preset"} onClick={() => setFontSizeMode("preset")} />
+            <ModeToggle label="Slider" active={fontSizeMode === "slider"} onClick={() => setFontSizeMode("slider")} />
+          </div>
+          {fontSizeMode === "preset" ? (
+            <div className="flex flex-wrap gap-1">
+              {FONT_SIZE_SCALE.map((s) => (
+                <ClassButton
+                  key={s}
+                  label={s}
+                  active={activeSet.has(`text-${s}`)}
+                  onClick={() => setGroupClass(`text-${s}`, fontSizeGroup)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={-1}
+                max={FONT_SIZE_SCALE.length - 1}
+                value={currentFontSizeIdx}
+                onChange={(e) => {
+                  const idx = Number(e.target.value);
+                  const filtered = classes.filter((c) => !fontSizeGroup.includes(c));
+                  if (idx < 0) {
+                    updateClassName(filtered.join(" "));
+                  } else {
+                    updateClassName([...filtered, `text-${FONT_SIZE_SCALE[idx]}`].join(" "));
+                  }
+                }}
+                className="flex-1 accent-[var(--vscode-button-background,#0e639c)]"
+              />
+              <span className="w-10 text-right text-[10px] text-[var(--vscode-foreground,#ccc)]">
+                {currentFontSizeIdx >= 0 ? FONT_SIZE_SCALE[currentFontSizeIdx] : "—"}
+              </span>
+            </div>
+          )}
+        </TailwindSection>
 
-      <TailwindSection title="Font Weight">
-        <div className="flex flex-wrap gap-1">
-          {FONT_WEIGHT_OPTIONS.map((w) => (
-            <ClassButton key={w} label={w} active={activeSet.has(`font-${w}`)} onClick={() => setGroupClass(`font-${w}`, fontWeightGroup)} />
-          ))}
-        </div>
-      </TailwindSection>
+        <TailwindSection title="Font Weight">
+          <div className="flex flex-wrap gap-1">
+            {FONT_WEIGHT_OPTIONS.map((w) => (
+              <ClassButton key={w} label={w} active={activeSet.has(`font-${w}`)} onClick={() => setGroupClass(`font-${w}`, fontWeightGroup)} />
+            ))}
+          </div>
+        </TailwindSection>
+      </TailwindCategory>
 
-      <TailwindSection title="Border Radius">
-        <div className="flex flex-wrap gap-1">
-          {BORDER_RADIUS_OPTIONS.map((r) => (
-            <ClassButton key={r} label={r} active={activeSet.has(`rounded-${r}`)} onClick={() => setGroupClass(`rounded-${r}`, borderRadiusGroup)} />
-          ))}
-        </div>
-      </TailwindSection>
+      <TailwindCategory title="Color" collapsed={collapsedCategories.has("color")} onToggle={() => toggleCategory("color")}>
+        <ColorSection
+          title="Text Color"
+          prefix="text"
+          activeSet={activeSet}
+          paletteFamily={textPaletteFamily}
+          onFamilyChange={setTextPaletteFamily}
+          findPaletteColor={findPaletteColor}
+          onApply={applyColor}
+        />
+
+        <ColorSection
+          title="Background"
+          prefix="bg"
+          activeSet={activeSet}
+          paletteFamily={bgPaletteFamily}
+          onFamilyChange={setBgPaletteFamily}
+          findPaletteColor={findPaletteColor}
+          onApply={applyColor}
+        />
+
+        <ColorSection
+          title="Border Color"
+          prefix="border"
+          activeSet={activeSet}
+          paletteFamily={borderPaletteFamily}
+          onFamilyChange={setBorderPaletteFamily}
+          findPaletteColor={findPaletteColor}
+          onApply={applyColor}
+        />
+      </TailwindCategory>
+
+      <TailwindCategory title="Border" collapsed={collapsedCategories.has("border")} onToggle={() => toggleCategory("border")}>
+        <TailwindSection title="Border Radius">
+          <div className="flex flex-wrap gap-1">
+            {BORDER_RADIUS_OPTIONS.map((r) => (
+              <ClassButton key={r} label={r} active={activeSet.has(`rounded-${r}`)} onClick={() => setGroupClass(`rounded-${r}`, borderRadiusGroup)} />
+            ))}
+          </div>
+        </TailwindSection>
+      </TailwindCategory>
     </div>
   );
 }
@@ -536,6 +564,32 @@ function SpacingSlider({
         </span>
       </div>
     </TailwindSection>
+  );
+}
+
+function TailwindCategory({
+  title,
+  collapsed,
+  onToggle,
+  children,
+}: {
+  title: string;
+  collapsed: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mt-1 border-t border-[var(--vscode-panel-border,#444)] pt-1">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center gap-1 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
+      >
+        <span className="text-[10px]">{collapsed ? "\u25b6" : "\u25bc"}</span>
+        {title}
+      </button>
+      {!collapsed && <div className="flex flex-col gap-3">{children}</div>}
+    </div>
   );
 }
 

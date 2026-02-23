@@ -8,6 +8,7 @@ interface CraftContainerProps {
   alignItems?: "start" | "center" | "end" | "stretch" | "baseline";
   gap?: string;
   gridCols?: number;
+  contextMenuMocPath?: string;
   width?: string;
   height?: string;
   className?: string;
@@ -69,6 +70,7 @@ export const CraftContainer: UserComponent<CraftContainerProps> = ({
   alignItems = "stretch",
   gap = "4",
   gridCols = 3,
+  contextMenuMocPath = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -94,7 +96,7 @@ export const CraftContainer: UserComponent<CraftContainerProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("min-h-[60px] p-4", layoutClasses, className)}
+      className={cn("min-h-[60px] p-4", layoutClasses, contextMenuMocPath && "ring-1 ring-dashed ring-muted-foreground/30", className)}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {children}
@@ -111,6 +113,7 @@ CraftContainer.craft = {
     alignItems: "stretch",
     gap: "4",
     gridCols: 3,
+    contextMenuMocPath: "",
     width: "auto",
     height: "auto",
     className: "",

@@ -11,6 +11,46 @@ import { CraftLabel } from "./shadcn/CraftLabel";
 import { CraftSeparator } from "./shadcn/CraftSeparator";
 import { CraftBadge } from "./shadcn/CraftBadge";
 import { CraftTable } from "./shadcn/CraftTable";
+// Phase 1: Simple components
+import { CraftAccordion } from "./shadcn/CraftAccordion";
+import { CraftAlert } from "./shadcn/CraftAlert";
+import { CraftAspectRatio } from "./shadcn/CraftAspectRatio";
+import { CraftAvatar } from "./shadcn/CraftAvatar";
+import { CraftBreadcrumb } from "./shadcn/CraftBreadcrumb";
+import { CraftCheckbox } from "./shadcn/CraftCheckbox";
+import { CraftCollapsible } from "./shadcn/CraftCollapsible";
+import { CraftPagination } from "./shadcn/CraftPagination";
+import { CraftProgress } from "./shadcn/CraftProgress";
+import { CraftRadioGroup } from "./shadcn/CraftRadioGroup";
+import { CraftScrollArea } from "./shadcn/CraftScrollArea";
+import { CraftSkeleton } from "./shadcn/CraftSkeleton";
+import { CraftSlider } from "./shadcn/CraftSlider";
+import { CraftSwitch } from "./shadcn/CraftSwitch";
+import { CraftTabs } from "./shadcn/CraftTabs";
+import { CraftTextarea } from "./shadcn/CraftTextarea";
+import { CraftToggle } from "./shadcn/CraftToggle";
+import { CraftToggleGroup } from "./shadcn/CraftToggleGroup";
+// Phase 2: Complex components
+import { CraftSelect } from "./shadcn/CraftSelect";
+import { CraftCalendar } from "./shadcn/CraftCalendar";
+import { CraftResizable } from "./shadcn/CraftResizable";
+import { CraftCarousel } from "./shadcn/CraftCarousel";
+import { CraftChart } from "./shadcn/CraftChart";
+import { CraftForm } from "./shadcn/CraftForm";
+// Phase 4: Overlay components
+import { CraftDialog } from "./shadcn/CraftDialog";
+import { CraftAlertDialog } from "./shadcn/CraftAlertDialog";
+import { CraftSheet } from "./shadcn/CraftSheet";
+import { CraftDrawer } from "./shadcn/CraftDrawer";
+import { CraftDropdownMenu } from "./shadcn/CraftDropdownMenu";
+import { CraftContextMenu } from "./shadcn/CraftContextMenu";
+import { CraftPopover } from "./shadcn/CraftPopover";
+import { CraftHoverCard } from "./shadcn/CraftHoverCard";
+import { CraftNavigationMenu } from "./shadcn/CraftNavigationMenu";
+import { CraftMenubar } from "./shadcn/CraftMenubar";
+import { CraftCommand } from "./shadcn/CraftCommand";
+import { CraftTooltip } from "./shadcn/CraftTooltip";
+import { CraftSonner } from "./shadcn/CraftSonner";
 
 export const resolvers = {
   CraftDiv,
@@ -26,6 +66,46 @@ export const resolvers = {
   CraftSeparator,
   CraftBadge,
   CraftTable,
+  // Phase 1
+  CraftAccordion,
+  CraftAlert,
+  CraftAspectRatio,
+  CraftAvatar,
+  CraftBreadcrumb,
+  CraftCheckbox,
+  CraftCollapsible,
+  CraftPagination,
+  CraftProgress,
+  CraftRadioGroup,
+  CraftScrollArea,
+  CraftSkeleton,
+  CraftSlider,
+  CraftSwitch,
+  CraftTabs,
+  CraftTextarea,
+  CraftToggle,
+  CraftToggleGroup,
+  // Phase 2
+  CraftSelect,
+  CraftCalendar,
+  CraftResizable,
+  CraftCarousel,
+  CraftChart,
+  CraftForm,
+  // Phase 4
+  CraftDialog,
+  CraftAlertDialog,
+  CraftSheet,
+  CraftDrawer,
+  CraftDropdownMenu,
+  CraftContextMenu,
+  CraftPopover,
+  CraftHoverCard,
+  CraftNavigationMenu,
+  CraftMenubar,
+  CraftCommand,
+  CraftTooltip,
+  CraftSonner,
 };
 
 export type ResolverKey = keyof typeof resolvers;
@@ -38,6 +118,8 @@ export interface PaletteItem {
   defaultProps: Record<string, unknown>;
   /** When true, the element is created as a Craft.js canvas that accepts children */
   isCanvas?: boolean;
+  /** false にするとパレットから非表示になる。省略時は表示（デフォルト true） */
+  enabled?: boolean;
 }
 
 export const paletteItems: PaletteItem[] = [
@@ -49,6 +131,7 @@ export const paletteItems: PaletteItem[] = [
     icon: "LayoutGrid",
     defaultProps: {},
     isCanvas: true,
+    enabled: true,
   },
   {
     resolverKey: "CraftFreeCanvas",
@@ -57,6 +140,7 @@ export const paletteItems: PaletteItem[] = [
     icon: "Move",
     defaultProps: {},
     isCanvas: true,
+    enabled: true,
   },
   // HTML
   {
@@ -66,6 +150,7 @@ export const paletteItems: PaletteItem[] = [
     icon: "Square",
     defaultProps: {},
     isCanvas: true,
+    enabled: true,
   },
   {
     resolverKey: "CraftText",
@@ -73,6 +158,7 @@ export const paletteItems: PaletteItem[] = [
     category: "html",
     icon: "Type",
     defaultProps: { text: "Text" },
+    enabled: true,
   },
   {
     resolverKey: "CraftImage",
@@ -80,6 +166,7 @@ export const paletteItems: PaletteItem[] = [
     category: "html",
     icon: "Image",
     defaultProps: {},
+    enabled: true,
   },
   {
     resolverKey: "CraftPlaceholderImage",
@@ -87,6 +174,7 @@ export const paletteItems: PaletteItem[] = [
     category: "html",
     icon: "ImageOff",
     defaultProps: {},
+    enabled: true,
   },
   // shadcn/ui
   {
@@ -95,6 +183,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "MousePointerClick",
     defaultProps: { text: "Button" },
+    enabled: true,
   },
   {
     resolverKey: "CraftInput",
@@ -102,6 +191,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "TextCursorInput",
     defaultProps: {},
+    enabled: true,
   },
   {
     resolverKey: "CraftCard",
@@ -110,6 +200,7 @@ export const paletteItems: PaletteItem[] = [
     icon: "CreditCard",
     defaultProps: {},
     isCanvas: true,
+    enabled: true,
   },
   {
     resolverKey: "CraftLabel",
@@ -117,6 +208,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Tag",
     defaultProps: { text: "Label" },
+    enabled: true,
   },
   {
     resolverKey: "CraftSeparator",
@@ -124,6 +216,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Minus",
     defaultProps: {},
+    enabled: true,
   },
   {
     resolverKey: "CraftBadge",
@@ -131,6 +224,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Award",
     defaultProps: { text: "Badge" },
+    enabled: true,
   },
   {
     resolverKey: "CraftTable",
@@ -138,5 +232,227 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Table",
     defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftAccordion",
+    label: "Accordion",
+    category: "shadcn",
+    icon: "ChevronsUpDown",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftAlert",
+    label: "Alert",
+    category: "shadcn",
+    icon: "AlertCircle",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftAspectRatio",
+    label: "Aspect Ratio",
+    category: "shadcn",
+    icon: "RatioIcon",
+    defaultProps: {},
+    isCanvas: true,
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftAvatar",
+    label: "Avatar",
+    category: "shadcn",
+    icon: "CircleUser",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftBreadcrumb",
+    label: "Breadcrumb",
+    category: "shadcn",
+    icon: "ChevronRight",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftCheckbox",
+    label: "Checkbox",
+    category: "shadcn",
+    icon: "CheckSquare",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftCollapsible",
+    label: "Collapsible",
+    category: "shadcn",
+    icon: "ChevronsDownUp",
+    defaultProps: {},
+    isCanvas: true,
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftPagination",
+    label: "Pagination",
+    category: "shadcn",
+    icon: "ArrowLeftRight",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftProgress",
+    label: "Progress",
+    category: "shadcn",
+    icon: "Loader",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftRadioGroup",
+    label: "Radio Group",
+    category: "shadcn",
+    icon: "Circle",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftScrollArea",
+    label: "Scroll Area",
+    category: "shadcn",
+    icon: "ScrollText",
+    defaultProps: {},
+    isCanvas: true,
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftSkeleton",
+    label: "Skeleton",
+    category: "shadcn",
+    icon: "RectangleHorizontal",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftSlider",
+    label: "Slider",
+    category: "shadcn",
+    icon: "SlidersHorizontal",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftSwitch",
+    label: "Switch",
+    category: "shadcn",
+    icon: "ToggleLeft",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftTabs",
+    label: "Tabs",
+    category: "shadcn",
+    icon: "PanelTop",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftTextarea",
+    label: "Textarea",
+    category: "shadcn",
+    icon: "AlignLeft",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftToggle",
+    label: "Toggle",
+    category: "shadcn",
+    icon: "ToggleRight",
+    defaultProps: { text: "Toggle" },
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftToggleGroup",
+    label: "Toggle Group",
+    category: "shadcn",
+    icon: "Group",
+    defaultProps: {},
+    enabled: false,
+  },
+  // Phase 2: Complex components
+  {
+    resolverKey: "CraftSelect",
+    label: "Select",
+    category: "shadcn",
+    icon: "ChevronDown",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftCalendar",
+    label: "Calendar",
+    category: "shadcn",
+    icon: "Calendar",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftResizable",
+    label: "Resizable",
+    category: "shadcn",
+    icon: "GripVertical",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftCarousel",
+    label: "Carousel",
+    category: "shadcn",
+    icon: "GalleryHorizontal",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftChart",
+    label: "Chart",
+    category: "shadcn",
+    icon: "BarChart3",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftForm",
+    label: "Form",
+    category: "shadcn",
+    icon: "FileInput",
+    defaultProps: {},
+    enabled: false,
+  },
+  // Phase 4: Overlay components (standalone kept in palette)
+  {
+    resolverKey: "CraftNavigationMenu",
+    label: "Navigation Menu",
+    category: "shadcn",
+    icon: "Navigation",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftMenubar",
+    label: "Menubar",
+    category: "shadcn",
+    icon: "Menu",
+    defaultProps: {},
+    enabled: false,
+  },
+  {
+    resolverKey: "CraftCommand",
+    label: "Command",
+    category: "shadcn",
+    icon: "Terminal",
+    defaultProps: {},
+    enabled: false,
   },
 ];

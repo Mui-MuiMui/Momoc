@@ -2,9 +2,13 @@
   "name": "mocker",
   "displayName": "Mocker",
   "description": "Interactive Design-Code Lab - Build mockups with GUI, code, and AI agents",
-  "version": "0.0.3",
-  "publisher": "mocker",
+  "version": "0.0.4",
+  "publisher": "mui-muimui",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mui-MuiMui/Mocker.git"
+  },
   "icon": "resources/icons/icon.png",
   "engines": {
     "vscode": "^1.100.0",

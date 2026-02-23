@@ -1,20 +1,18 @@
 import { useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 
-interface CraftDivProps {
-  contextMenuMocPath?: string;
+interface CraftProgressProps {
+  value?: number;
   width?: string;
   height?: string;
   className?: string;
-  children?: React.ReactNode;
 }
 
-export const CraftDiv: UserComponent<CraftDivProps> = ({
-  contextMenuMocPath = "",
+export const CraftProgress: UserComponent<CraftProgressProps> = ({
+  value = 50,
   width = "auto",
   height = "auto",
   className = "",
-  children,
 }) => {
   const {
     connectors: { connect, drag },
@@ -25,26 +23,34 @@ export const CraftDiv: UserComponent<CraftDivProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("min-h-[40px] min-w-[40px] p-2", contextMenuMocPath && "ring-1 ring-dashed ring-muted-foreground/30", className)}
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      className={cn(
+        "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
+        className,
+      )}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
-      {children}
+      <div
+        className="h-full w-full flex-1 bg-primary transition-all"
+        style={{ transform: `translateX(-${100 - value}%)` }}
+      />
     </div>
   );
 };
 
-CraftDiv.craft = {
-  displayName: "Div",
+CraftProgress.craft = {
+  displayName: "Progress",
   props: {
-    contextMenuMocPath: "",
+    value: 50,
     width: "auto",
     height: "auto",
     className: "",
   },
   rules: {
     canDrag: () => true,
-    canDrop: () => true,
-    canMoveIn: () => true,
-    canMoveOut: () => true,
+    canMoveIn: () => false,
   },
 };

@@ -4,6 +4,8 @@ import { cn } from "../../utils/cn";
 interface CraftLabelProps {
   text?: string;
   htmlFor?: string;
+  tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
   width?: string;
   height?: string;
   className?: string;
@@ -12,6 +14,8 @@ interface CraftLabelProps {
 export const CraftLabel: UserComponent<CraftLabelProps> = ({
   text = "Label",
   htmlFor = "",
+  tooltipText = "",
+  tooltipSide = "",
   width = "auto",
   height = "auto",
   className = "",
@@ -50,6 +54,8 @@ CraftLabel.craft = {
   props: {
     text: "Label",
     htmlFor: "",
+    tooltipText: "",
+    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

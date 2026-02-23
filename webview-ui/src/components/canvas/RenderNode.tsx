@@ -119,13 +119,15 @@ export function RenderNode({
 
   // Commit resize to Craft.js props
   const commitResize = useCallback(
-    (newWidth: number, newHeight: number) => {
+    (newWidth: number, newHeight: number, handle: HandlePosition) => {
+      const widthOnly = handle === "right" && !keepAspectRatio;
+      const heightOnly = handle === "bottom" && !keepAspectRatio;
       editorActions.setProp(id, (props: Record<string, unknown>) => {
-        props.width = `${Math.round(newWidth)}px`;
-        props.height = `${Math.round(newHeight)}px`;
+        if (!heightOnly) props.width = `${Math.round(newWidth)}px`;
+        if (!widthOnly) props.height = `${Math.round(newHeight)}px`;
       });
     },
-    [id, editorActions],
+    [id, editorActions, keepAspectRatio],
   );
 
   // Calculate new dimensions for a resize operation
@@ -197,8 +199,10 @@ export function RenderNode({
         const dx = ev.clientX - state.startX;
         const dy = ev.clientY - state.startY;
         const { w, h } = calcResize(state, dx, dy, keepAspectRatio);
-        dom.style.width = `${w}px`;
-        dom.style.height = `${h}px`;
+        const widthOnly = state.handle === "right" && !keepAspectRatio;
+        const heightOnly = state.handle === "bottom" && !keepAspectRatio;
+        if (!heightOnly) dom.style.width = `${w}px`;
+        if (!widthOnly) dom.style.height = `${h}px`;
       };
 
       const onMouseUp = (ev: MouseEvent) => {
@@ -209,7 +213,7 @@ export function RenderNode({
         const dx = ev.clientX - state.startX;
         const dy = ev.clientY - state.startY;
         const { w, h } = calcResize(state, dx, dy, keepAspectRatio);
-        commitResize(w, h);
+        commitResize(w, h, state.handle);
         resizeStateRef.current = null;
       };
 

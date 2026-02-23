@@ -12,7 +12,9 @@ export type ExtToWebMessage =
       payload: { locale: string; messages: Record<string, string> };
     }
   | { type: "capture:start" }
-  | { type: "resolve:imageUri:result"; payload: { src: string; uri: string } };
+  | { type: "resolve:imageUri:result"; payload: { src: string; uri: string } }
+  | { type: "resolve:mocFile:result"; payload: { path: string; exists: boolean } }
+  | { type: "browse:mocFile:result"; payload: { relativePath: string; targetProp?: string } };
 
 export type WebToExtMessage =
   | { type: "doc:save"; payload: { content: string } }
@@ -31,4 +33,6 @@ export type WebToExtMessage =
   | { type: "command:exportImage" }
   | { type: "capture:complete"; payload: { dataUrl: string } }
   | { type: "capture:error"; payload: { error: string } }
-  | { type: "resolve:imageUri"; payload: { src: string } };
+  | { type: "resolve:imageUri"; payload: { src: string } }
+  | { type: "resolve:mocFile"; payload: { path: string } }
+  | { type: "browse:mocFile"; payload: { currentPath?: string; targetProp?: string } };

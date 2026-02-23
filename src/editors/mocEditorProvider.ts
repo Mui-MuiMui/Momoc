@@ -384,6 +384,52 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         break;
       }
 
+      case "browse:mocFile": {
+        const browsePayload = message.payload as { currentPath?: string; targetProp?: string };
+        const docDir = vscode.Uri.joinPath(document.uri, "..");
+        const result = await vscode.window.showOpenDialog({
+          defaultUri: docDir,
+          canSelectFiles: true,
+          canSelectFolders: false,
+          canSelectMany: false,
+          filters: { "Moc Files": ["moc"] },
+        });
+        if (result && result[0]) {
+          const selectedPath = result[0].fsPath;
+          const docDirPath = path.dirname(document.uri.fsPath);
+          const relativePath = path.relative(docDirPath, selectedPath).replace(/\\/g, "/");
+          webviewPanel.webview.postMessage({
+            type: "browse:mocFile:result",
+            payload: { relativePath, targetProp: browsePayload?.targetProp },
+          });
+        }
+        break;
+      }
+
+      case "resolve:mocFile": {
+        const { path: mocPath } = message.payload as { path: string };
+        let filePath: string;
+        if (path.isAbsolute(mocPath)) {
+          filePath = mocPath;
+        } else {
+          const docDir = path.dirname(document.uri.fsPath);
+          filePath = path.join(docDir, mocPath);
+        }
+        try {
+          await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
+          webviewPanel.webview.postMessage({
+            type: "resolve:mocFile:result",
+            payload: { path: mocPath, exists: true },
+          });
+        } catch {
+          webviewPanel.webview.postMessage({
+            type: "resolve:mocFile:result",
+            payload: { path: mocPath, exists: false },
+          });
+        }
+        break;
+      }
+
       case "editor:ready":
         break;
     }
