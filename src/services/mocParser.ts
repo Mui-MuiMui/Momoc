@@ -2,7 +2,10 @@ import type { MocDocument, MocMetadata, MocMemo, MocEditorData } from "../shared
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
 const MOC_COMMENT_REGEX = /\/\*\*[\s\S]*?\*\//;
-const MOC_TAG_REGEX = /@moc-(\w[\w-]*)\s+(.+)/g;
+// Match only actual metadata tags (` * @moc-key value`), not description block lines (`*   @moc-key`).
+// Using `\* @moc-` (asterisk + single space) excludes indented description block lines.
+// `[^\S\n]*` allows optional non-newline whitespace, `(.*)` allows empty values.
+const MOC_TAG_REGEX = /\* @moc-(\w[\w-]*)[^\S\n]*(.*)/g;
 const MOC_MEMO_REGEX = /@moc-memo\s+#(\S+)\s+"([^"]+)"/g;
 const EDITOR_DATA_REGEX = /const\s+__mocEditorData\s*=\s*`([\s\S]*?)`;/;
 
@@ -52,12 +55,14 @@ function parseMetadata(content: string): MocMetadata {
     });
   }
 
+  const theme = tags["theme"] === "dark" ? "dark" : DEFAULT_METADATA.theme;
+  const layout = tags["layout"] === "absolute" ? "absolute" : DEFAULT_METADATA.layout;
+
   return {
     version: tags["version"] || MOC_VERSION,
     intent: tags["intent"] || "",
-    theme: (tags["theme"] as "light" | "dark") || DEFAULT_METADATA.theme,
-    layout:
-      (tags["layout"] as "flow" | "absolute") || DEFAULT_METADATA.layout,
+    theme,
+    layout,
     viewport: tags["viewport"] || DEFAULT_METADATA.viewport,
     memos,
     craftState: tags["craft-state"] || undefined,
