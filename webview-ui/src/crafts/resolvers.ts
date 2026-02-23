@@ -379,7 +379,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Group",
     defaultProps: {},
-    enabled: false,
+    enabled: true,
   },
   // Phase 2: Complex components
   {
