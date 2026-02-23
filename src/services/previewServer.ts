@@ -254,6 +254,8 @@ export async function startPreviewServer(
       background-color: var(--color-background);
       color: var(--color-foreground);
     }
+    /* Toggle: icon fill when pressed */
+    [data-toggle-pressed] svg.lucide { fill: currentColor; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style type="text/tailwindcss">
@@ -873,7 +875,7 @@ export function Toggle(props: any) {
   };
   const IconComponent = icon ? (Icons as any)[icon] : null;
   const cls = cn("inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=on]:bg-accent data-[state=on]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50", s[size] || s.default, v[variant] || v.default, className);
-  return <button type="button" aria-pressed={pressed} data-state={pressed ? "on" : "off"} data-disabled={disabled || undefined} disabled={disabled} onClick={() => setPressed((p: boolean) => !p)} className={cls} {...rest}>{IconComponent && <IconComponent className="h-4 w-4" style={pressed ? { fill: "currentColor" } : undefined} />}{children}</button>;
+  return <button type="button" aria-pressed={pressed} data-state={pressed ? "on" : "off"} data-toggle-pressed={pressed || undefined} data-disabled={disabled || undefined} disabled={disabled} onClick={() => setPressed((p: boolean) => !p)} className={cls} {...rest}>{IconComponent && <IconComponent className="h-4 w-4" />}{children}</button>;
 }`,
 
   "toggle-group": `import { cn } from "@/components/ui/_cn";
