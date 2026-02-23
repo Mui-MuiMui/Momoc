@@ -5,5 +5,7 @@
   "command.openPreview": "プレビューを開く",
   "command.switchLayoutMode": "レイアウトモードを切替",
   "command.toggleTheme": "プレビューテーマを切替",
-  "command.exportFlatTsx": "フラット TSX をエクスポート"
+  "command.exportFlatTsx": "フラット TSX をエクスポート",
+  "command.openBrowserPreview": "ブラウザプレビューを開く",
+  "command.exportImage": "画像としてエクスポート"
 }

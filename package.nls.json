@@ -5,5 +5,7 @@
   "command.openPreview": "Open Preview",
   "command.switchLayoutMode": "Switch Layout Mode",
   "command.toggleTheme": "Toggle Preview Theme",
-  "command.exportFlatTsx": "Export Flat TSX"
+  "command.exportFlatTsx": "Export Flat TSX",
+  "command.openBrowserPreview": "Open Browser Preview",
+  "command.exportImage": "Export as Image"
 }
