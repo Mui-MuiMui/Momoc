@@ -39,6 +39,8 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   ToggleGroup: {
     type: ["single", "multiple"],
+    variant: ["default", "outline"],
+    size: ["default", "sm", "lg"],
   },
   Chart: {
     chartType: ["bar", "line", "pie"],

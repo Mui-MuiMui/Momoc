@@ -877,10 +877,37 @@ export function Toggle(props: any) {
 }`,
 
   "toggle-group": `import { cn } from "@/components/ui/_cn";
+import { useState } from "react";
 export function ToggleGroup(props: any) {
-  const { className = "", children, ...rest } = props;
-  const cls = cn("flex items-center justify-center gap-1", className);
+  const { className = "", children, orientation = "horizontal", disabled, ...rest } = props;
+  const cls = cn(
+    "flex items-center justify-center",
+    orientation === "vertical" ? "flex-col" : "flex-row gap-1",
+    disabled ? "opacity-50 pointer-events-none" : "",
+    className
+  );
   return <div role="group" className={cls} {...rest}>{children}</div>;
+}
+export function ToggleGroupItem(props: any) {
+  const { className = "", children, value, variant = "default", size = "default", ...rest } = props;
+  const [pressed, setPressed] = useState(false);
+  const v: Record<string, string> = {
+    default: "bg-transparent",
+    outline: "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground",
+  };
+  const s: Record<string, string> = {
+    default: "h-9 px-3 min-w-9",
+    sm: "h-8 px-2 min-w-8",
+    lg: "h-10 px-3 min-w-10",
+  };
+  const cls = cn(
+    "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+    pressed ? "bg-accent text-accent-foreground" : "",
+    s[size] || s.default,
+    v[variant] || v.default,
+    className
+  );
+  return <button type="button" onClick={() => setPressed((p: boolean) => !p)} className={cls} {...rest}>{children}</button>;
 }`,
 
   // Phase 2: Complex components

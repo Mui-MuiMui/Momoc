@@ -242,7 +242,7 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     tag: "ToggleGroup",
     importFrom: "@/components/ui/toggle-group",
     importName: "ToggleGroup",
-    propsMap: ["type", "className"],
+    propsMap: ["type", "variant", "size", "disabled", "orientation", "className"],
     isContainer: false,
   },
   // Phase 2: Complex components
@@ -426,7 +426,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftTabs: { items: "Tab 1,Tab 2,Tab 3" },
   CraftTextarea: { disabled: false, tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
   CraftToggle: { text: "Toggle", variant: "default", pressed: false, size: "default", disabled: false, icon: "", tooltipText: "", tooltipSide: "" },
-  CraftToggleGroup: { items: "Bold,Italic,Underline", type: "single" },
+  CraftToggleGroup: { items: "Bold,Italic,Underline", type: "single", variant: "default", size: "default", disabled: false, gap: "1", orientation: "horizontal", tooltipText: "", tooltipSide: "" },
   // Phase 2
   CraftSelect: { items: "Option 1,Option 2,Option 3", placeholder: "Select an option", tooltipText: "", tooltipSide: "" },
   CraftCalendar: {},
@@ -488,6 +488,11 @@ export function craftStateToTsx(
     if (resolvedName === "CraftToggle") {
       const icon = node.props?.icon as string | undefined;
       if (icon) addImport("lucide-react", icon);
+    }
+
+    // Collect toggle-group sub-component imports
+    if (resolvedName === "CraftToggleGroup") {
+      addImport("@/components/ui/toggle-group", "ToggleGroupItem");
     }
 
     // Collect accordion sub-component imports
@@ -841,6 +846,24 @@ export function craftStateToTsx(
     // Table special case: render as static table
     if (resolvedName === "CraftTable") {
       return `${mocComments}\n${renderTable(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+    }
+
+    // ToggleGroup special case: render items as ToggleGroupItem children
+    if (resolvedName === "CraftToggleGroup") {
+      const gap = node.props?.gap as string | undefined;
+      const userClassName = (node.props?.className as string) || "";
+      const gapClass = gap ? `gap-${gap}` : "";
+      const combinedCls = [gapClass, userClassName].filter(Boolean).join(" ");
+      const tgClassAttr = combinedCls ? ` className="${combinedCls}"` : "";
+
+      const tgItems = ((node.props?.items as string) || "Bold,Italic,Underline")
+        .split(",").map((s) => s.trim()).filter(Boolean);
+      const childLines = tgItems.map((item) =>
+        `${pad}  <ToggleGroupItem value="${escapeAttr(item)}">${escapeJsx(item)}</ToggleGroupItem>`,
+      ).join("\n");
+      rendered = `${mocComments}\n${pad}<ToggleGroup${propsStr}${tgClassAttr}${styleAttr}>\n${childLines}\n${pad}</ToggleGroup>`;
+      rendered = wrapWithTooltip(rendered, node.props, pad);
+      return rendered;
     }
 
     // Self-closing for img
