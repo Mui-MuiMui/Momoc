@@ -45,8 +45,8 @@ function serializeMetadata(metadata: MocMetadata): string {
   lines.push(" * SSOT（Single Source of Truth）:");
   lines.push(" *   GUIエディタの状態（craftState）が末尾のエディタデータに存在する場合、");
   lines.push(" *   TSXコードよりcraftStateが正となります。");
-  lines.push(" *   TSXはcraftStateから自動生成される派生データです。");
-  lines.push(" *   AIエージェントがTSXを編集した場合、GUIエディタ側でcraftStateが再構築されます。");
+  lines.push(" *   TSXはcraftStateから自動生成される派生データであり、AIがページ構造を");
+  lines.push(" *   読み取るための参照用です。コンポーネントの配置変更はGUIで行ってください。");
   lines.push(" *");
   lines.push(" * メタデータ:");
   lines.push(" *   @moc-version  - ドキュメント形式バージョン（必須）");
