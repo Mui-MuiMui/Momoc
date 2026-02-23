@@ -31,7 +31,7 @@ shadcn/ui 公式コンポーネントの実装状況と確認状態を管理す�
 | Combobox      | Planned     | [ ]       | Command ベースで構成                       |
 | Switch        | Implemented | [x]       |                                            |
 | Slider        | Implemented | [x]       | 横スライダーのみ他は要件等                 |
-| Toggle        | Implemented | [ ]       |                                            |
+| Toggle        | Implemented | [x]       | 見た目だけ実装。On/Offのトグルが効かない   |
 | Toggle Group  | Implemented | [ ]       |                                            |
 | Form          | Implemented | [ ]       |                                            |
 | Field         | Not Planned | [x]       | Container で代用可能。将来追加の可能性あり |
