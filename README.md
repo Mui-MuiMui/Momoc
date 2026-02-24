@@ -1,17 +1,17 @@
 ```
-▄▄▄      ▄▄▄                                
-████▄  ▄████             ▄▄                 
-███▀████▀███ ▄███▄ ▄████ ██ ▄█▀ ▄█▀█▄ ████▄ 
-███  ▀▀  ███ ██ ██ ██    ████   ██▄█▀ ██ ▀▀ 
-███      ███ ▀███▀ ▀████ ██ ▀█▄ ▀█▄▄▄ ██    
+▄▄▄      ▄▄▄                            
+████▄  ▄████                            
+███▀████▀███ ▄███▄ ███▄███▄ ▄███▄ ▄████ 
+███  ▀▀  ███ ██ ██ ██ ██ ██ ██ ██ ██    
+███      ███ ▀███▀ ██ ██ ██ ▀███▀ ▀████ 
 ```
 ![app_icon](./resources/icons/icon_128.png)
 
 
-# Mocker
+# Momoc
 GUI Frontend Web UI Builder for VSCode  
   
-[English](#mockerenglish)
+[English](#momocenglish)
 
 ## 概要
 VSCode上でGUI操作でWebのモック画面を作成する拡張機能です。  
@@ -27,13 +27,13 @@ VSCode上でGUI操作でWebのモック画面を作成する拡張機能です�
 
 > 出力されるファイル内に構造データと人間の意図を含ませることにより、AIが実装時に迷わず高度な再現を行うことを目的としています。
 
-- [.mocファイル仕様](https://github.com/Mui-MuiMui/moc-spec) (Mockerの開発に合わせて変更する可能性があります。)
+- [.mocファイル仕様](https://github.com/Mui-MuiMui/moc-spec) (Momocの開発に合わせて変更する可能性があります。)
 - [ファイル仕様の概念(思想)](https://github.com/Mui-MuiMui/AINDF) (.mocの元となる考え方、思想です。)
 
 ```mermaid
 graph TD
     subgraph "1. 人間（意図と設計）"
-        A["Mocker GUI"] --> B["ビジュアル設計"]
+        A["Momoc GUI"] --> B["ビジュアル設計"]
         B --> C["@moc-memo<br/>(AIへの指示付箋)"]
     end
 
@@ -71,13 +71,13 @@ UIの整理 ←この段階でver1.0.0程度を見込んでいます。
 ```
 
 ---
-# Mocker(English)
+# Momoc(English)
 Visual Frontend Web UI Builder for VSCode  
   
-[日本語](#mocker)
+[日本語](#momoc)
 
 ## Overview
-Mocker is a VSCode extension for creating web mockups via GUI.  
+Momoc is a VSCode extension for creating web mockups via GUI.  
 The project is currently in core development; some features may not function as expected.  
 Please be aware that breaking changes are highly likely during core development and alpha stages.  
   
@@ -86,8 +86,8 @@ Please be aware that breaking changes are highly likely during core development 
 ## Concept
 - Create mockups directly within VSCode using a GUI.
 - Implement production-ready code using the output file and simple AI instructions.
-- By embedding structural data and human intent within the file, Mocker aims to allow AI to perform high-fidelity implementations without confusion.
-- [.moc File Specification](https://github.com/Mui-MuiMui/moc-spec) (Subject to change alongside Mocker development.)
+- By embedding structural data and human intent within the file, Momoc aims to allow AI to perform high-fidelity implementations without confusion.
+- [.moc File Specification](https://github.com/Mui-MuiMui/moc-spec) (Subject to change alongside Momoc development.)
 - [Core Philosophy & Concepts](https://github.com/Mui-MuiMui/AINDF) (The underlying philosophy behind the .moc format.)
 
 ---
@@ -95,7 +95,7 @@ Please be aware that breaking changes are highly likely during core development 
 ```mermaid
 graph TD
     subgraph "1. Human (Intent & Design)"
-        A["Mocker GUI"] --> B["Visual Design"]
+        A["Momoc GUI"] --> B["Visual Design"]
         B --> C["@moc-memo<br/>(AI Instructions)"]
     end
 
