@@ -25,8 +25,8 @@ function serializeMetadata(metadata: MocMetadata): string {
   const lines: string[] = ["/**"];
 
   // Data structure description prompt for AI agents
-  lines.push(" * Mocker Document (.moc)");
-  lines.push(" * VSCode拡張「Mocker」で作成されたGUIモックアップの定義ファイルです。");
+  lines.push(" * Momoc Document (.moc)");
+  lines.push(" * VSCode拡張「Momoc」で作成されたGUIモックアップの定義ファイルです。");
   lines.push(" * 人間・GUI・AIエージェントが協調して開発を行うための統合データ形式です。");
   lines.push(" *");
   lines.push(" * ファイル構造:");

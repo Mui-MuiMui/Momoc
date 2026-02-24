@@ -82,12 +82,12 @@ export function RenderNode({
   useEffect(() => {
     if (!dom) return;
 
-    const existingLabel = dom.querySelector("[data-mocker-label]");
+    const existingLabel = dom.querySelector("[data-momoc-label]");
     if (existingLabel) existingLabel.remove();
 
     if (isActive || isHover) {
       const label = document.createElement("div");
-      label.setAttribute("data-mocker-label", "true");
+      label.setAttribute("data-momoc-label", "true");
       label.style.cssText = `
         position: absolute;
         top: -20px;
@@ -111,7 +111,7 @@ export function RenderNode({
 
     return () => {
       if (dom) {
-        const label = dom.querySelector("[data-mocker-label]");
+        const label = dom.querySelector("[data-momoc-label]");
         if (label) label.remove();
       }
     };
@@ -247,7 +247,7 @@ export function RenderNode({
 
     handles.forEach((pos) => {
       const handle = document.createElement("div");
-      handle.setAttribute("data-mocker-handle", pos);
+      handle.setAttribute("data-momoc-handle", pos);
       handle.style.cssText = `
         position: absolute;
         width: ${HANDLE_SIZE}px;

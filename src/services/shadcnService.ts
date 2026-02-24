@@ -49,7 +49,7 @@ export async function initShadcn(
   if (confirmed !== "Yes") return false;
 
   const terminal = vscode.window.createTerminal({
-    name: "Mocker: shadcn init",
+    name: "Momoc: shadcn init",
     cwd: workspaceRoot,
   });
   terminal.show();
@@ -70,7 +70,7 @@ export async function installComponent(
     },
     async () => {
       const terminal = vscode.window.createTerminal({
-        name: `Mocker: add ${componentName}`,
+        name: `Momoc: add ${componentName}`,
         cwd: workspaceRoot,
       });
       terminal.sendText(`npx shadcn@latest add ${componentName} -y`);

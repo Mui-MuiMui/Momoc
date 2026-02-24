@@ -1,5 +1,5 @@
 {
-  "customEditor.mocEditor.displayName": "Mocker デザインエディタ",
+  "customEditor.mocEditor.displayName": "Momoc デザインエディタ",
   "command.createMocFile": "新規Mocファイルを作成",
   "command.toggleCodeDesign": "コード/デザイン表示を切り替え",
   "command.openPreview": "プレビューを開く",

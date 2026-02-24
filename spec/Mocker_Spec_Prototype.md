@@ -1,4 +1,4 @@
-# Mocker
+# Momoc
 Detailed Specification: Interactive Design-Code Lab (Full Edition)
 
 ## 1. 開発コンセプト

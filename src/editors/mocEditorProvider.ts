@@ -14,7 +14,7 @@ import type { MocDocument, MocEditorData } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
 export class MocEditorProvider implements vscode.CustomTextEditorProvider {
-  public static readonly viewType = "mocker.mocEditor";
+  public static readonly viewType = "momoc.mocEditor";
 
   /** Singleton instance for command access */
   private static instance: MocEditorProvider;
@@ -254,7 +254,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         try {
           const payload = message.payload as { content: string };
           if (!payload?.content) {
-            console.error("[Mocker] doc:save received empty content");
+            console.error("[Momoc] doc:save received empty content");
             break;
           }
 
@@ -271,10 +271,10 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           edit.replace(document.uri, fullRange, mocContent);
           const success = await vscode.workspace.applyEdit(edit);
           if (!success) {
-            console.error("[Mocker] WorkspaceEdit.applyEdit returned false");
+            console.error("[Momoc] WorkspaceEdit.applyEdit returned false");
           }
         } catch (err) {
-          console.error("[Mocker] doc:save error:", err);
+          console.error("[Momoc] doc:save error:", err);
         }
         break;
       }
@@ -332,7 +332,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
 
       case "command:openBrowserPreview": {
-        await vscode.commands.executeCommand("mocker.openBrowserPreview");
+        await vscode.commands.executeCommand("momoc.openBrowserPreview");
         break;
       }
 
@@ -465,7 +465,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data: blob: https: http:; connect-src ${webview.cspSource} https: http: data: blob:;">
   <link rel="stylesheet" href="${styleUri}">
-  <title>Mocker</title>
+  <title>Momoc</title>
 </head>
 <body>
   <div id="root"></div>

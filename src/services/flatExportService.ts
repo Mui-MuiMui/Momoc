@@ -6,7 +6,7 @@ export function generateFlatTsx(content: string): string {
 
   // Header with metadata as AI-readable comments
   lines.push("/**");
-  lines.push(` * Mocker Flat TSX Export`);
+  lines.push(` * Momoc Flat TSX Export`);
   lines.push(` * Generated for AI agent consumption`);
   lines.push(` *`);
   lines.push(` * Intent: ${doc.metadata.intent}`);

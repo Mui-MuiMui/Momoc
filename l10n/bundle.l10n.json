@@ -1,5 +1,5 @@
 {
-  "customEditor.mocEditor.displayName": "Mocker Design Editor",
+  "customEditor.mocEditor.displayName": "Momoc Design Editor",
   "command.createMocFile": "Create New Moc File",
   "command.toggleCodeDesign": "Toggle Code/Design View",
   "command.openPreview": "Open Preview",

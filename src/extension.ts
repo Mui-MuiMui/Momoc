@@ -9,10 +9,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
   registerCommands(context);
 
-  console.log("Mocker extension activated");
+  console.log("Momoc extension activated");
 }
 
 export function deactivate(): void {
   disposePreviewServers();
-  console.log("Mocker extension deactivated");
+  console.log("Momoc extension deactivated");
 }

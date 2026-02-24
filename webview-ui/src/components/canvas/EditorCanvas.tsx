@@ -224,7 +224,7 @@ export function EditorCanvas() {
   );
 
   return (
-    <div data-mocker-canvas className="relative flex-1">
+    <div data-momoc-canvas className="relative flex-1">
       {/* Scrollable canvas area */}
       <div
         ref={scrollContainerRef}
@@ -268,7 +268,7 @@ export function EditorCanvas() {
                 {viewportWidth} x {viewportHeight}
                 {zoom !== 1 && ` (${Math.round(zoom * 100)}%)`}
               </div>
-              <div data-mocker-viewport className={themeMode === "dark" ? "dark" : ""}>
+              <div data-momoc-viewport className={themeMode === "dark" ? "dark" : ""}>
                 <div className="min-h-full bg-background text-foreground">
                   <Frame>
                     <Element

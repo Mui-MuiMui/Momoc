@@ -7,18 +7,18 @@ import { parseMocFile } from "../services/mocParser.js";
 
 export function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand("mocker.createMocFile", () =>
+    vscode.commands.registerCommand("momoc.createMocFile", () =>
       createMocFile(context),
     ),
 
-    vscode.commands.registerCommand("mocker.toggleCodeDesign", async () => {
+    vscode.commands.registerCommand("momoc.toggleCodeDesign", async () => {
       const editor = vscode.window.activeTextEditor;
       if (editor && editor.document.fileName.endsWith(".moc")) {
         // Toggle between text editor and custom editor
         await vscode.commands.executeCommand(
           "vscode.openWith",
           editor.document.uri,
-          "mocker.mocEditor",
+          "momoc.mocEditor",
         );
       } else {
         // If in custom editor, switch to text editor
@@ -36,7 +36,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
       }
     }),
 
-    vscode.commands.registerCommand("mocker.openPreview", async () => {
+    vscode.commands.registerCommand("momoc.openPreview", async () => {
       const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
       if (activeTab?.input && typeof activeTab.input === "object") {
         const input = activeTab.input as { uri?: vscode.Uri };
@@ -44,26 +44,26 @@ export function registerCommands(context: vscode.ExtensionContext): void {
           await vscode.commands.executeCommand(
             "vscode.openWith",
             input.uri,
-            "mocker.mocEditor",
+            "momoc.mocEditor",
             vscode.ViewColumn.Beside,
           );
         }
       }
     }),
 
-    vscode.commands.registerCommand("mocker.switchLayoutMode", () => {
+    vscode.commands.registerCommand("momoc.switchLayoutMode", () => {
       if (!MocEditorProvider.postToWebview({ type: "command:switchLayoutMode" })) {
-        vscode.window.showWarningMessage("No active Mocker editor");
+        vscode.window.showWarningMessage("No active Momoc editor");
       }
     }),
 
-    vscode.commands.registerCommand("mocker.toggleTheme", () => {
+    vscode.commands.registerCommand("momoc.toggleTheme", () => {
       if (!MocEditorProvider.postToWebview({ type: "command:toggleTheme" })) {
-        vscode.window.showWarningMessage("No active Mocker editor");
+        vscode.window.showWarningMessage("No active Momoc editor");
       }
     }),
 
-    vscode.commands.registerCommand("mocker.openBrowserPreview", async () => {
+    vscode.commands.registerCommand("momoc.openBrowserPreview", async () => {
       const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
       let uri: vscode.Uri | undefined;
 
@@ -114,13 +114,13 @@ export function registerCommands(context: vscode.ExtensionContext): void {
       await vscode.env.openExternal(vscode.Uri.parse(url));
     }),
 
-    vscode.commands.registerCommand("mocker.exportImage", () => {
+    vscode.commands.registerCommand("momoc.exportImage", () => {
       if (!MocEditorProvider.postToWebview({ type: "capture:start" })) {
-        vscode.window.showWarningMessage("No active Mocker editor");
+        vscode.window.showWarningMessage("No active Momoc editor");
       }
     }),
 
-    vscode.commands.registerCommand("mocker.exportFlatTsx", async () => {
+    vscode.commands.registerCommand("momoc.exportFlatTsx", async () => {
       const editor = vscode.window.activeTextEditor;
       const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 

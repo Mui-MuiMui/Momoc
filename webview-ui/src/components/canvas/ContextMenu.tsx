@@ -190,7 +190,7 @@ export function ContextMenu() {
     (e: MouseEvent) => {
       if (!selectedRef.current) return;
       const target = e.target as HTMLElement;
-      if (target.closest("[data-mocker-canvas]")) {
+      if (target.closest("[data-momoc-canvas]")) {
         e.preventDefault();
         setMenuPos({ x: e.clientX, y: e.clientY });
       }

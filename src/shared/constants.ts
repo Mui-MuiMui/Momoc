@@ -1,5 +1,5 @@
 export const MOC_FILE_EXTENSION = ".moc";
-export const MOC_EDITOR_VIEW_TYPE = "mocker.mocEditor";
+export const MOC_EDITOR_VIEW_TYPE = "momoc.mocEditor";
 export const MOC_VERSION = "1.0.0";
 
 export const VIEWPORT_WIDTHS: Record<string, number> = {

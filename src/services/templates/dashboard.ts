@@ -1,7 +1,7 @@
 export function dashboardTemplate(componentName: string): string {
   return `/**
- * Mocker Document (.moc)
- * VSCode拡張「Mocker」で作成されたGUIモックアップの定義ファイルです。
+ * Momoc Document (.moc)
+ * VSCode拡張「Momoc」で作成されたGUIモックアップの定義ファイルです。
  * 人間・GUI・AIエージェントが協調して開発を行うための統合データ形式です。
  *
  * ファイル構造:

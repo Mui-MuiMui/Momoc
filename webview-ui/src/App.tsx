@@ -88,7 +88,7 @@ export default function App() {
 
         scheduleSave();
       } catch (err) {
-        console.error("[Mocker] onNodesChange serialize error:", err);
+        console.error("[Momoc] onNodesChange serialize error:", err);
       }
     },
     [scheduleSave, buildSaveContent],

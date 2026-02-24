@@ -160,7 +160,7 @@ export async function startPreviewServer(
           : linkedTsxSource;
         // Skip empty .moc files entirely (no hash registration = no import map entry)
         if (!linkedTsx.trim()) {
-          console.warn(`[Mocker] Skipping empty linked .moc: ${relPath}`);
+          console.warn(`[Momoc] Skipping empty linked .moc: ${relPath}`);
           continue;
         }
         const hash = crypto.createHash("md5").update(relPath).digest("hex").slice(0, 8);
@@ -172,7 +172,7 @@ export async function startPreviewServer(
           linkedJs.set(hash, linkedResult.code);
         }
       } catch (err) {
-        console.warn(`[Mocker] Failed to compile linked .moc: ${relPath}`, err);
+        console.warn(`[Momoc] Failed to compile linked .moc: ${relPath}`, err);
       }
     }
   }
@@ -253,7 +253,7 @@ export async function startPreviewServer(
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mocker Preview</title>
+  <title>Momoc Preview</title>
   <script type="importmap">
   ${buildImportMap()}
   </script>
@@ -461,7 +461,7 @@ export async function startPreviewServer(
   });
 
   // Listen on configured port (or random if not set)
-  const config = vscode.workspace.getConfiguration("mocker");
+  const config = vscode.workspace.getConfiguration("momoc");
   const basePort = config.get<number>("previewBasePort");
   const port = basePort !== undefined ? await findAvailablePort(basePort) : 0;
   await new Promise<void>((resolve) => {
