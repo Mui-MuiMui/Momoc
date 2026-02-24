@@ -55,7 +55,7 @@ graph TD
 ```
 
 ## 実装状況
-[COMPONENT_STATUS](doc\COMPONENT_STATUS.md)  
+[COMPONENT_STATUS](doc/COMPONENT_STATUS.md)  
 こちらのチェックリストを使って導入進捗を管理しています。  
 
 ```
@@ -118,7 +118,7 @@ graph TD
 
 
 ## Roadmap
-[COMPONENT_STATUS](doc\COMPONENT_STATUS.md)
+[COMPONENT_STATUS](doc/COMPONENT_STATUS.md)
 
 We use this checklist to manage implementation progress.
 
