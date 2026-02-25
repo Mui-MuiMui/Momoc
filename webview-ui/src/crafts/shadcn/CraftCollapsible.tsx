@@ -97,12 +97,13 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
       {/* Content zone */}
       <div className="border-t px-4 py-2 text-sm">
         {linkedMocPath ? (
-          <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <LinkIcon />
             <span>{linkedFileName || linkedMocPath}</span>
           </div>
-        ) : null}
-        <Element id="content" is={CollapsibleSlot} canvas className="min-h-[40px]" />
+        ) : (
+          <Element id="content" is={CollapsibleSlot} canvas className="min-h-[40px]" />
+        )}
       </div>
     </div>
   );
