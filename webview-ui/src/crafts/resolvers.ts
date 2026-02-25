@@ -290,7 +290,7 @@ export const paletteItems: PaletteItem[] = [
     icon: "ChevronsDownUp",
     defaultProps: {},
     isCanvas: true,
-    enabled: false,
+    enabled: true,
   },
   {
     resolverKey: "CraftPagination",
