@@ -177,6 +177,7 @@ const PROP_TO_GROUP: Record<string, PropGroup> = {
   tooltipText: "interaction", tooltipSide: "interaction", tooltipTrigger: "interaction", toastText: "interaction", toastPosition: "interaction",
   // Layout
   width: "layout", height: "layout",
+  top: "layout", left: "layout",
   display: "layout", flexDirection: "layout", justifyContent: "layout",
   alignItems: "layout", gap: "layout", gridCols: "layout",
   orientation: "layout", objectFit: "layout", keepAspectRatio: "layout",

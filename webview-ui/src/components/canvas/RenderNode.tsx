@@ -1,5 +1,6 @@
 import { useNode, useEditor } from "@craftjs/core";
 import { useEffect, useRef, useCallback } from "react";
+import { useEditorStore } from "../../stores/editorStore";
 
 type HandlePosition = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "right" | "bottom";
 
@@ -27,6 +28,8 @@ export function RenderNode({
     name,
     isCanvas,
     keepAspectRatio,
+    nodeTop,
+    nodeLeft,
   } = useNode((node) => ({
     isActive: node.events.selected,
     isHover: node.events.hovered,
@@ -34,7 +37,11 @@ export function RenderNode({
     name: node.data.displayName || node.data.name || "Element",
     isCanvas: node.data.isCanvas,
     keepAspectRatio: !!(node.data.props as Record<string, unknown>)?.keepAspectRatio,
+    nodeTop: (node.data.props as Record<string, unknown>)?.top as string | undefined,
+    nodeLeft: (node.data.props as Record<string, unknown>)?.left as string | undefined,
   }));
+
+  const layoutMode = useEditorStore((s) => s.layoutMode);
 
   const { actions: editorActions } = useEditor();
   const handlesRef = useRef<HTMLDivElement[]>([]);
@@ -77,6 +84,56 @@ export function RenderNode({
       }
     }
   }, [dom, isActive, isHover, isCanvas]);
+
+  // Apply absolute positioning when layoutMode === "absolute"
+  useEffect(() => {
+    if (!dom) return;
+    if (layoutMode === "absolute") {
+      dom.style.position = "absolute";
+      dom.style.top = nodeTop || "0px";
+      dom.style.left = nodeLeft || "0px";
+    } else {
+      dom.style.position = "";
+      dom.style.top = "";
+      dom.style.left = "";
+    }
+  }, [dom, layoutMode, nodeTop, nodeLeft]);
+
+  // Drag-to-move in absolute mode (active node only)
+  useEffect(() => {
+    if (!dom || !isActive || layoutMode !== "absolute") return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest("[data-momoc-handle]")) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startTop = parseInt(dom.style.top || "0", 10);
+      const startLeft = parseInt(dom.style.left || "0", 10);
+
+      const onMove = (ev: MouseEvent) => {
+        dom.style.top = `${startTop + ev.clientY - startY}px`;
+        dom.style.left = `${startLeft + ev.clientX - startX}px`;
+      };
+      const onUp = (ev: MouseEvent) => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        const newTop = `${startTop + ev.clientY - startY}px`;
+        const newLeft = `${startLeft + ev.clientX - startX}px`;
+        editorActions.setProp(id, (props: Record<string, unknown>) => {
+          props.top = newTop;
+          props.left = newLeft;
+        });
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    };
+
+    dom.addEventListener("mousedown", onMouseDown);
+    return () => dom.removeEventListener("mousedown", onMouseDown);
+  }, [dom, isActive, layoutMode, editorActions, id]);
 
   // Label badge
   useEffect(() => {
