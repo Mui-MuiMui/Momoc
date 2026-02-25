@@ -31,6 +31,9 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Accordion: {
     type: ["single", "multiple"],
   },
+  Collapsible: {
+    triggerStyle: ["chevron", "plus-minus", "arrow", "none"],
+  },
   Alert: {
     variant: ["default", "destructive"],
   },
