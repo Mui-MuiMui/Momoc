@@ -150,6 +150,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         craftState: mocDoc.editorData.craftState,
         memos: mocDoc.editorData.memos,
         intent: mocDoc.metadata.intent,
+        layoutMode: mocDoc.metadata.layout,
       };
       // Restore viewport from editorData, or fall back to metadata
       if (mocDoc.editorData.viewport) {
@@ -178,6 +179,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     let memos: MocEditorData["memos"];
     let viewport: MocEditorData["viewport"];
     let parsedIntent: string | undefined;
+    let parsedLayoutMode: "flow" | "absolute" | undefined;
     try {
       const parsed = JSON.parse(webviewJson);
       craftState = parsed.craftState || {};
@@ -187,6 +189,9 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
       if (typeof parsed.intent === "string") {
         parsedIntent = parsed.intent;
+      }
+      if (parsed.layoutMode === "flow" || parsed.layoutMode === "absolute") {
+        parsedLayoutMode = parsed.layoutMode;
       }
     } catch {
       // If JSON parsing fails, return as-is
@@ -226,7 +231,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       version: existingMeta?.version || MOC_VERSION,
       intent: parsedIntent ?? existingMeta?.intent ?? "",
       theme: existingMeta?.theme || DEFAULT_METADATA.theme,
-      layout: existingMeta?.layout || DEFAULT_METADATA.layout,
+      layout: parsedLayoutMode ?? existingMeta?.layout ?? DEFAULT_METADATA.layout,
       viewport: metaViewport,
       memos: mocMemos,
       selection: undefined,

@@ -40,6 +40,7 @@ export default function App() {
         height: s.customViewportHeight,
       },
       intent: s.intent,
+      layoutMode: s.layoutMode,
     });
   }, []);
 

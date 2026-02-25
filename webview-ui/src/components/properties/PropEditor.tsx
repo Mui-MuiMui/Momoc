@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useEditor } from "@craftjs/core";
 import { getVsCodeApi } from "../../utils/vscodeApi";
 import { IconCombobox } from "./IconCombobox";
+import { useEditorStore } from "../../stores/editorStore";
 
 /** Mapping of property names to their allowed values (select options). */
 const PROP_OPTIONS: Record<string, string[]> = {
@@ -29,6 +30,9 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   Accordion: {
     type: ["single", "multiple"],
+  },
+  Collapsible: {
+    triggerStyle: ["chevron", "plus-minus", "arrow", "none"],
   },
   Alert: {
     variant: ["default", "destructive"],
@@ -142,50 +146,46 @@ const OVERLAY_CLASS_PRESETS: { label: string; value: string }[] = [
 
 // --- Property grouping ---
 
-type PropGroup = "basic" | "overlay" | "interaction" | "layout" | "other";
+type PropGroup = "common" | "flow" | "absolute" | "component";
 
 const GROUP_LABELS: Record<PropGroup, string> = {
-  basic: "Basic",
-  overlay: "Overlay",
-  interaction: "Interaction",
-  layout: "Layout",
-  other: "Other",
+  common: "共通",
+  flow: "フロー配置",
+  absolute: "自由配置",
+  component: "コンポーネント",
 };
 
-const GROUP_ORDER: PropGroup[] = ["basic", "overlay", "interaction", "layout", "other"];
+const GROUP_ORDER: PropGroup[] = ["common", "flow", "absolute", "component"];
 
-const PROP_TO_GROUP: Record<string, PropGroup> = {
-  // Basic
-  text: "basic", label: "basic", title: "basic", description: "basic",
-  variant: "basic", size: "basic", type: "basic", disabled: "basic", invalid: "basic",
-  checked: "basic", pressed: "basic", placeholder: "basic", htmlFor: "basic",
-  items: "basic", value: "basic", rows: "basic", columns: "basic",
-  hasHeader: "basic", src: "basic", alt: "basic", fallback: "basic",
-  open: "basic", step: "basic", min: "basic", max: "basic",
-  icon: "basic", ratio: "basic", chartType: "basic", direction: "basic",
-  totalPages: "basic", currentPage: "basic", triggerText: "basic",
-  side: "basic", role: "basic", descriptions: "basic",
-  cardBorderColor: "basic", cardBgColor: "basic", descriptionColor: "basic", labelColor: "basic",
-  checkedClassName: "basic", uncheckedClassName: "basic",
-  fillClassName: "basic", trackClassName: "basic",
-  // Overlay
-  overlayType: "overlay", linkedMocPath: "overlay", sheetSide: "overlay",
-  overlayWidth: "overlay", overlayHeight: "overlay", overlayClassName: "overlay",
-  contextMenuMocPath: "overlay",
-  linkedMocPaths: "overlay",
-  // Interaction
-  tooltipText: "interaction", tooltipSide: "interaction", tooltipTrigger: "interaction", toastText: "interaction", toastPosition: "interaction",
-  // Layout
-  width: "layout", height: "layout",
-  display: "layout", flexDirection: "layout", justifyContent: "layout",
-  alignItems: "layout", gap: "layout", gridCols: "layout",
-  orientation: "layout", objectFit: "layout", keepAspectRatio: "layout",
-  tag: "layout",
+/** 共通プロパティ (width/height) — 常時表示 */
+const COMMON_KEYS = new Set(["width", "height"]);
+
+/** フロー配置専用プロパティ — layoutMode === "flow" のみ表示 */
+const FLOW_KEYS = new Set([
+  "display", "flexDirection", "justifyContent", "alignItems", "gap", "gridCols",
+]);
+
+/** 自由配置専用プロパティ — layoutMode === "absolute" のみ表示 */
+const ABSOLUTE_KEYS = new Set(["top", "left"]);
+
+/** 共通/フロー/自由配置 以外はコンポーネント固有として扱う */
+const LAYOUT_ALL_KEYS = new Set([...COMMON_KEYS, ...FLOW_KEYS, ...ABSOLUTE_KEYS]);
+
+/** フロー配置のデフォルト値 (selectedProps に無い場合に使用) */
+const FLOW_DEFAULTS: Record<string, unknown> = {
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "start",
+  alignItems: "stretch",
+  gap: "4",
+  gridCols: 3,
 };
 
-function getPropGroup(key: string): PropGroup {
-  return PROP_TO_GROUP[key] || "other";
-}
+/** 自由配置のデフォルト値 */
+const ABSOLUTE_DEFAULTS: Record<string, unknown> = {
+  top: "0px",
+  left: "0px",
+};
 
 export function PropEditor() {
   const { selectedProps, actions, selectedNodeId, componentName, craftDefaultProps } = useEditor(
@@ -208,6 +208,8 @@ export function PropEditor() {
       };
     },
   );
+
+  const layoutMode = useEditorStore((s) => s.layoutMode);
 
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [colorFamilies, setColorFamilies] = useState<Record<string, string>>({});
@@ -264,25 +266,41 @@ export function PropEditor() {
     });
   };
 
-  // Group properties — craft.props が権威（UI主導）、取得できない場合は PROP_TO_GROUP にフォールバック
-  const propEntries = Object.entries(selectedProps).filter(
+  // --- 新グループ分けロジック ---
+
+  // 共通グループ: width/height を selectedProps から取得（無ければデフォルト値）
+  const commonEntries: [string, unknown][] = Array.from(COMMON_KEYS).map(
+    (k) => [k, selectedProps[k] ?? "auto"],
+  );
+
+  // フロー配置グループ: layoutMode === "flow" のみ。selectedProps に無ければデフォルト値
+  const flowEntries: [string, unknown][] = layoutMode === "flow"
+    ? Array.from(FLOW_KEYS).map((k) => [k, selectedProps[k] ?? FLOW_DEFAULTS[k]])
+    : [];
+
+  // 自由配置グループ: layoutMode === "absolute" のみ。selectedProps に無ければデフォルト値
+  const absoluteEntries: [string, unknown][] = layoutMode === "absolute"
+    ? Array.from(ABSOLUTE_KEYS).map((k) => [k, selectedProps[k] ?? ABSOLUTE_DEFAULTS[k]])
+    : [];
+
+  // コンポーネントグループ: craftDefaultProps に定義されているキーのうち、レイアウト系を除いたもの
+  const componentEntries: [string, unknown][] = Object.entries(selectedProps).filter(
     ([key]) =>
       key !== "children" &&
       key !== "className" &&
-      (craftDefaultProps ? key in craftDefaultProps : key in PROP_TO_GROUP),
+      !LAYOUT_ALL_KEYS.has(key) &&
+      (craftDefaultProps ? key in craftDefaultProps : true),
   );
 
-  const grouped = new Map<PropGroup, [string, unknown][]>();
-  for (const entry of propEntries) {
-    const group = getPropGroup(entry[0]);
-    if (!grouped.has(group)) grouped.set(group, []);
-    grouped.get(group)!.push(entry);
-  }
+  const grouped = new Map<PropGroup, [string, unknown][]>([
+    ["common", commonEntries],
+    ["flow", flowEntries],
+    ["absolute", absoluteEntries],
+    ["component", componentEntries],
+  ]);
 
-  // Filter to groups that have at least one property
-  const activeGroups = GROUP_ORDER.filter((g) => grouped.has(g));
-  // If only 1 group, don't show group headers (flat layout)
-  const showGroupHeaders = activeGroups.length > 1;
+  // 常にグループヘッダーを表示
+  const activeGroups = GROUP_ORDER.filter((g) => (grouped.get(g)?.length ?? 0) > 0);
 
   function renderProp(key: string, value: unknown) {
     // Custom UI for icon (combobox with all Lucide icons)
@@ -748,17 +766,15 @@ export function PropEditor() {
 
         return (
           <div key={group}>
-            {showGroupHeaders && (
-              <button
-                type="button"
-                onClick={() => toggleGroup(group)}
-                className="flex w-full items-center gap-1 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
-              >
-                <span className="text-[10px]">{isCollapsed ? "\u25b6" : "\u25bc"}</span>
-                {GROUP_LABELS[group]}
-                <span className="ml-auto text-[10px] font-normal opacity-60">{entries.length}</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => toggleGroup(group)}
+              className="flex w-full items-center gap-1 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
+            >
+              <span className="text-[10px]">{isCollapsed ? "\u25b6" : "\u25bc"}</span>
+              {GROUP_LABELS[group]}
+              <span className="ml-auto text-[10px] font-normal opacity-60">{entries.length}</span>
+            </button>
             {!isCollapsed && (
               <div className="flex flex-col gap-2">
                 {entries.map(([key, value]) => renderProp(key, value))}

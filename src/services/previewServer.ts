@@ -474,9 +474,13 @@ export async function startPreviewServer(
   const watcher = vscode.workspace.onDidSaveTextDocument(async (doc) => {
     const isLinkedFile = linkedAbsPaths.has(doc.uri.fsPath);
     if (doc.uri.fsPath === mocFilePath || isLinkedFile) {
+      const prevLinkedKeys = new Set(linkedHashes.keys());
       await compileCurrentFile();
-      // Linked file changes require full page reload to bust ES module cache
-      sendReload(isLinkedFile);
+      // Full reload if linked set changed (import map in HTML needs update)
+      const linkedSetChanged =
+        prevLinkedKeys.size !== linkedHashes.size ||
+        [...linkedHashes.keys()].some((k) => !prevLinkedKeys.has(k));
+      sendReload(isLinkedFile || linkedSetChanged);
     }
   });
 
@@ -725,8 +729,30 @@ export function Checkbox(props: any) {
   );
 }`,
 
-  collapsible: `export function Collapsible(props: any) {
+  collapsible: `import { createContext, useContext, useState } from "react";
+const CollCtx = createContext<any>(null);
+export function Collapsible(props: any) {
+  const { className = "", children, defaultOpen = false, ...rest } = props;
+  const [open, setOpen] = useState(defaultOpen);
+  return <CollCtx.Provider value={{ open, toggle: () => setOpen((o: boolean) => !o) }}><div className={className} {...rest}>{children}</div></CollCtx.Provider>;
+}
+export function CollapsibleTrigger(props: any) {
+  const { className = "", children, "data-variant": variant, ...rest } = props;
+  const ctx = useContext(CollCtx);
+  const open = ctx?.open;
+  if (variant === "plus-minus") {
+    const icon = open
+      ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M5 12h14"/></svg>
+      : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M5 12h14"/><path d="M12 5v14"/></svg>;
+    return <button type="button" className={className} onClick={() => ctx?.toggle()} {...rest}>{icon}</button>;
+  }
+  const deg = open ? (variant === "arrow" ? 90 : 180) : 0;
+  return <button type="button" className={className} onClick={() => ctx?.toggle()} {...rest}><span style={{ display: "inline-flex", transform: "rotate(" + deg + "deg)", transition: "transform 0.2s ease" }}>{children}</span></button>;
+}
+export function CollapsibleContent(props: any) {
   const { className = "", children, ...rest } = props;
+  const ctx = useContext(CollCtx);
+  if (!ctx?.open) return null;
   return <div className={className} {...rest}>{children}</div>;
 }`,
 

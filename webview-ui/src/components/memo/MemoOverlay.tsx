@@ -173,7 +173,7 @@ function MemoSticker({
 
   return (
     <div
-      className={`absolute z-40 w-56 rounded shadow-lg ${colors.bg} ${isDragging ? "select-none" : ""}`}
+      className={`absolute z-40 w-64 rounded shadow-lg ${colors.bg} ${isDragging ? "select-none" : ""}`}
       style={{ left: position.x, top: position.y }}
     >
       {/* Header */}

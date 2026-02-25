@@ -40,9 +40,9 @@ shadcn/ui 公式コンポーネントの実装状況と確認状態を管理す�
 
 | Component    | Status      | Confirmed | Notes                                  |
 | ------------ | ----------- | --------- | -------------------------------------- |
-| Card         | Implemented | [ ]       |                                        |
-| Accordion    | Implemented | [ ]       |                                        |
-| Collapsible  | Implemented | [ ]       |                                        |
+| Card         | Implemented | [x]       |                                        |
+| Accordion    | Implemented | [x]       |                                        |
+| Collapsible  | Implemented | [x]       |                                        |
 | Tabs         | Implemented | [ ]       |                                        |
 | Resizable    | Implemented | [ ]       |                                        |
 | Scroll Area  | Implemented | [ ]       |                                        |
