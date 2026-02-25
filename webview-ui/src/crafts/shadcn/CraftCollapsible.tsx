@@ -1,4 +1,4 @@
-import { useNode, type UserComponent } from "@craftjs/core";
+import { Element, useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 
 const ChevronIcon = () => (
@@ -21,26 +21,53 @@ function TriggerIcon({ style }: { style: string }) {
   return null;
 }
 
+/** Internal canvas slot used by CraftCollapsible for header/content drop zones */
+export const CollapsibleSlot: UserComponent<{ children?: React.ReactNode; className?: string }> = ({
+  children,
+  className = "",
+}) => {
+  const {
+    connectors: { connect },
+  } = useNode();
+
+  return (
+    <div
+      ref={(ref) => {
+        if (ref) connect(ref);
+      }}
+      className={cn("min-h-[20px]", className)}
+    >
+      {children}
+    </div>
+  );
+};
+
+CollapsibleSlot.craft = {
+  displayName: "CollapsibleSlot",
+  rules: {
+    canDrag: () => false,
+    canDrop: () => true,
+    canMoveIn: () => true,
+    canMoveOut: () => true,
+  },
+};
+
 interface CraftCollapsibleProps {
-  title?: string;
   open?: boolean;
   triggerStyle?: "chevron" | "plus-minus" | "arrow" | "none";
   linkedMocPath?: string;
   width?: string;
   height?: string;
   className?: string;
-  children?: React.ReactNode;
 }
 
 export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
-  title = "Collapsible Section",
   open = false,
   triggerStyle = "chevron",
   linkedMocPath = "",
   width = "auto",
   height = "auto",
   className = "",
-  children,
 }) => {
   const {
     connectors: { connect, drag },
@@ -56,31 +83,27 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
       className={cn("w-full rounded-md border", className)}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
-      {/* Header row */}
+      {/* Header zone - always visible, drop zone for any components */}
       <div className="flex items-center justify-between space-x-4 px-4 py-2">
-        <h4 className="flex items-center gap-1.5 text-sm font-semibold">
-          {title}
-          {linkedMocPath && <LinkIcon />}
-        </h4>
+        <div className="flex-1">
+          <Element id="header" is={CollapsibleSlot} canvas className="flex min-h-[24px] items-center gap-2" />
+        </div>
         {triggerStyle !== "none" && (
           <button type="button" className="rounded-md border p-1 hover:bg-accent">
             <TriggerIcon style={triggerStyle} />
           </button>
         )}
       </div>
-      {/* Content area */}
-      {open && (
-        <div className="border-t px-4 py-2 text-sm">
-          {linkedMocPath ? (
-            <div className="flex items-center gap-1.5 rounded border border-dashed border-muted-foreground/40 px-3 py-2 text-xs text-muted-foreground">
-              <LinkIcon />
-              {linkedFileName || linkedMocPath}
-            </div>
-          ) : (
-            children || <p className="text-xs text-muted-foreground">Collapsible content goes here.</p>
-          )}
-        </div>
-      )}
+      {/* Content zone */}
+      <div className="border-t px-4 py-2 text-sm">
+        {linkedMocPath ? (
+          <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <LinkIcon />
+            <span>{linkedFileName || linkedMocPath}</span>
+          </div>
+        ) : null}
+        <Element id="content" is={CollapsibleSlot} canvas className="min-h-[40px]" />
+      </div>
     </div>
   );
 };
@@ -88,7 +111,6 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
 CraftCollapsible.craft = {
   displayName: "Collapsible",
   props: {
-    title: "Collapsible Section",
     open: false,
     triggerStyle: "chevron",
     linkedMocPath: "",
@@ -99,7 +121,7 @@ CraftCollapsible.craft = {
   rules: {
     canDrag: () => true,
     canDrop: () => true,
-    canMoveIn: () => true,
+    canMoveIn: () => false,
     canMoveOut: () => true,
   },
 };

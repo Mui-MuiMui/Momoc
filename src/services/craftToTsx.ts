@@ -166,6 +166,11 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["open", "className"],
     isContainer: true,
   },
+  CollapsibleSlot: {
+    tag: "div",
+    propsMap: [],
+    isContainer: true,
+  },
   CraftPagination: {
     tag: "Pagination",
     importFrom: "@/components/ui/pagination",
@@ -415,7 +420,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftAvatar: { src: "", fallback: "AB" },
   CraftBreadcrumb: { items: "Home,Products,Current" },
   CraftCheckbox: { label: "Accept terms", checked: false, disabled: false, tooltipText: "", tooltipSide: "" },
-  CraftCollapsible: { open: false, title: "Collapsible Section", triggerStyle: "chevron", linkedMocPath: "" },
+  CraftCollapsible: { open: false, triggerStyle: "chevron", linkedMocPath: "" },
   CraftPagination: { totalPages: 5, currentPage: 1 },
   CraftProgress: { value: 50 },
   CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", orientation: "vertical", variant: "default", descriptions: "", cardBorderColor: "", cardBgColor: "", descriptionColor: "", tooltipText: "", tooltipSide: "" },
@@ -842,13 +847,21 @@ export function craftStateToTsx(
       return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
     }
 
-    // Collapsible special case: render with CollapsibleTrigger/Content
+    // Collapsible special case: render with linkedNodes header/content zones + CollapsibleTrigger/Content
     if (resolvedName === "CraftCollapsible") {
       const open = !!(node.props?.open);
-      const title = (node.props?.title as string) || "Collapsible Section";
       const triggerStyle = (node.props?.triggerStyle as string) || "chevron";
       const linkedMocPath = (node.props?.linkedMocPath as string) || "";
-      const innerChildren = children.map((id) => renderNode(id, indent + 3)).filter(Boolean);
+
+      // Resolve header children from linkedNodes
+      const headerSlotId = node.linkedNodes?.header;
+      const headerSlotNode = headerSlotId ? craftState[headerSlotId] : null;
+      const headerChildren = (headerSlotNode?.nodes || []).map((id) => renderNode(id, indent + 2)).filter(Boolean);
+
+      // Resolve content children from linkedNodes
+      const contentSlotId = node.linkedNodes?.content;
+      const contentSlotNode = contentSlotId ? craftState[contentSlotId] : null;
+      const contentChildren = (contentSlotNode?.nodes || []).map((id) => renderNode(id, indent + 4)).filter(Boolean);
 
       const TRIGGER_SVGS: Record<string, string> = {
         chevron: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>`,
@@ -859,7 +872,9 @@ export function craftStateToTsx(
       const lines: string[] = [];
       lines.push(`${pad}<Collapsible defaultOpen={${open}}${classNameAttr}${styleAttr}>`);
       lines.push(`${pad}  <div className="flex items-center justify-between space-x-4 px-4 py-2">`);
-      lines.push(`${pad}    <h4 className="text-sm font-semibold">${escapeJsx(title)}</h4>`);
+      if (headerChildren.length > 0) {
+        lines.push(...headerChildren);
+      }
       if (triggerStyle !== "none") {
         const svg = TRIGGER_SVGS[triggerStyle] || TRIGGER_SVGS.chevron;
         lines.push(`${pad}    <CollapsibleTrigger className="rounded-md border p-1 hover:bg-accent">`);
@@ -871,8 +886,8 @@ export function craftStateToTsx(
       lines.push(`${pad}    <div className="border-t px-4 py-2 text-sm">`);
       if (linkedMocPath) {
         lines.push(`${pad}      {/* linked: ${escapeJsx(linkedMocPath)} */}`);
-      } else if (innerChildren.length > 0) {
-        lines.push(...innerChildren);
+      } else if (contentChildren.length > 0) {
+        lines.push(...contentChildren);
       } else {
         lines.push(`${pad}      <p>Collapsible content.</p>`);
       }

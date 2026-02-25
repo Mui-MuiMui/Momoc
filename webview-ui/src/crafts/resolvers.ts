@@ -18,7 +18,7 @@ import { CraftAspectRatio } from "./shadcn/CraftAspectRatio";
 import { CraftAvatar } from "./shadcn/CraftAvatar";
 import { CraftBreadcrumb } from "./shadcn/CraftBreadcrumb";
 import { CraftCheckbox } from "./shadcn/CraftCheckbox";
-import { CraftCollapsible } from "./shadcn/CraftCollapsible";
+import { CraftCollapsible, CollapsibleSlot } from "./shadcn/CraftCollapsible";
 import { CraftPagination } from "./shadcn/CraftPagination";
 import { CraftProgress } from "./shadcn/CraftProgress";
 import { CraftRadioGroup } from "./shadcn/CraftRadioGroup";
@@ -74,6 +74,7 @@ export const resolvers = {
   CraftBreadcrumb,
   CraftCheckbox,
   CraftCollapsible,
+  CollapsibleSlot,
   CraftPagination,
   CraftProgress,
   CraftRadioGroup,
@@ -289,7 +290,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "ChevronsDownUp",
     defaultProps: {},
-    isCanvas: true,
+    isCanvas: false,
     enabled: true,
   },
   {
