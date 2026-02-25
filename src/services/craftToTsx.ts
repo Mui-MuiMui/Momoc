@@ -502,6 +502,12 @@ export function craftStateToTsx(
       addImport("@/components/ui/accordion", "AccordionContent");
     }
 
+    // Collect collapsible sub-component imports
+    if (resolvedName === "CraftCollapsible") {
+      addImport("@/components/ui/collapsible", "CollapsibleTrigger");
+      addImport("@/components/ui/collapsible", "CollapsibleContent");
+    }
+
     // Collect radio group sub-component imports
     if (resolvedName === "CraftRadioGroup") {
       addImport("@/components/ui/radio-group", "RadioGroupItem");
@@ -834,6 +840,31 @@ export function craftStateToTsx(
     // Accordion special case: render with AccordionItem/Trigger/Content
     if (resolvedName === "CraftAccordion") {
       return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+    }
+
+    // Collapsible special case: render with CollapsibleTrigger/Content
+    if (resolvedName === "CraftCollapsible") {
+      const open = !!(node.props?.open);
+      const innerChildren = children.map((id) => renderNode(id, indent + 3)).filter(Boolean);
+      const lines: string[] = [];
+      lines.push(`${pad}<Collapsible defaultOpen={${open}}${classNameAttr}${styleAttr}>`);
+      lines.push(`${pad}  <div className="flex items-center justify-between space-x-4 px-4 py-2">`);
+      lines.push(`${pad}    <h4 className="text-sm font-semibold">Collapsible Section</h4>`);
+      lines.push(`${pad}    <CollapsibleTrigger className="rounded-md border p-1 hover:bg-accent">`);
+      lines.push(`${pad}      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>`);
+      lines.push(`${pad}    </CollapsibleTrigger>`);
+      lines.push(`${pad}  </div>`);
+      lines.push(`${pad}  <CollapsibleContent>`);
+      lines.push(`${pad}    <div className="rounded-md border px-4 py-2 text-sm">`);
+      if (innerChildren.length > 0) {
+        lines.push(...innerChildren);
+      } else {
+        lines.push(`${pad}      <p>Collapsible content.</p>`);
+      }
+      lines.push(`${pad}    </div>`);
+      lines.push(`${pad}  </CollapsibleContent>`);
+      lines.push(`${pad}</Collapsible>`);
+      return `${mocComments}\n${lines.join("\n")}`;
     }
 
     // Select special case: render with SelectTrigger/Content/Item (tooltip handled internally)

@@ -729,8 +729,22 @@ export function Checkbox(props: any) {
   );
 }`,
 
-  collapsible: `export function Collapsible(props: any) {
+  collapsible: `import { createContext, useContext, useState } from "react";
+const CollCtx = createContext<any>(null);
+export function Collapsible(props: any) {
+  const { className = "", children, defaultOpen = false, ...rest } = props;
+  const [open, setOpen] = useState(defaultOpen);
+  return <CollCtx.Provider value={{ open, toggle: () => setOpen((o: boolean) => !o) }}><div className={className} {...rest}>{children}</div></CollCtx.Provider>;
+}
+export function CollapsibleTrigger(props: any) {
   const { className = "", children, ...rest } = props;
+  const ctx = useContext(CollCtx);
+  return <button type="button" className={className} onClick={() => ctx?.toggle()} {...rest}>{children}</button>;
+}
+export function CollapsibleContent(props: any) {
+  const { className = "", children, ...rest } = props;
+  const ctx = useContext(CollCtx);
+  if (!ctx?.open) return null;
   return <div className={className} {...rest}>{children}</div>;
 }`,
 
