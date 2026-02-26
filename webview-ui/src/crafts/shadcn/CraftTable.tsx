@@ -176,7 +176,14 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
           const colspan = (slotNode?.data?.props?.colspan as number) || 1;
           const rowspan = (slotNode?.data?.props?.rowspan as number) || 1;
           const colWidth = colWidths[String(physC)];
-          const colWidthStyle = colWidth && colWidth !== "auto" ? { width: colWidth } : undefined;
+          const cellWidth = (slotNode?.data?.props?.width as string) || "";
+          const cellHeight = (slotNode?.data?.props?.height as string) || "";
+          const cellStyle: React.CSSProperties = {};
+          const effectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth
+            : (colWidth && colWidth !== "auto") ? colWidth
+            : undefined;
+          if (effectiveWidth) cellStyle.width = effectiveWidth;
+          if (cellHeight && cellHeight !== "auto") cellStyle.height = cellHeight;
 
           const CellTag = isHeader ? "th" : "td";
           return (
@@ -184,7 +191,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
               key={physC}
               colSpan={colspan > 1 ? colspan : undefined}
               rowSpan={rowspan > 1 ? rowspan : undefined}
-              style={colWidthStyle}
+              style={Object.keys(cellStyle).length > 0 ? cellStyle : undefined}
               className={cn(cellBorderClass, "p-0 align-top")}
             >
               <Element

@@ -1210,10 +1210,12 @@ function renderTable(
   // Parse tableMeta
   let rowMap: number[] = [0, 1, 2];
   let colMap: number[] = [0, 1, 2];
+  let colWidths: Record<string, string> = {};
   try {
     const meta = JSON.parse((node.props?.tableMeta as string) || "{}");
     if (Array.isArray(meta.rowMap)) rowMap = meta.rowMap;
     if (Array.isArray(meta.colMap)) colMap = meta.colMap;
+    if (typeof meta.colWidths === "object" && meta.colWidths !== null) colWidths = meta.colWidths;
   } catch {
     // use defaults
   }
@@ -1288,20 +1290,30 @@ function renderTable(
       const rowspan = (slotNode?.props?.rowspan as number) || 1;
       const bgClass = (slotNode?.props?.bgClass as string) || "";
       const borderClass = (slotNode?.props?.borderClass as string) || "";
+      const cellWidth = (slotNode?.props?.width as string) || "";
+      const cellHeight = (slotNode?.props?.height as string) || "";
+      const colWidth = colWidths[String(physC)] || "";
       const cellTag = isHeader ? "TableHead" : "TableCell";
       const colSpanAttr = colspan > 1 ? ` colSpan={${colspan}}` : "";
       const rowSpanAttr = rowspan > 1 ? ` rowSpan={${rowspan}}` : "";
       const cellCls = [bgClass, borderClass, tableBorderClass].filter(Boolean).join(" ");
       const classAttr = cellCls ? ` className="${escapeAttr(cellCls)}"` : "";
+      const stylePartsCell: string[] = [];
+      const effectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth
+        : (colWidth && colWidth !== "auto") ? colWidth
+        : "";
+      if (effectiveWidth) stylePartsCell.push(`width: "${effectiveWidth}"`);
+      if (cellHeight && cellHeight !== "auto") stylePartsCell.push(`height: "${cellHeight}"`);
+      const cellStyleAttr = stylePartsCell.length > 0 ? ` style={{ ${stylePartsCell.join(", ")} }}` : "";
       const slotChildren = slotNode
         ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, rowIndent + 2)).filter(Boolean)
         : [];
       if (slotChildren.length > 0) {
-        lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr}>`);
+        lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr}${cellStyleAttr}>`);
         for (const child of slotChildren) lines.push(child);
         lines.push(`${rowPad}  </${cellTag}>`);
       } else {
-        lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr} />`);
+        lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr}${cellStyleAttr} />`);
       }
     }
     lines.push(`${rowPad}</TableRow>`);
