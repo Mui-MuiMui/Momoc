@@ -598,8 +598,8 @@ export function Button(props: any) {
     const childArray = Array.isArray(children) ? children : [children];
     const placeholder = String(childArray.find((c: any) => typeof c === "string") || "Select...");
     const icons = childArray.filter((c: any) => c !== null && c !== undefined && typeof c !== "string");
-    return <div className={cn("relative inline-flex items-center", className)} style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
-      <input ref={inputRef} type="text" className="flex h-9 w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring" value={comboCtx.search || comboCtx.value || ""} placeholder={placeholder} onChange={(e: any) => { comboCtx.setSearch(e.target.value); comboCtx.setOpen(true); }} onFocus={() => comboCtx.setOpen(true)} />
+    return <div className={cn("relative inline-flex items-center z-[51]", className)} style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
+      <input ref={inputRef} type="text" className="flex h-9 w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring" value={comboCtx.search || ""} placeholder={placeholder} onChange={(e: any) => { comboCtx.setSearch(e.target.value); comboCtx.setOpen(true); }} onFocus={() => comboCtx.setOpen(true)} />
       <span className="absolute right-2 pointer-events-none opacity-50">{icons}</span>
     </div>;
   }
@@ -1062,7 +1062,7 @@ export function CommandItem({ children, value = "", className = "", onSelect, ..
   const isSelected = comboCtx?.value === value;
   const handleClick = () => {
     onSelect?.(value);
-    if (comboCtx) { comboCtx.setValue(value); comboCtx.setSearch(""); comboCtx.setOpen(false); }
+    if (comboCtx) { comboCtx.setValue(value); comboCtx.setSearch(value); comboCtx.setOpen(false); }
   };
   return <div className={cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground", isSelected && "bg-accent text-accent-foreground", className)} onClick={handleClick} {...rest}>{children}</div>;
 }
