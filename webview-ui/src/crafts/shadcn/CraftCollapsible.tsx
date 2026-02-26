@@ -62,6 +62,9 @@ interface CraftCollapsibleProps {
   outerBorderColor?: string;
   dividerBorderColor?: string;
   triggerBorderColor?: string;
+  outerShadow?: string;
+  contentShadow?: string;
+  triggerShadow?: string;
 }
 
 export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
@@ -74,6 +77,9 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
   outerBorderColor = "",
   dividerBorderColor = "",
   triggerBorderColor = "",
+  outerShadow = "",
+  contentShadow = "",
+  triggerShadow = "",
 }) => {
   const {
     connectors: { connect, drag },
@@ -86,7 +92,7 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("w-full rounded-md border", outerBorderColor, className)}
+      className={cn("w-full rounded-md border", outerBorderColor, outerShadow, className)}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {/* Header zone - always visible, drop zone for any components */}
@@ -95,13 +101,13 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
           <Element id="header" is={CollapsibleSlot} canvas className="flex min-h-[24px] items-center gap-2" />
         </div>
         {triggerStyle !== "none" && (
-          <button type="button" className={cn("rounded-md border p-1 hover:bg-accent", triggerBorderColor)}>
+          <button type="button" className={cn("rounded-md border p-1 hover:bg-accent", triggerBorderColor, triggerShadow)}>
             <TriggerIcon style={triggerStyle} />
           </button>
         )}
       </div>
       {/* Content zone */}
-      <div className={cn("border-t px-4 py-2 text-sm", dividerBorderColor)}>
+      <div className={cn("border-t px-4 py-2 text-sm", dividerBorderColor, contentShadow)}>
         {linkedMocPath ? (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <LinkIcon />
@@ -127,6 +133,9 @@ CraftCollapsible.craft = {
     outerBorderColor: "",
     dividerBorderColor: "",
     triggerBorderColor: "",
+    outerShadow: "",
+    contentShadow: "",
+    triggerShadow: "",
   },
   rules: {
     canDrag: () => true,

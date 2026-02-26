@@ -34,6 +34,9 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   Collapsible: {
     triggerStyle: ["chevron", "plus-minus", "arrow", "none"],
+    outerShadow: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    contentShadow: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    triggerShadow: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
   },
   Alert: {
     variant: ["default", "destructive"],

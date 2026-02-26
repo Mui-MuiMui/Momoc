@@ -912,6 +912,9 @@ export function craftStateToTsx(
       const outerBorderColor = (node.props?.outerBorderColor as string) || "";
       const dividerBorderColor = (node.props?.dividerBorderColor as string) || "";
       const triggerBorderColor = (node.props?.triggerBorderColor as string) || "";
+      const outerShadow = (node.props?.outerShadow as string) || "";
+      const contentShadow = (node.props?.contentShadow as string) || "";
+      const triggerShadow = (node.props?.triggerShadow as string) || "";
 
       // Resolve header children from linkedNodes
       const headerSlotId = node.linkedNodes?.header;
@@ -929,16 +932,16 @@ export function craftStateToTsx(
         arrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m9 18 6-6-6-6"/></svg>`,
       };
 
-      // Build outer className (user className + outerBorderColor)
+      // Build outer className: always include "rounded-md border" so outerBorderColor is visible
       const userClassName = (node.props?.className as string) || "";
-      const outerCls = [userClassName, outerBorderColor].filter(Boolean).join(" ");
-      const outerClassAttr = outerCls ? ` className="${escapeAttr(outerCls)}"` : "";
+      const outerCls = ["rounded-md border", outerBorderColor, outerShadow, userClassName].filter(Boolean).join(" ");
+      const outerClassAttr = ` className="${escapeAttr(outerCls)}"`;
 
       // Build trigger className
-      const triggerCls = ["rounded-md border p-1 hover:bg-accent", triggerBorderColor].filter(Boolean).join(" ");
+      const triggerCls = ["rounded-md border p-1 hover:bg-accent", triggerBorderColor, triggerShadow].filter(Boolean).join(" ");
 
       // Build divider className
-      const dividerCls = ["border-t px-4 py-2 text-sm", dividerBorderColor].filter(Boolean).join(" ");
+      const dividerCls = ["border-t px-4 py-2 text-sm", dividerBorderColor, contentShadow].filter(Boolean).join(" ");
 
       const lines: string[] = [];
       lines.push(`${pad}<Collapsible defaultOpen={${open}}${outerClassAttr}${styleAttr}>`);
