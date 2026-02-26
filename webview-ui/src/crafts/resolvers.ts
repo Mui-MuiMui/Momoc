@@ -32,6 +32,7 @@ import { CraftToggle } from "./shadcn/CraftToggle";
 import { CraftToggleGroup } from "./shadcn/CraftToggleGroup";
 // Phase 2: Complex components
 import { CraftSelect } from "./shadcn/CraftSelect";
+import { CraftCombobox } from "./shadcn/CraftCombobox";
 import { CraftCalendar } from "./shadcn/CraftCalendar";
 import { CraftResizable } from "./shadcn/CraftResizable";
 import { CraftCarousel } from "./shadcn/CraftCarousel";
@@ -88,6 +89,7 @@ export const resolvers = {
   CraftToggleGroup,
   // Phase 2
   CraftSelect,
+  CraftCombobox,
   CraftCalendar,
   CraftResizable,
   CraftCarousel,
@@ -388,6 +390,14 @@ export const paletteItems: PaletteItem[] = [
     label: "Select",
     category: "shadcn",
     icon: "ChevronDown",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftCombobox",
+    label: "Combobox",
+    category: "shadcn",
+    icon: "ChevronsUpDown",
     defaultProps: {},
     enabled: true,
   },

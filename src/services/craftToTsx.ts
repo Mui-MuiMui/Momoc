@@ -364,6 +364,13 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: false,
   },
+  CraftCombobox: {
+    tag: "Popover",
+    importFrom: "@/components/ui/popover",
+    importName: "Popover",
+    propsMap: ["className"],
+    isContainer: false,
+  },
   CraftTooltip: {
     tag: "Button",
     importFrom: "@/components/ui/button",
@@ -451,6 +458,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftNavigationMenu: { items: "Home,About,Services,Contact", linkedMocPath: "" },
   CraftMenubar: { items: "File,Edit,View,Help", linkedMocPath: "" },
   CraftCommand: { placeholder: "Type a command or search...", items: "Calendar,Search,Settings", linkedMocPath: "" },
+  CraftCombobox: { placeholder: "Select an option...", searchPlaceholder: "Search...", items: "Apple,Banana,Cherry", linkedMocPath: "" },
   CraftTooltip: { triggerText: "Hover", text: "Tooltip text" },
   CraftSonner: { triggerText: "Show Toast", text: "Event has been created." },
 };
@@ -525,6 +533,21 @@ export function craftStateToTsx(
       addImport("@/components/ui/select", "SelectContent");
       addImport("@/components/ui/select", "SelectItem");
       addImport("@/components/ui/select", "SelectValue");
+    }
+
+    // Collect combobox sub-component imports
+    if (resolvedName === "CraftCombobox") {
+      addImport("@/components/ui/popover", "PopoverContent");
+      addImport("@/components/ui/popover", "PopoverTrigger");
+      addImport("@/components/ui/button", "Button");
+      addImport("@/components/ui/command", "Command");
+      addImport("@/components/ui/command", "CommandEmpty");
+      addImport("@/components/ui/command", "CommandGroup");
+      addImport("@/components/ui/command", "CommandInput");
+      addImport("@/components/ui/command", "CommandItem");
+      addImport("@/components/ui/command", "CommandList");
+      addImport("lucide-react", "Check");
+      addImport("lucide-react", "ChevronsUpDown");
     }
 
     // Collect overlay-related imports for CraftButton
@@ -916,6 +939,12 @@ export function craftStateToTsx(
     // Select special case: render with SelectTrigger/Content/Item (tooltip handled internally)
     if (resolvedName === "CraftSelect") {
       rendered = `${mocComments}\n${renderSelect(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      return rendered;
+    }
+
+    // Combobox special case: render with Popover + Command structure
+    if (resolvedName === "CraftCombobox") {
+      rendered = `${mocComments}\n${renderCombobox(node.props, styleAttr, pad)}`;
       return rendered;
     }
 
@@ -1361,6 +1390,48 @@ function renderSelect(
   }
   lines.push(`${pad}  </SelectContent>`);
   lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
+function renderCombobox(
+  props: Record<string, unknown>,
+  styleAttr: string,
+  pad: string,
+): string {
+  const items = ((props?.items as string) || "Apple,Banana,Cherry").split(",").map((s) => s.trim());
+  const placeholder = (props?.placeholder as string) || "Select an option...";
+  const searchPlaceholder = (props?.searchPlaceholder as string) || "Search...";
+  const linkedMocPath = (props?.linkedMocPath as string) || "";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<Popover>`);
+  lines.push(`${pad}  <PopoverTrigger asChild>`);
+  lines.push(`${pad}    <Button variant="outline" role="combobox" className="w-[200px] justify-between"${styleAttr}>`);
+  lines.push(`${pad}      ${escapeJsx(placeholder)}`);
+  lines.push(`${pad}      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />`);
+  lines.push(`${pad}    </Button>`);
+  lines.push(`${pad}  </PopoverTrigger>`);
+  lines.push(`${pad}  <PopoverContent className="w-[200px] p-0">`);
+  lines.push(`${pad}    <Command>`);
+  lines.push(`${pad}      <CommandInput placeholder="${escapeAttr(searchPlaceholder)}" />`);
+  lines.push(`${pad}      <CommandList>`);
+  lines.push(`${pad}        <CommandEmpty>No results found.</CommandEmpty>`);
+  lines.push(`${pad}        <CommandGroup>`);
+  if (linkedMocPath) {
+    lines.push(`${pad}          {/* linked: ${escapeJsx(linkedMocPath)} */}`);
+  } else {
+    for (const item of items) {
+      lines.push(`${pad}          <CommandItem value="${escapeAttr(item)}">`);
+      lines.push(`${pad}            <Check className="mr-2 h-4 w-4 opacity-0" />`);
+      lines.push(`${pad}            ${escapeJsx(item)}`);
+      lines.push(`${pad}          </CommandItem>`);
+    }
+  }
+  lines.push(`${pad}        </CommandGroup>`);
+  lines.push(`${pad}      </CommandList>`);
+  lines.push(`${pad}    </Command>`);
+  lines.push(`${pad}  </PopoverContent>`);
+  lines.push(`${pad}</Popover>`);
   return lines.join("\n");
 }
 
