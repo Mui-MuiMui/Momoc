@@ -4,8 +4,10 @@ import { cn } from "../../utils/cn";
 interface CraftComboboxProps {
   items?: string;
   placeholder?: string;
-  searchPlaceholder?: string;
   linkedMocPath?: string;
+  tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
+  tooltipTrigger?: "hover" | "focus";
   width?: string;
   height?: string;
   className?: string;
@@ -44,8 +46,10 @@ CraftCombobox.craft = {
   props: {
     items: "Apple,Banana,Cherry",
     placeholder: "Select an option...",
-    searchPlaceholder: "Search...",
     linkedMocPath: "",
+    tooltipText: "",
+    tooltipSide: "",
+    tooltipTrigger: "hover",
     width: "auto",
     height: "auto",
     className: "",

@@ -458,7 +458,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftNavigationMenu: { items: "Home,About,Services,Contact", linkedMocPath: "" },
   CraftMenubar: { items: "File,Edit,View,Help", linkedMocPath: "" },
   CraftCommand: { placeholder: "Type a command or search...", items: "Calendar,Search,Settings", linkedMocPath: "" },
-  CraftCombobox: { placeholder: "Select an option...", searchPlaceholder: "Search...", items: "Apple,Banana,Cherry", linkedMocPath: "" },
+  CraftCombobox: { placeholder: "Select an option...", items: "Apple,Banana,Cherry", linkedMocPath: "", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
   CraftTooltip: { triggerText: "Hover", text: "Tooltip text" },
   CraftSonner: { triggerText: "Show Toast", text: "Event has been created." },
 };
@@ -945,6 +945,8 @@ export function craftStateToTsx(
     // Combobox special case: render with Popover + Command structure
     if (resolvedName === "CraftCombobox") {
       rendered = `${mocComments}\n${renderCombobox(node.props, styleAttr, pad)}`;
+      const comboboxTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
+      rendered = wrapWithTooltip(rendered, node.props, pad, comboboxTooltipTrigger);
       return rendered;
     }
 
@@ -1400,7 +1402,6 @@ function renderCombobox(
 ): string {
   const items = ((props?.items as string) || "Apple,Banana,Cherry").split(",").map((s) => s.trim());
   const placeholder = (props?.placeholder as string) || "Select an option...";
-  const searchPlaceholder = (props?.searchPlaceholder as string) || "Search...";
   const linkedMocPath = (props?.linkedMocPath as string) || "";
 
   const lines: string[] = [];
@@ -1413,7 +1414,7 @@ function renderCombobox(
   lines.push(`${pad}  </PopoverTrigger>`);
   lines.push(`${pad}  <PopoverContent className="w-[200px] p-0">`);
   lines.push(`${pad}    <Command>`);
-  lines.push(`${pad}      <CommandInput placeholder="${escapeAttr(searchPlaceholder)}" />`);
+  lines.push(`${pad}      <CommandInput placeholder="Search..." />`);
   lines.push(`${pad}      <CommandList>`);
   lines.push(`${pad}        <CommandEmpty>No results found.</CommandEmpty>`);
   lines.push(`${pad}        <CommandGroup>`);
