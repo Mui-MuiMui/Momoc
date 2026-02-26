@@ -1036,7 +1036,11 @@ export function CommandItem({ children, value = "", className = "", onSelect, ..
     }
   }, [visible]);
   if (!visible) return null;
-  return <div className={cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground", className)} onClick={() => onSelect?.(value)} {...rest}>{children}</div>;
+  const handleClick = (e: any) => {
+    onSelect?.(value);
+    e.currentTarget.dispatchEvent(new Event("combobox-select", { bubbles: true }));
+  };
+  return <div className={cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground", className)} onClick={handleClick} {...rest}>{children}</div>;
 }
 export function CommandSeparator({ className = "", ...rest }: any) {
   return <div className={cn("-mx-1 h-px bg-border", className)} {...rest} />;
@@ -1187,11 +1191,19 @@ export function DrawerContent(props: any) {
   return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
-  popover: `import { createContext, useContext, useState } from "react";
+  popover: `import { createContext, useContext, useState, useRef, useEffect } from "react";
 const Ctx = createContext<any>(null);
 export function Popover(props: any) {
   const [open, setOpen] = useState(false);
-  return <Ctx.Provider value={{ open, setOpen }}><div className="relative inline-block">{props.children}</div></Ctx.Provider>;
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const close = () => setOpen(false);
+    el.addEventListener("combobox-select", close);
+    return () => el.removeEventListener("combobox-select", close);
+  }, []);
+  return <Ctx.Provider value={{ open, setOpen }}><div ref={ref} className="relative inline-block">{props.children}</div></Ctx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
