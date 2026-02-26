@@ -1000,6 +1000,44 @@ export function SelectValue(props: any) {
   return <span className={cn("text-muted-foreground", className)}>{placeholder}</span>;
 }`,
 
+  command: `import { cn } from "@/components/ui/_cn";
+import { useState } from "react";
+export function Command(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = cn("flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground", className);
+  return <div className={cls} {...rest}>{children}</div>;
+}
+export function CommandInput(props: any) {
+  const { className = "", placeholder = "", ...rest } = props;
+  const cls = cn("flex h-9 w-full rounded-md bg-transparent px-3 py-1 text-sm outline-none border-b placeholder:text-muted-foreground", className);
+  return <input type="text" className={cls} placeholder={placeholder} {...rest} />;
+}
+export function CommandList(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className);
+  return <div className={cls} {...rest}>{children}</div>;
+}
+export function CommandEmpty(props: any) {
+  const { className = "", children, ...rest } = props;
+  const cls = cn("py-6 text-center text-sm", className);
+  return <div className={cls} {...rest}>{children}</div>;
+}
+export function CommandGroup(props: any) {
+  const { className = "", children, heading, ...rest } = props;
+  const cls = cn("overflow-hidden p-1 text-foreground", className);
+  return <div className={cls} {...rest}>{heading && <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{heading}</div>}{children}</div>;
+}
+export function CommandItem(props: any) {
+  const { className = "", children, onSelect, value, ...rest } = props;
+  const cls = cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground", className);
+  return <div className={cls} onClick={() => onSelect?.(value || "")} {...rest}>{children}</div>;
+}
+export function CommandSeparator(props: any) {
+  const { className = "", ...rest } = props;
+  const cls = cn("-mx-1 h-px bg-border", className);
+  return <div className={cls} {...rest} />;
+}`,
+
   calendar: `import { cn } from "@/components/ui/_cn";
 export function Calendar(props: any) {
   const { className = "", ...rest } = props;
