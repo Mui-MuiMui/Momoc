@@ -909,6 +909,9 @@ export function craftStateToTsx(
       const open = !!(node.props?.open);
       const triggerStyle = (node.props?.triggerStyle as string) || "chevron";
       const linkedMocPath = (node.props?.linkedMocPath as string) || "";
+      const outerBorderColor = (node.props?.outerBorderColor as string) || "";
+      const dividerBorderColor = (node.props?.dividerBorderColor as string) || "";
+      const triggerBorderColor = (node.props?.triggerBorderColor as string) || "";
 
       // Resolve header children from linkedNodes
       const headerSlotId = node.linkedNodes?.header;
@@ -926,21 +929,31 @@ export function craftStateToTsx(
         arrow: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m9 18 6-6-6-6"/></svg>`,
       };
 
+      // Build outer className (user className + outerBorderColor)
+      const outerCls = [className, outerBorderColor].filter(Boolean).join(" ");
+      const outerClassAttr = outerCls ? ` className="${escapeAttr(outerCls)}"` : "";
+
+      // Build trigger className
+      const triggerCls = ["rounded-md border p-1 hover:bg-accent", triggerBorderColor].filter(Boolean).join(" ");
+
+      // Build divider className
+      const dividerCls = ["border-t px-4 py-2 text-sm", dividerBorderColor].filter(Boolean).join(" ");
+
       const lines: string[] = [];
-      lines.push(`${pad}<Collapsible defaultOpen={${open}}${classNameAttr}${styleAttr}>`);
+      lines.push(`${pad}<Collapsible defaultOpen={${open}}${outerClassAttr}${styleAttr}>`);
       lines.push(`${pad}  <div className="flex items-center justify-between space-x-4 px-4 py-2">`);
       if (headerChildren.length > 0) {
         lines.push(...headerChildren);
       }
       if (triggerStyle !== "none") {
         const svg = TRIGGER_SVGS[triggerStyle] || TRIGGER_SVGS.chevron;
-        lines.push(`${pad}    <CollapsibleTrigger className="rounded-md border p-1 hover:bg-accent" data-variant="${triggerStyle}">`);
+        lines.push(`${pad}    <CollapsibleTrigger className="${escapeAttr(triggerCls)}" data-variant="${triggerStyle}">`);
         lines.push(`${pad}      ${svg}`);
         lines.push(`${pad}    </CollapsibleTrigger>`);
       }
       lines.push(`${pad}  </div>`);
       lines.push(`${pad}  <CollapsibleContent>`);
-      lines.push(`${pad}    <div className="border-t px-4 py-2 text-sm">`);
+      lines.push(`${pad}    <div className="${escapeAttr(dividerCls)}">`);
       if (linkedMocPath) {
         lines.push(`${pad}      {/* linked: ${escapeJsx(linkedMocPath)} */}`);
       } else if (contentChildren.length > 0) {

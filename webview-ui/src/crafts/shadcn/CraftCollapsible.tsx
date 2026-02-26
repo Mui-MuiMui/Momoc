@@ -59,6 +59,9 @@ interface CraftCollapsibleProps {
   width?: string;
   height?: string;
   className?: string;
+  outerBorderColor?: string;
+  dividerBorderColor?: string;
+  triggerBorderColor?: string;
 }
 
 export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
@@ -68,6 +71,9 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
   width = "auto",
   height = "auto",
   className = "",
+  outerBorderColor = "",
+  dividerBorderColor = "",
+  triggerBorderColor = "",
 }) => {
   const {
     connectors: { connect, drag },
@@ -80,7 +86,7 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("w-full rounded-md border", className)}
+      className={cn("w-full rounded-md border", outerBorderColor, className)}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {/* Header zone - always visible, drop zone for any components */}
@@ -89,13 +95,13 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
           <Element id="header" is={CollapsibleSlot} canvas className="flex min-h-[24px] items-center gap-2" />
         </div>
         {triggerStyle !== "none" && (
-          <button type="button" className="rounded-md border p-1 hover:bg-accent">
+          <button type="button" className={cn("rounded-md border p-1 hover:bg-accent", triggerBorderColor)}>
             <TriggerIcon style={triggerStyle} />
           </button>
         )}
       </div>
       {/* Content zone */}
-      <div className="border-t px-4 py-2 text-sm">
+      <div className={cn("border-t px-4 py-2 text-sm", dividerBorderColor)}>
         {linkedMocPath ? (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <LinkIcon />
@@ -118,6 +124,9 @@ CraftCollapsible.craft = {
     width: "auto",
     height: "auto",
     className: "",
+    outerBorderColor: "",
+    dividerBorderColor: "",
+    triggerBorderColor: "",
   },
   rules: {
     canDrag: () => true,

@@ -88,7 +88,7 @@ const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descript
 const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass"]);
 
 /** Props that use the Tailwind border class palette picker UI (stores "border-red-500" style class names). */
-const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor"]);
+const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor"]);
 
 /**
  * Tailwind CSS color palette (hex) — same data as TailwindEditor.tsx.
