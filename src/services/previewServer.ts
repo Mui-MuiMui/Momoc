@@ -574,11 +574,12 @@ export function cn(...inputs: (string | undefined | null | false)[]) {
 export const ComboboxCtx = createContext<any>(null);`,
 
   button: `import { cn } from "@/components/ui/_cn";
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { ComboboxCtx } from "@/components/ui/_combobox";
 export function Button(props: any) {
-  const { className = "", variant = "default", size = "default", children, role, ...rest } = props;
+  const { className = "", variant = "default", size = "default", children, role, style, ...rest } = props;
   const comboCtx = useContext(ComboboxCtx);
+  const inputRef = useRef<HTMLInputElement>(null);
   const v: Record<string, string> = {
     default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
     destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
@@ -593,15 +594,17 @@ export function Button(props: any) {
     lg: "h-10 rounded-md px-8",
     icon: "h-9 w-9",
   };
-  const cls = cn("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors", v[variant] || v.default, s[size] || s.default, className);
-  let displayChildren = children;
   if (role === "combobox" && comboCtx) {
     const childArray = Array.isArray(children) ? children : [children];
-    const placeholder = childArray.find((c: any) => typeof c === "string") || "";
+    const placeholder = String(childArray.find((c: any) => typeof c === "string") || "Select...");
     const icons = childArray.filter((c: any) => c !== null && c !== undefined && typeof c !== "string");
-    displayChildren = [comboCtx.value || <span key="ph" className="text-muted-foreground">{placeholder}</span>, ...icons];
+    return <div className={cn("relative inline-flex items-center", className)} style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
+      <input ref={inputRef} type="text" className="flex h-9 w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring" value={comboCtx.search || comboCtx.value || ""} placeholder={placeholder} onChange={(e: any) => { comboCtx.setSearch(e.target.value); comboCtx.setOpen(true); }} onFocus={() => comboCtx.setOpen(true)} />
+      <span className="absolute right-2 pointer-events-none opacity-50">{icons}</span>
+    </div>;
   }
-  return <button className={cls} role={role} {...rest}>{displayChildren}</button>;
+  const cls = cn("inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors", v[variant] || v.default, s[size] || s.default, className);
+  return <button className={cls} role={role} style={style} {...rest}>{children}</button>;
 }`,
 
   input: `import { cn } from "@/components/ui/_cn";
@@ -1025,6 +1028,8 @@ export function Command({ children, className = "", ...rest }: any) {
   return <Ctx.Provider value={{ search, setSearch, visibleCount, setVisibleCount }}><div className={cls} {...rest}>{children}</div></Ctx.Provider>;
 }
 export function CommandInput({ className = "", placeholder = "", ...rest }: any) {
+  const comboCtx = useContext(ComboboxCtx);
+  if (comboCtx) return null;
   const ctx = useContext(Ctx);
   return <div className="flex items-center border-b px-3"><input type="text" className={cn("flex h-10 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground", className)} placeholder={placeholder} value={ctx?.search || ""} onChange={(e: any) => ctx?.setSearch(e.target.value)} /></div>;
 }
@@ -1033,7 +1038,9 @@ export function CommandList({ children, className = "", ...rest }: any) {
 }
 export function CommandEmpty({ children, className = "", ...rest }: any) {
   const ctx = useContext(Ctx);
-  if (!ctx?.search || ctx.visibleCount > 0) return null;
+  const comboCtx = useContext(ComboboxCtx);
+  const search = comboCtx?.search || ctx?.search || "";
+  if (!search || ctx?.visibleCount > 0) return null;
   return <div className={cn("py-6 text-center text-sm", className)} {...rest}>{children}</div>;
 }
 export function CommandGroup({ children, className = "", heading, ...rest }: any) {
@@ -1042,7 +1049,7 @@ export function CommandGroup({ children, className = "", heading, ...rest }: any
 export function CommandItem({ children, value = "", className = "", onSelect, ...rest }: any) {
   const ctx = useContext(Ctx);
   const comboCtx = useContext(ComboboxCtx);
-  const search = ctx?.search || "";
+  const search = comboCtx?.search || ctx?.search || "";
   const visible = !search || String(value).toLowerCase().includes(search.toLowerCase());
   useEffect(() => {
     if (!ctx) return;
@@ -1055,8 +1062,7 @@ export function CommandItem({ children, value = "", className = "", onSelect, ..
   const isSelected = comboCtx?.value === value;
   const handleClick = () => {
     onSelect?.(value);
-    comboCtx?.setValue(value);
-    comboCtx?.setOpen(false);
+    if (comboCtx) { comboCtx.setValue(value); comboCtx.setSearch(""); comboCtx.setOpen(false); }
   };
   return <div className={cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground", isSelected && "bg-accent text-accent-foreground", className)} onClick={handleClick} {...rest}>{children}</div>;
 }
@@ -1209,13 +1215,15 @@ export function DrawerContent(props: any) {
   return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
-  popover: `import { createContext, useContext, useState } from "react";
+  popover: `import { cn } from "@/components/ui/_cn";
+import { createContext, useContext, useState } from "react";
 import { ComboboxCtx } from "@/components/ui/_combobox";
 const Ctx = createContext<any>(null);
 export function Popover(props: any) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
-  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue }}><Ctx.Provider value={{ open, setOpen }}><div className="relative inline-block">{props.children}</div></Ctx.Provider></ComboboxCtx.Provider>;
+  const [search, setSearch] = useState("");
+  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen }}><div className="relative inline-block">{props.children}</div></Ctx.Provider></ComboboxCtx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
@@ -1223,9 +1231,11 @@ export function PopoverTrigger(props: any) {
 }
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
+  const comboCtx = useContext(ComboboxCtx);
   if (!ctx?.open) return null;
-  const cls = ("absolute left-0 top-full mt-2 z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md " + (props.className || "")).trim();
-  return <div className={cls} style={props.style}>{props.children}</div>;
+  const cls = cn("absolute left-0 top-full mt-1 z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md", props.className);
+  const handleClose = () => { ctx.setOpen(false); comboCtx?.setSearch(""); };
+  return <><div className="fixed inset-0 z-40" onClick={handleClose} /><div className={cls} style={props.style} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>;
 }`,
 
   "dropdown-menu": `import { createContext, useContext, useState } from "react";
