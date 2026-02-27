@@ -1,6 +1,12 @@
 import { Element, useEditor, useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 
+/** 単位なし数値文字列に "px" を付ける。"100" → "100px"、"50%" → "50%"（そのまま） */
+function normalizeCssSize(v: string | undefined): string | undefined {
+  if (!v || v === "auto") return v;
+  return /^\d+(\.\d+)?$/.test(v) ? v + "px" : v;
+}
+
 export interface TableMeta {
   rowMap: number[];
   colMap: number[];
@@ -35,6 +41,7 @@ interface TableCellSlotProps {
   borderClass?: string;
   colspan?: number;
   rowspan?: number;
+  align?: "left" | "center" | "right";
   children?: React.ReactNode;
 }
 
@@ -45,18 +52,23 @@ export const TableCellSlot: UserComponent<TableCellSlotProps> = ({
   borderClass = "",
   colspan = 1,
   rowspan = 1,
+  align = "left",
   children,
 }) => {
   const {
     connectors: { connect },
   } = useNode();
 
+  const alignCls = align === "right" ? "flex flex-col items-end"
+    : align === "center" ? "flex flex-col items-center"
+    : "";
+
   return (
     <div
       ref={(ref) => {
         if (ref) connect(ref);
       }}
-      className={cn("min-h-[20px] p-1", bgClass, borderClass)}
+      className={cn("min-h-[20px] p-1", alignCls, bgClass, borderClass)}
     >
       {children}
     </div>
@@ -71,6 +83,7 @@ TableCellSlot.craft = {
     borderClass: "",
     colspan: 1,
     rowspan: 1,
+    align: "left",
   },
   rules: {
     canDrag: () => false,
@@ -153,8 +166,10 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   }
 
   const tableStyle: React.CSSProperties = {};
-  if (width !== "auto") tableStyle.width = width;
-  if (height !== "auto") tableStyle.height = height;
+  const normalizedWidth = normalizeCssSize(width);
+  const normalizedHeight = normalizeCssSize(height);
+  if (normalizedWidth && normalizedWidth !== "auto") tableStyle.width = normalizedWidth;
+  if (normalizedHeight && normalizedHeight !== "auto") tableStyle.height = normalizedHeight;
 
   const bwClass = borderWidth === "0" ? "border-0"
     : borderWidth === "2" ? "border-2"
@@ -179,11 +194,13 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
           const cellWidth = (slotNode?.data?.props?.width as string) || "";
           const cellHeight = (slotNode?.data?.props?.height as string) || "";
           const cellStyle: React.CSSProperties = {};
-          const effectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth
+          const rawEffectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth
             : (colWidth && colWidth !== "auto") ? colWidth
             : undefined;
+          const effectiveWidth = normalizeCssSize(rawEffectiveWidth);
           if (effectiveWidth) cellStyle.width = effectiveWidth;
-          if (cellHeight && cellHeight !== "auto") cellStyle.height = cellHeight;
+          const normalizedCellHeight = normalizeCssSize(cellHeight);
+          if (normalizedCellHeight && normalizedCellHeight !== "auto") cellStyle.height = normalizedCellHeight;
 
           const CellTag = isHeader ? "th" : "td";
           return (

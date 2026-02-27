@@ -176,6 +176,11 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: [],
     isContainer: true,
   },
+  TabContentSlot: {
+    tag: "div",
+    propsMap: [],
+    isContainer: true,
+  },
   CraftPagination: {
     tag: "Pagination",
     importFrom: "@/components/ui/pagination",
@@ -580,6 +585,22 @@ export function craftStateToTsx(
       }
     }
 
+    // Collect tooltip imports for CraftTabs with any tab tooltip set
+    if (resolvedName === "CraftTabs") {
+      try {
+        const tabMetaRaw = node.props?.tabMeta as string | undefined;
+        const tabMeta = JSON.parse(tabMetaRaw || "{}");
+        const tabTooltips = tabMeta.tooltips as Record<string, string> | undefined;
+        if (tabTooltips && Object.values(tabTooltips).some((t) => !!t)) {
+          for (const name of TOOLTIP_IMPORT.names) {
+            addImport(TOOLTIP_IMPORT.from, name);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     // Collect context menu imports for containers with contextMenuMocPath
     const contextMenuMocPath = node.props?.contextMenuMocPath as string | undefined;
     if (contextMenuMocPath) {
@@ -595,6 +616,28 @@ export function craftStateToTsx(
       addImport("@/components/ui/table", "TableRow");
       addImport("@/components/ui/table", "TableHead");
       addImport("@/components/ui/table", "TableCell");
+      for (const linkedId of Object.values(node.linkedNodes || {})) {
+        collectImports(linkedId);
+      }
+      return;
+    }
+
+    // CraftTabs: add tab sub-component imports and traverse linkedNodes
+    if (resolvedName === "CraftTabs") {
+      addImport("@/components/ui/tabs", "TabsList");
+      addImport("@/components/ui/tabs", "TabsTrigger");
+      addImport("@/components/ui/tabs", "TabsContent");
+      // Collect icon imports from tabMeta
+      try {
+        const meta = JSON.parse((node.props?.tabMeta as string) || "{}");
+        if (typeof meta.icons === "object" && meta.icons !== null) {
+          for (const icon of Object.values(meta.icons)) {
+            if (icon && typeof icon === "string") addImport("lucide-react", icon);
+          }
+        }
+      } catch {
+        // ignore parse errors
+      }
       for (const linkedId of Object.values(node.linkedNodes || {})) {
         collectImports(linkedId);
       }
@@ -992,6 +1035,11 @@ export function craftStateToTsx(
       return rendered;
     }
 
+    // Tabs special case: render as LinkedNodes tabs
+    if (resolvedName === "CraftTabs") {
+      return `${mocComments}\n${renderTabs(node, craftState, indent, renderNode)}`;
+    }
+
     // Table special case: render as LinkedNodes table
     if (resolvedName === "CraftTable") {
       return `${mocComments}\n${renderTable(node, craftState, indent, renderNode)}`;
@@ -1199,9 +1247,15 @@ function buildContainerClasses(props: Record<string, unknown>): string {
   return classes.join(" ");
 }
 
+/** 単位なし数値文字列に "px" を付ける。"100" → "100px"、"50%" → "50%"（そのまま） */
+function normalizeCssSize(v: string | undefined): string | undefined {
+  if (!v || v === "auto") return v;
+  return /^\d+(\.\d+)?$/.test(v) ? v + "px" : v;
+}
+
 function buildStyleAttr(props: Record<string, unknown>): string {
-  const w = props?.width as string | undefined;
-  const h = props?.height as string | undefined;
+  const w = normalizeCssSize(props?.width as string | undefined);
+  const h = normalizeCssSize(props?.height as string | undefined);
   const objectFit = props?.objectFit as string | undefined;
   const top = props?.top as string | undefined;
   const left = props?.left as string | undefined;
@@ -1309,25 +1363,38 @@ function renderTable(
       const borderClass = (slotNode?.props?.borderClass as string) || "";
       const cellWidth = (slotNode?.props?.width as string) || "";
       const cellHeight = (slotNode?.props?.height as string) || "";
+      const cellAlign = (slotNode?.props?.align as string) || "left";
       const colWidth = colWidths[String(physC)] || "";
       const cellTag = isHeader ? "TableHead" : "TableCell";
       const colSpanAttr = colspan > 1 ? ` colSpan={${colspan}}` : "";
       const rowSpanAttr = rowspan > 1 ? ` rowSpan={${rowspan}}` : "";
+      // alignCls must go on an inner div, NOT on the td (display:flex on td breaks rowspan/colspan)
+      const alignCls = cellAlign === "right" ? "flex flex-col items-end"
+        : cellAlign === "center" ? "flex flex-col items-center"
+        : "";
       const cellCls = [bgClass, borderClass, tableBorderClass].filter(Boolean).join(" ");
       const classAttr = cellCls ? ` className="${escapeAttr(cellCls)}"` : "";
       const stylePartsCell: string[] = [];
-      const effectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth
+      const rawEffectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth
         : (colWidth && colWidth !== "auto") ? colWidth
         : "";
+      const effectiveWidth = normalizeCssSize(rawEffectiveWidth || undefined) || "";
       if (effectiveWidth) stylePartsCell.push(`width: "${effectiveWidth}"`);
-      if (cellHeight && cellHeight !== "auto") stylePartsCell.push(`height: "${cellHeight}"`);
+      const normalizedCellHeight = normalizeCssSize(cellHeight || undefined);
+      if (normalizedCellHeight && normalizedCellHeight !== "auto") stylePartsCell.push(`height: "${normalizedCellHeight}"`);
       const cellStyleAttr = stylePartsCell.length > 0 ? ` style={{ ${stylePartsCell.join(", ")} }}` : "";
       const slotChildren = slotNode
-        ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, rowIndent + 2)).filter(Boolean)
+        ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, rowIndent + 3)).filter(Boolean)
         : [];
       if (slotChildren.length > 0) {
         lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr}${cellStyleAttr}>`);
-        for (const child of slotChildren) lines.push(child);
+        if (alignCls) {
+          lines.push(`${rowPad}    <div className="${alignCls}">`);
+          for (const child of slotChildren) lines.push(child);
+          lines.push(`${rowPad}    </div>`);
+        } else {
+          for (const child of slotChildren) lines.push(child);
+        }
         lines.push(`${rowPad}  </${cellTag}>`);
       } else {
         lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr}${cellStyleAttr} />`);
@@ -1354,6 +1421,112 @@ function renderTable(
   }
 
   lines.push(`${pad}</Table>`);
+  return lines.join("\n");
+}
+
+function renderTabs(
+  node: CraftNodeData,
+  craftState: CraftSerializedState,
+  indent: number,
+  renderNodeFn: (nodeId: string, indent: number) => string,
+): string {
+  const pad = "  ".repeat(indent);
+
+  // Parse tabMeta
+  let keys: number[] = [0, 1, 2];
+  let labels: Record<string, string> = { "0": "Tab 1", "1": "Tab 2", "2": "Tab 3" };
+  let icons: Record<string, string> = {};
+  let tooltips: Record<string, string> = {};
+  try {
+    const meta = JSON.parse((node.props?.tabMeta as string) || "{}");
+    if (Array.isArray(meta.keys)) keys = meta.keys;
+    if (typeof meta.labels === "object" && meta.labels !== null) labels = meta.labels;
+    if (typeof meta.icons === "object" && meta.icons !== null) icons = meta.icons;
+    if (typeof meta.tooltips === "object" && meta.tooltips !== null) tooltips = meta.tooltips;
+  } catch {
+    // use defaults
+  }
+
+  const orientation = (node.props?.orientation as string) || "horizontal";
+  const isVertical = orientation === "vertical";
+  const tabListBgClass = (node.props?.tabListBgClass as string) || "";
+  const tabActiveBgClass = (node.props?.tabActiveBgClass as string) || "";
+  const contentBgClass = (node.props?.contentBgClass as string) || "";
+  const outerBorderColor = (node.props?.outerBorderColor as string) || "";
+  const contentBorderColor = (node.props?.contentBorderColor as string) || "";
+  const outerShadow = (node.props?.outerShadow as string) || "";
+  const contentShadow = (node.props?.contentShadow as string) || "";
+  const userClassName = (node.props?.className as string) || "";
+
+  const styleAttr = buildStyleAttr(node.props);
+
+  // Build outer wrapper className
+  const outerCls = [isVertical ? "flex flex-row" : "flex flex-col", outerBorderColor, outerShadow, userClassName]
+    .filter(Boolean)
+    .join(" ");
+  const outerClassAttr = outerCls ? ` className="${escapeAttr(outerCls)}"` : "";
+
+  // Build TabsList className
+  const tabListBase = isVertical
+    ? "flex flex-col items-stretch bg-muted p-1 rounded-md"
+    : "inline-flex items-center bg-muted p-1 rounded-md w-full";
+  const tabListCls = [tabListBase, tabListBgClass].filter(Boolean).join(" ");
+
+  // Build TabsContent className
+  const contentCls = [contentBgClass, contentBorderColor, contentShadow].filter(Boolean).join(" ");
+
+  // Use first key as default active value
+  const defaultValue = keys.length > 0 ? `tab-${keys[0]}` : "tab-0";
+
+  const lines: string[] = [];
+  const orientationAttr = isVertical ? ` orientation="vertical"` : "";
+  lines.push(`${pad}<Tabs defaultValue="${defaultValue}"${orientationAttr}${outerClassAttr}${styleAttr}>`);
+  lines.push(`${pad}  <TabsList className="${escapeAttr(tabListCls)}">`);
+
+  for (const key of keys) {
+    const label = labels[String(key)] ?? `Tab ${key}`;
+    const icon = icons[String(key)] ?? "";
+    const tooltip = tooltips[String(key)] ?? "";
+    const iconJsx = icon ? `<${icon} className="h-4 w-4" /> ` : "";
+    const triggerClassAttr = tabActiveBgClass
+      ? ` className="${escapeAttr(`data-[state=active]:${tabActiveBgClass}`)}"`
+      : "";
+    if (tooltip) {
+      lines.push(`${pad}    <TooltipProvider>`);
+      lines.push(`${pad}      <Tooltip>`);
+      lines.push(`${pad}        <TooltipTrigger asChild>`);
+      lines.push(`${pad}          <TabsTrigger value="tab-${key}"${triggerClassAttr}>${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
+      lines.push(`${pad}        </TooltipTrigger>`);
+      lines.push(`${pad}        <TooltipContent>`);
+      lines.push(`${pad}          <p>${escapeJsx(tooltip)}</p>`);
+      lines.push(`${pad}        </TooltipContent>`);
+      lines.push(`${pad}      </Tooltip>`);
+      lines.push(`${pad}    </TooltipProvider>`);
+    } else {
+      lines.push(`${pad}    <TabsTrigger value="tab-${key}"${triggerClassAttr}>${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
+    }
+  }
+
+  lines.push(`${pad}  </TabsList>`);
+
+  for (const key of keys) {
+    const slotId = node.linkedNodes?.[`tab_${key}`];
+    const slotNode = slotId ? craftState[slotId] : null;
+    const slotChildren = slotNode
+      ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, indent + 3)).filter(Boolean)
+      : [];
+
+    const contentClassAttr = contentCls ? ` className="${escapeAttr(contentCls)}"` : "";
+    if (slotChildren.length > 0) {
+      lines.push(`${pad}  <TabsContent value="tab-${key}"${contentClassAttr}>`);
+      for (const child of slotChildren) lines.push(child);
+      lines.push(`${pad}  </TabsContent>`);
+    } else {
+      lines.push(`${pad}  <TabsContent value="tab-${key}"${contentClassAttr} />`);
+    }
+  }
+
+  lines.push(`${pad}</Tabs>`);
   return lines.join("\n");
 }
 

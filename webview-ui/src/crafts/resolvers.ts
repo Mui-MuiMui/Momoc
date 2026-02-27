@@ -26,7 +26,7 @@ import { CraftScrollArea } from "./shadcn/CraftScrollArea";
 import { CraftSkeleton } from "./shadcn/CraftSkeleton";
 import { CraftSlider } from "./shadcn/CraftSlider";
 import { CraftSwitch } from "./shadcn/CraftSwitch";
-import { CraftTabs } from "./shadcn/CraftTabs";
+import { CraftTabs, TabContentSlot } from "./shadcn/CraftTabs";
 import { CraftTextarea } from "./shadcn/CraftTextarea";
 import { CraftToggle } from "./shadcn/CraftToggle";
 import { CraftToggleGroup } from "./shadcn/CraftToggleGroup";
@@ -85,6 +85,7 @@ export const resolvers = {
   CraftSlider,
   CraftSwitch,
   CraftTabs,
+  TabContentSlot,
   CraftTextarea,
   CraftToggle,
   CraftToggleGroup,
@@ -359,7 +360,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "PanelTop",
     defaultProps: {},
-    enabled: false,
+    enabled: true,
   },
   {
     resolverKey: "CraftTextarea",

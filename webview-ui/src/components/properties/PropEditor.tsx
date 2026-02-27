@@ -3,6 +3,7 @@ import { useEditor } from "@craftjs/core";
 import { getVsCodeApi } from "../../utils/vscodeApi";
 import { IconCombobox } from "./IconCombobox";
 import { TableMetaEditor } from "./TableMetaEditor";
+import { TabMetaEditor } from "./TabMetaEditor";
 import { useEditorStore } from "../../stores/editorStore";
 
 /** Mapping of property names to their allowed values (select options). */
@@ -63,6 +64,9 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Table: {
     borderWidth: ["0", "1", "2", "4"],
   },
+  TableCellSlot: {
+    align: ["left", "center", "right"],
+  },
   Switch: {
     variant: ["default", "card"],
     size: ["default", "sm"],
@@ -72,6 +76,11 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   Sheet: {
     side: ["top", "right", "bottom", "left"],
+  },
+  Tabs: {
+    orientation: ["horizontal", "vertical"],
+    outerShadow: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    contentShadow: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
   },
 };
 
@@ -88,10 +97,10 @@ const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath"]);
 const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor", "labelColor"]);
 
 /** Props that use the Tailwind bg class palette picker UI (stores "bg-red-500" style class names). */
-const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass"]);
+const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass"]);
 
 /** Props that use the Tailwind border class palette picker UI (stores "border-red-500" style class names). */
-const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor"]);
+const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor"]);
 
 /**
  * Tailwind CSS color palette (hex) — same data as TailwindEditor.tsx.
@@ -323,6 +332,17 @@ export function PropEditor() {
     if (key === "tableMeta" && selectedNodeId) {
       return (
         <TableMetaEditor
+          key={key}
+          value={String(value ?? "")}
+          selectedNodeId={selectedNodeId}
+        />
+      );
+    }
+
+    // Custom UI for tabMeta (tab structure editor)
+    if (key === "tabMeta" && selectedNodeId) {
+      return (
+        <TabMetaEditor
           key={key}
           value={String(value ?? "")}
           selectedNodeId={selectedNodeId}
