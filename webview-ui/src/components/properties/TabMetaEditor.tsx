@@ -86,34 +86,33 @@ export function TabMetaEditor({ value, selectedNodeId }: TabMetaEditorProps) {
       <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">tabMeta</label>
 
       {/* Tab list */}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         {meta.keys.map((key, idx) => (
-          <div key={key} className="flex items-center gap-1">
-            {/* Icon selector */}
-            <div className="w-[90px] shrink-0">
-              <IconCombobox
-                value={meta.icons[String(key)] ?? ""}
-                onChange={(v) => setIcon(key, v)}
+          <div key={key} className="flex flex-col gap-1">
+            {/* Label input + delete button */}
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={meta.labels[String(key)] ?? ""}
+                onChange={(e) => setLabel(key, e.target.value)}
+                className={`${INPUT_CLASS} flex-1`}
+                placeholder={`Tab ${idx + 1}`}
               />
+              <button
+                type="button"
+                className={btnDangerClass}
+                disabled={meta.keys.length <= 1}
+                onClick={() => removeTab(idx)}
+                title="削除"
+              >
+                ✕
+              </button>
             </div>
-            {/* Label input */}
-            <input
-              type="text"
-              value={meta.labels[String(key)] ?? ""}
-              onChange={(e) => setLabel(key, e.target.value)}
-              className={`${INPUT_CLASS} flex-1`}
-              placeholder={`Tab ${idx + 1}`}
+            {/* Icon selector */}
+            <IconCombobox
+              value={meta.icons[String(key)] ?? ""}
+              onChange={(v) => setIcon(key, v)}
             />
-            {/* Delete button */}
-            <button
-              type="button"
-              className={btnDangerClass}
-              disabled={meta.keys.length <= 1}
-              onClick={() => removeTab(idx)}
-              title="削除"
-            >
-              ✕
-            </button>
           </div>
         ))}
       </div>

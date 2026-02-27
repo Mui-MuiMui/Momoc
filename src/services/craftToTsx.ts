@@ -1413,6 +1413,7 @@ function renderTabs(
   const orientation = (node.props?.orientation as string) || "horizontal";
   const isVertical = orientation === "vertical";
   const tabListBgClass = (node.props?.tabListBgClass as string) || "";
+  const tabActiveBgClass = (node.props?.tabActiveBgClass as string) || "";
   const contentBgClass = (node.props?.contentBgClass as string) || "";
   const outerBorderColor = (node.props?.outerBorderColor as string) || "";
   const contentBorderColor = (node.props?.contentBorderColor as string) || "";
@@ -1449,7 +1450,10 @@ function renderTabs(
     const label = labels[String(key)] ?? `Tab ${key}`;
     const icon = icons[String(key)] ?? "";
     const iconJsx = icon ? `<${icon} className="h-4 w-4" /> ` : "";
-    lines.push(`${pad}    <TabsTrigger value="tab-${key}">${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
+    const triggerClassAttr = tabActiveBgClass
+      ? ` className="${escapeAttr(`data-[state=active]:${tabActiveBgClass}`)}"`
+      : "";
+    lines.push(`${pad}    <TabsTrigger value="tab-${key}"${triggerClassAttr}>${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
   }
 
   lines.push(`${pad}  </TabsList>`);

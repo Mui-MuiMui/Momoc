@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Element, useNode, type UserComponent } from "@craftjs/core";
+import * as LucideIcons from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReactNode } from "react";
 
@@ -54,6 +55,7 @@ interface CraftTabsProps {
   height?: string;
   className?: string;
   tabListBgClass?: string;
+  tabActiveBgClass?: string;
   contentBgClass?: string;
   outerBorderColor?: string;
   contentBorderColor?: string;
@@ -68,6 +70,7 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
   height = "auto",
   className = "",
   tabListBgClass = "",
+  tabActiveBgClass = "",
   contentBgClass = "",
   outerBorderColor = "",
   contentBorderColor = "",
@@ -117,6 +120,8 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
       <div className={tabListCls}>
         {meta.keys.map((key) => {
           const label = meta.labels[String(key)] ?? `Tab ${key}`;
+          const iconName = meta.icons[String(key)];
+          const IconComp = iconName ? (LucideIcons as Record<string, any>)[iconName] : null;
           const isActive = key === activeKey;
           return (
             <button
@@ -127,10 +132,11 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
                 "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 isVertical ? "text-left" : "flex-1",
                 isActive
-                  ? "bg-background text-foreground shadow"
+                  ? cn("bg-background text-foreground shadow", tabActiveBgClass)
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
+              {IconComp && <IconComp className="h-4 w-4" />}
               {label}
             </button>
           );
@@ -160,6 +166,7 @@ CraftTabs.craft = {
     height: "auto",
     className: "",
     tabListBgClass: "",
+    tabActiveBgClass: "",
     contentBgClass: "",
     outerBorderColor: "",
     contentBorderColor: "",
