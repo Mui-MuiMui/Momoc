@@ -952,9 +952,13 @@ export function TabsTrigger({ value, className = "", children, ...rest }: any) {
   const ctx = useContext(TabsCtx);
   const isActive = ctx?.value === value;
   const base = "inline-flex items-center justify-center gap-1 px-3 py-1 text-sm font-medium rounded-sm transition-all cursor-pointer";
+  const prefix = "data-[state=active]:";
+  const parts = className.split(" ").filter(Boolean);
+  const activeExtra = parts.filter((c: string) => c.startsWith(prefix)).map((c: string) => c.slice(prefix.length)).join(" ");
+  const restCls = parts.filter((c: string) => !c.startsWith(prefix)).join(" ");
   return (
     <button type="button"
-      className={cn(base, isActive ? "bg-background text-foreground shadow" : "text-muted-foreground hover:text-foreground", className)}
+      className={cn(base, isActive ? cn("bg-background text-foreground shadow", activeExtra) : "text-muted-foreground hover:text-foreground", restCls)}
       onClick={() => ctx?.setValue(value)} {...rest}>{children}</button>
   );
 }
