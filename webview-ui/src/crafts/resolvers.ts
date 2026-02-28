@@ -329,7 +329,7 @@ export const paletteItems: PaletteItem[] = [
     icon: "ScrollText",
     defaultProps: {},
     isCanvas: true,
-    enabled: false,
+    enabled: true,
   },
   {
     resolverKey: "CraftSkeleton",
