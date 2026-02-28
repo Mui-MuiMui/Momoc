@@ -73,10 +73,19 @@ export function parseResizableMeta(raw: string | undefined): ResizableMeta {
   }
 }
 
+function borderWidthToClass(bw?: string): string {
+  if (bw === "0") return "border-0";
+  if (bw === "2") return "border-2";
+  if (bw === "4") return "border-4";
+  if (bw === "8") return "border-8";
+  return "border";
+}
+
 interface CraftResizableProps {
   panelMeta?: string;
   withHandle?: boolean;
   borderColor?: string;
+  borderWidth?: string;
   separatorColor?: string;
   separatorSize?: string;
   borderRadius?: string;
@@ -90,6 +99,7 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
   panelMeta = DEFAULT_PANEL_META_JSON,
   withHandle = true,
   borderColor = "",
+  borderWidth = "1",
   separatorColor = "",
   separatorSize = "4",
   borderRadius = "rounded-lg",
@@ -168,7 +178,8 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
     <div
       ref={outerRef}
       className={cn(
-        "flex border overflow-hidden",
+        "flex overflow-hidden",
+        borderWidthToClass(borderWidth),
         isVertical ? "flex-col" : "flex-row",
         borderRadius,
         borderColor,
@@ -257,6 +268,7 @@ CraftResizable.craft = {
     panelMeta: DEFAULT_PANEL_META_JSON,
     withHandle: true,
     borderColor: "",
+    borderWidth: "1",
     separatorColor: "",
     separatorSize: "4",
     borderRadius: "rounded-lg",
