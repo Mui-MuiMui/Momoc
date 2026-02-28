@@ -139,21 +139,6 @@ const CP: Record<string, Record<string, string>> = {
   rose:    { "50":"#fff1f2","100":"#ffe4e6","200":"#fecdd3","300":"#fda4af","400":"#fb7185","500":"#f43f5e","600":"#e11d48","700":"#be123c","800":"#9f1239","900":"#881337","950":"#4c0519" },
 };
 
-/** Parse a border color/width compound value like "border-2 border-red-500" */
-function parseBorderClasses(value: string): { colorClass: string; widthClass: string } {
-  const parts = (value || "").split(" ").filter(Boolean);
-  const colorClass = parts.find((p) =>
-    /^border-[a-z]+-\d{2,3}$/.test(p) || /^border-(black|white)$/.test(p)
-  ) || "";
-  const widthClass = parts.find((p) => /^border(-\d+)?$/.test(p)) || "";
-  return { colorClass, widthClass };
-}
-
-/** Build a combined border value: "border-2 border-red-500" */
-function buildBorderValue(colorClass: string, widthClass: string): string {
-  return [widthClass, colorClass].filter(Boolean).join(" ");
-}
-
 /** Parse a Tailwind class with given prefix → { family, shade } */
 function parseTailwindColorClass(value: string, prefix: string): { family: string; shade: string } | null {
   const escaped = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -622,11 +607,10 @@ export function PropEditor() {
     // Custom UI for Tailwind border class palette props (borderColor)
     if (TAILWIND_BORDER_PALETTE_PROPS.has(key)) {
       const currentValue = String(value ?? "");
-      const { colorClass, widthClass } = parseBorderClasses(currentValue);
-      const borderInfo = parseTailwindColorClass(colorClass, "border");
+      const borderInfo = parseTailwindColorClass(currentValue, "border");
       const family = colorFamilies[key] || borderInfo?.family || "gray";
       const setFamily = (f: string) => setColorFamilies((prev) => ({ ...prev, [key]: f }));
-      const isActive = (s: string) => colorClass === `border-${family}-${s}`;
+      const isActive = (s: string) => currentValue === `border-${family}-${s}`;
 
       return (
         <div key={key} className="flex flex-col gap-1">
@@ -648,19 +632,19 @@ export function PropEditor() {
             </button>
             <button
               type="button"
-              onClick={() => handlePropChange(key, colorClass === "border-black" ? buildBorderValue("", widthClass) : buildBorderValue("border-black", widthClass))}
+              onClick={() => handlePropChange(key, currentValue === "border-black" ? "" : "border-black")}
               title="black"
               className={`h-3.5 w-3.5 rounded-sm border border-[var(--vscode-input-border,#555)] transition-all ${
-                colorClass === "border-black" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+                currentValue === "border-black" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
               }`}
               style={{ backgroundColor: "#000" }}
             />
             <button
               type="button"
-              onClick={() => handlePropChange(key, colorClass === "border-white" ? buildBorderValue("", widthClass) : buildBorderValue("border-white", widthClass))}
+              onClick={() => handlePropChange(key, currentValue === "border-white" ? "" : "border-white")}
               title="white"
               className={`h-3.5 w-3.5 rounded-sm border border-[var(--vscode-input-border,#555)] transition-all ${
-                colorClass === "border-white" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+                currentValue === "border-white" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
               }`}
               style={{ backgroundColor: "#fff" }}
             />
@@ -669,28 +653,6 @@ export function PropEditor() {
                 {borderInfo.family}-{borderInfo.shade}
               </span>
             )}
-          </div>
-          {/* Border width selector */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-[var(--vscode-descriptionForeground,#888)] shrink-0">width</span>
-            {(["1", "0", "2", "4", "8"] as const).map((w) => {
-              const wc = w === "1" ? "border" : `border-${w}`;
-              const isActiveW = widthClass === wc;
-              return (
-                <button
-                  key={w}
-                  type="button"
-                  onClick={() => handlePropChange(key, buildBorderValue(colorClass, isActiveW ? "" : wc))}
-                  className={`rounded px-1.5 py-0.5 text-[10px] transition-colors ${
-                    isActiveW
-                      ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
-                      : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
-                  }`}
-                >
-                  {w}
-                </button>
-              );
-            })}
           </div>
           {/* Palette family selector */}
           <div className="flex flex-wrap gap-1">
@@ -713,7 +675,7 @@ export function PropEditor() {
               <button
                 key={s}
                 type="button"
-                onClick={() => handlePropChange(key, buildBorderValue(isActive(s) ? "" : `border-${family}-${s}`, widthClass))}
+                onClick={() => handlePropChange(key, isActive(s) ? "" : `border-${family}-${s}`)}
                 title={`${family}-${s}`}
                 className={`h-4 flex-1 rounded-sm transition-all ${
                   isActive(s) ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-y-125"
