@@ -1123,7 +1123,7 @@ export function craftStateToTsx(
       const renderedChildren = children
         .map((id) => renderNode(id, indent + 1))
         .filter(Boolean);
-      rendered = `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
       rendered = wrapWithContextMenu(rendered, node.props, pad);
       return rendered;
     }
@@ -1162,7 +1162,7 @@ export function craftStateToTsx(
 
     // Empty container
     if (mapping.isContainer) {
-      rendered = `${mocComments}\n${pad}<${tag}${classNameAttr}${styleAttr} />`;
+      rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
       rendered = wrapWithContextMenu(rendered, node.props, pad);
       return rendered;
     }
