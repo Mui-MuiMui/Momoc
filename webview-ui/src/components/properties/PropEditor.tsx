@@ -60,15 +60,11 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
     variant: ["default", "card"],
   },
   Resizable: {
-    borderWidth: ["0", "1", "2", "4", "8"],
     borderRadius: ["", "rounded", "rounded-md", "rounded-lg", "rounded-xl"],
     shadow: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg"],
     separatorSize: ["1", "2", "4", "6", "8"],
   },
   ResizablePanelSlot: {},
-  ScrollArea: {
-    borderWidth: ["0", "1", "2", "4", "8"],
-  },
   Table: {
     borderWidth: ["0", "1", "2", "4"],
   },

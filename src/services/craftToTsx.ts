@@ -881,9 +881,6 @@ export function craftStateToTsx(
     if (resolvedName === "CraftFreeCanvas") {
       containerClass = "relative";
     }
-    if (resolvedName === "CraftScrollArea") {
-      containerClass = borderWidthToClass(node.props?.borderWidth as string | undefined);
-    }
 
     // Merge className
     const userClassName = (node.props?.className as string) || "";
@@ -1281,14 +1278,6 @@ function buildContainerClasses(props: Record<string, unknown>): string {
   return classes.join(" ");
 }
 
-function borderWidthToClass(bw?: string): string {
-  if (bw === "0") return "border-0";
-  if (bw === "2") return "border-2";
-  if (bw === "4") return "border-4";
-  if (bw === "8") return "border-8";
-  return "border";
-}
-
 /** 単位なし数値文字列に "px" を付ける。"100" → "100px"、"50%" → "50%"（そのまま） */
 function normalizeCssSize(v: string | undefined): string | undefined {
   if (!v || v === "auto") return v;
@@ -1594,14 +1583,13 @@ function renderResizable(
   const withHandle = node.props?.withHandle !== false;
   const userClassName = (node.props?.className as string) || "";
   const borderColor = (node.props?.borderColor as string) || "";
-  const borderWidth = (node.props?.borderWidth as string) || "1";
   const separatorColor = (node.props?.separatorColor as string) || "";
   const separatorSize = (node.props?.separatorSize as string) || "4";
   const borderRadius = (node.props?.borderRadius as string) || "rounded-lg";
   const shadow = (node.props?.shadow as string) || "";
 
   // Outer wrapper: owns border/color/size/shadow
-  const outerClasses = ["flex overflow-hidden", borderWidthToClass(borderWidth), borderRadius, borderColor, shadow, userClassName]
+  const outerClasses = ["flex border overflow-hidden", borderRadius, borderColor, shadow, userClassName]
     .filter(Boolean).join(" ");
   const styleAttr = buildStyleAttr(node.props);
 
