@@ -216,6 +216,15 @@ const ABSOLUTE_DEFAULTS: Record<string, unknown> = {
   left: "0px",
 };
 
+/**
+ * コンポーネント固有の非表示プロパティ。
+ * 共通グループ・コンポーネントグループの両方から除外される。
+ */
+const COMPONENT_EXCLUDED_PROPS: Record<string, Set<string>> = {
+  // AspectRatio: height は CSS aspect-ratio で制御、keepAspectRatio は内部用
+  AspectRatio: new Set(["height", "keepAspectRatio"]),
+};
+
 export function PropEditor() {
   const { selectedProps, actions, selectedNodeId, componentName, craftDefaultProps } = useEditor(
     (state) => {
@@ -305,10 +314,12 @@ export function PropEditor() {
 
   // --- 新グループ分けロジック ---
 
+  const excludedProps = COMPONENT_EXCLUDED_PROPS[componentName] ?? new Set<string>();
+
   // 共通グループ: width/height を selectedProps から取得（無ければデフォルト値）
-  const commonEntries: [string, unknown][] = Array.from(COMMON_KEYS).map(
-    (k) => [k, selectedProps[k] ?? "auto"],
-  );
+  const commonEntries: [string, unknown][] = Array.from(COMMON_KEYS)
+    .filter((k) => !excludedProps.has(k))
+    .map((k) => [k, selectedProps[k] ?? "auto"]);
 
   // フロー配置グループ: layoutMode === "flow" のみ。selectedProps に無ければデフォルト値
   const flowEntries: [string, unknown][] = layoutMode === "flow"
@@ -326,6 +337,7 @@ export function PropEditor() {
       key !== "children" &&
       key !== "className" &&
       !LAYOUT_ALL_KEYS.has(key) &&
+      !excludedProps.has(key) &&
       (craftDefaultProps ? key in craftDefaultProps : true),
   );
 

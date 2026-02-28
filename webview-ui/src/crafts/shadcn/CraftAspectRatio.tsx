@@ -4,15 +4,15 @@ import { cn } from "../../utils/cn";
 interface CraftAspectRatioProps {
   ratio?: number;
   width?: string;
-  height?: string;
   className?: string;
   children?: React.ReactNode;
+  /** RenderNode がリサイズ時に比率を維持するために使用 (常に true) */
+  keepAspectRatio?: boolean;
 }
 
 export const CraftAspectRatio: UserComponent<CraftAspectRatioProps> = ({
   ratio = 16 / 9,
   width = "auto",
-  height = "auto",
   className = "",
   children,
 }) => {
@@ -25,15 +25,19 @@ export const CraftAspectRatio: UserComponent<CraftAspectRatioProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("relative w-full", className)}
+      // w-full は width="auto" の時のみ適用。明示的な width がある場合は inline style が制御する
+      className={cn("relative", width === "auto" && "w-full", className)}
       style={{
         width: width !== "auto" ? width : undefined,
-        aspectRatio: height === "auto" ? ratio : undefined,
-        height: height !== "auto" ? height : undefined,
+        // height は常に "auto" にして CSS aspect-ratio が機能するようにする。
+        // RenderNode がドラッグ中に dom.style.height を直接書き換えても、
+        // React の再レンダリング時に "auto" で上書きされる。
+        height: "auto",
+        aspectRatio: ratio,
       }}
     >
       {children ?? (
-        <div className="flex h-full min-h-[60px] items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/30 text-xs text-muted-foreground">
+        <div className="flex min-h-[60px] items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/30 text-xs text-muted-foreground">
           コンポーネントをドロップ
         </div>
       )}
@@ -46,8 +50,9 @@ CraftAspectRatio.craft = {
   props: {
     ratio: 16 / 9,
     width: "auto",
-    height: "auto",
     className: "",
+    // RenderNode がこの prop を読んでリサイズ時に比率を維持する
+    keepAspectRatio: true,
   },
   rules: {
     canDrag: () => true,
