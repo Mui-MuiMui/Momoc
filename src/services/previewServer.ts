@@ -838,7 +838,7 @@ export function RadioGroupItem(props: any) {
   "scroll-area": `import { cn } from "@/components/ui/_cn";
 export function ScrollArea(props: any) {
   const { className = "", children, ...rest } = props;
-  const cls = cn("relative overflow-auto", className);
+  const cls = cn("relative overflow-auto rounded-md border", className);
   return <div className={cls} {...rest}>{children}</div>;
 }`,
 

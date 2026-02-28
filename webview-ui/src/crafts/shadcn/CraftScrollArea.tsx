@@ -27,11 +27,7 @@ export const CraftScrollArea: UserComponent<CraftScrollAreaProps> = ({
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       <div className="p-4">
-        {children || (
-          <div className="text-sm text-muted-foreground">
-            Scrollable content area. Drop elements here.
-          </div>
-        )}
+        {children}
       </div>
     </div>
   );
