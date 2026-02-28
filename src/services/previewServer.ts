@@ -1190,9 +1190,9 @@ export function ResizableHandle(props) {
   }
   return (
     <div ref={ref}
-      className={cn("bg-border flex-shrink-0 flex items-center justify-center select-none",
+      className={cn("flex-shrink-0 flex items-center justify-center select-none",
         isVertical ? "h-[4px] w-full cursor-row-resize" : "w-[4px] h-full cursor-col-resize",
-        className)}
+        className || "bg-border")}
       onPointerDown={onPointerDown} {...rest}>
       {withHandle && (
         <div style={{

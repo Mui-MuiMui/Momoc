@@ -62,6 +62,7 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Resizable: {
     borderRadius: ["", "rounded", "rounded-md", "rounded-lg", "rounded-xl"],
     shadow: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg"],
+    separatorSize: ["1", "2", "4", "6", "8"],
   },
   ResizablePanelSlot: {},
   Table: {

@@ -1,4 +1,5 @@
-import { Element, useNode, type UserComponent } from "@craftjs/core";
+import { useState, useRef } from "react";
+import { Element, useNode, useEditor, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 import type { ReactNode } from "react";
 
@@ -76,6 +77,7 @@ interface CraftResizableProps {
   withHandle?: boolean;
   borderColor?: string;
   separatorColor?: string;
+  separatorSize?: string;
   borderRadius?: string;
   shadow?: string;
   className?: string;
@@ -88,6 +90,7 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
   withHandle = true,
   borderColor = "",
   separatorColor = "",
+  separatorSize = "4",
   borderRadius = "rounded-lg",
   shadow = "",
   className = "",
@@ -95,14 +98,74 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
   height = "200px",
 }) => {
   const {
+    id,
     connectors: { connect, drag },
   } = useNode();
+  const { actions } = useEditor();
 
   const meta = parseResizableMeta(panelMeta);
   const isVertical = meta.direction === "vertical";
+  const allNumeric = meta.panels.every(
+    (p) => /^\d+(\.\d+)?%?$/.test(String(p.size).trim()),
+  );
+
+  const [liveSizes, setLiveSizes] = useState<number[] | null>(null);
+  const outerRef = useRef<HTMLDivElement>(null);
+
+  function handleSeparatorDrag(e: React.MouseEvent, idx: number) {
+    if (!allNumeric) return;
+    e.stopPropagation();
+    e.preventDefault();
+
+    const outer = outerRef.current;
+    if (!outer) return;
+    const containerPx = isVertical ? outer.offsetHeight : outer.offsetWidth;
+    if (containerPx === 0) return;
+
+    const startPos = isVertical ? e.clientY : e.clientX;
+    const currentSizes = meta.panels.map((p) => Number(p.size));
+    const totalFlex = currentSizes.reduce((sum, s) => sum + s, 0);
+    const minFlex = totalFlex * 0.05;
+    setLiveSizes(currentSizes);
+
+    const onMouseMove = (me: MouseEvent) => {
+      const deltaFlex = ((isVertical ? me.clientY : me.clientX) - startPos) / containerPx * totalFlex;
+      const newSizes = [...currentSizes];
+      const maxA = currentSizes[idx] + currentSizes[idx + 1] - minFlex;
+      newSizes[idx] = Math.max(minFlex, Math.min(maxA, currentSizes[idx] + deltaFlex));
+      newSizes[idx + 1] = currentSizes[idx] + currentSizes[idx + 1] - newSizes[idx];
+      setLiveSizes(newSizes);
+    };
+
+    const onMouseUp = (me: MouseEvent) => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+
+      const deltaFlex = ((isVertical ? me.clientY : me.clientX) - startPos) / containerPx * totalFlex;
+      const newSizes = [...currentSizes];
+      const maxA = currentSizes[idx] + currentSizes[idx + 1] - minFlex;
+      newSizes[idx] = Math.max(minFlex, Math.min(maxA, currentSizes[idx] + deltaFlex));
+      newSizes[idx + 1] = currentSizes[idx] + currentSizes[idx + 1] - newSizes[idx];
+
+      actions.setProp(id, (props: Record<string, unknown>) => {
+        const currentMeta = parseResizableMeta(props.panelMeta as string);
+        const newPanels = currentMeta.panels.map((p, i) => ({
+          ...p,
+          size: Math.round(newSizes[i] * 10) / 10,
+        }));
+        props.panelMeta = JSON.stringify({ ...currentMeta, panels: newPanels });
+      });
+
+      setLiveSizes(null);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }
 
   return (
     <div
+      ref={outerRef}
       className={cn(
         "flex border overflow-hidden",
         isVertical ? "flex-col" : "flex-row",
@@ -126,57 +189,63 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
       >
         <span className="text-[9px] text-muted-foreground">⠿</span>
       </div>
-      {meta.panels.map((panel, idx) => (
-        <div
-          key={panel.key}
-          className="flex"
-          style={{
-            flexDirection: isVertical ? "column" : "row",
-            flex: getPanelFlex(panel.size),
-            minWidth: isVertical ? undefined : 0,
-            minHeight: isVertical ? 0 : undefined,
-            overflow: "hidden",
-          }}
-        >
-          <div className="flex-1 min-w-0 min-h-0 overflow-auto">
-            <Element id={`panel_${panel.key}`} is={ResizablePanelSlot} canvas />
-          </div>
-          {/* Visual handle between panels */}
-          {idx < meta.panels.length - 1 && (
-            <div
-              className={cn(
-                "flex-shrink-0 flex items-center justify-center",
-                separatorColor || "bg-border",
-                isVertical ? "h-[4px] w-full" : "w-[4px] h-full",
-              )}
-            >
-              {withHandle && (
-                <div
-                  className={cn(
-                    "rounded-sm bg-border border border-border/60 flex items-center justify-center",
-                    isVertical ? "h-[12px] w-[32px]" : "h-[32px] w-[12px]",
-                  )}
-                >
-                  {isVertical ? (
-                    /* vertical direction → horizontal separator → GripHorizontal (3col×2row) */
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5">
-                      <circle cx="5" cy="9" r="1.2"/><circle cx="12" cy="9" r="1.2"/><circle cx="19" cy="9" r="1.2"/>
-                      <circle cx="5" cy="15" r="1.2"/><circle cx="12" cy="15" r="1.2"/><circle cx="19" cy="15" r="1.2"/>
-                    </svg>
-                  ) : (
-                    /* horizontal direction → vertical separator → GripVertical (2col×3row) */
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5">
-                      <circle cx="9" cy="5" r="1.2"/><circle cx="15" cy="5" r="1.2"/>
-                      <circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/>
-                      <circle cx="9" cy="19" r="1.2"/><circle cx="15" cy="19" r="1.2"/>
-                    </svg>
-                  )}
-                </div>
-              )}
+      {meta.panels.map((panel, idx) => {
+        const panelSize = liveSizes ? liveSizes[idx] : panel.size;
+        return (
+          <div
+            key={panel.key}
+            className="flex"
+            style={{
+              flexDirection: isVertical ? "column" : "row",
+              flex: getPanelFlex(panelSize),
+              minWidth: isVertical ? undefined : 0,
+              minHeight: isVertical ? 0 : undefined,
+              overflow: "hidden",
+            }}
+          >
+            <div className="flex-1 min-w-0 min-h-0 overflow-auto">
+              <Element id={`panel_${panel.key}`} is={ResizablePanelSlot} canvas />
             </div>
-          )}
-        </div>
-      ))}
+            {/* Draggable separator between panels */}
+            {idx < meta.panels.length - 1 && (
+              <div
+                className={cn(
+                  "flex-shrink-0 flex items-center justify-center",
+                  isVertical ? "cursor-row-resize" : "cursor-col-resize",
+                  separatorColor || "bg-border",
+                  isVertical ? "w-full" : "h-full",
+                )}
+                style={{ [isVertical ? "height" : "width"]: `${separatorSize}px` }}
+                onMouseDown={(e) => handleSeparatorDrag(e, idx)}
+              >
+                {withHandle && (
+                  <div
+                    className={cn(
+                      "rounded-sm bg-border border border-border/60 flex items-center justify-center",
+                      isVertical ? "h-[12px] w-[32px]" : "h-[32px] w-[12px]",
+                    )}
+                  >
+                    {isVertical ? (
+                      /* vertical direction → horizontal separator → GripHorizontal (3col×2row) */
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5">
+                        <circle cx="5" cy="9" r="1.2"/><circle cx="12" cy="9" r="1.2"/><circle cx="19" cy="9" r="1.2"/>
+                        <circle cx="5" cy="15" r="1.2"/><circle cx="12" cy="15" r="1.2"/><circle cx="19" cy="15" r="1.2"/>
+                      </svg>
+                    ) : (
+                      /* horizontal direction → vertical separator → GripVertical (2col×3row) */
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5">
+                        <circle cx="9" cy="5" r="1.2"/><circle cx="15" cy="5" r="1.2"/>
+                        <circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/>
+                        <circle cx="9" cy="19" r="1.2"/><circle cx="15" cy="19" r="1.2"/>
+                      </svg>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -188,6 +257,7 @@ CraftResizable.craft = {
     withHandle: true,
     borderColor: "",
     separatorColor: "",
+    separatorSize: "4",
     borderRadius: "rounded-lg",
     shadow: "",
     className: "",

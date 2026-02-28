@@ -1584,6 +1584,7 @@ function renderResizable(
   const userClassName = (node.props?.className as string) || "";
   const borderColor = (node.props?.borderColor as string) || "";
   const separatorColor = (node.props?.separatorColor as string) || "";
+  const separatorSize = (node.props?.separatorSize as string) || "4";
   const borderRadius = (node.props?.borderRadius as string) || "rounded-lg";
   const shadow = (node.props?.shadow as string) || "";
 
@@ -1594,6 +1595,10 @@ function renderResizable(
 
   const dirAttr = direction === "vertical" ? ` direction="vertical"` : ` direction="horizontal"`;
   const handleClassAttr = separatorColor ? ` className="${escapeAttr(separatorColor)}"` : "";
+  const handleSizeStyleVal = direction === "vertical"
+    ? `{{ height: '${separatorSize}px' }}`
+    : `{{ width: '${separatorSize}px' }}`;
+  const handleStyleAttr = ` style=${handleSizeStyleVal}`;
 
   const lines: string[] = [];
   lines.push(`${pad}<div className="${escapeAttr(outerClasses)}"${styleAttr}>`);
@@ -1621,7 +1626,7 @@ function renderResizable(
     }
 
     if (idx < panels.length - 1) {
-      lines.push(`${pad}    <ResizableHandle${withHandle ? " withHandle" : ""}${handleClassAttr} />`);
+      lines.push(`${pad}    <ResizableHandle${withHandle ? " withHandle" : ""}${handleClassAttr}${handleStyleAttr} />`);
     }
   });
 

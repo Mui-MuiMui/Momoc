@@ -45,24 +45,8 @@ export function ResizableMetaEditor({ value, selectedNodeId }: ResizableMetaEdit
     }
   }
 
-  function removePanel(idx: number) {
-    if (meta.panels.length <= 2) return;
-    if (allNumeric) {
-      const removed = meta.panels[idx];
-      const distributeSize = Math.floor(Number(removed.size) / (meta.panels.length - 1));
-      const newPanels = meta.panels
-        .filter((_, i) => i !== idx)
-        .map((p) => ({ ...p, size: Number(p.size) + distributeSize }));
-      updateMeta({ ...meta, panels: newPanels });
-    } else {
-      updateMeta({ ...meta, panels: meta.panels.filter((_, i) => i !== idx) });
-    }
-  }
-
   const btnClass =
     "rounded border border-[var(--vscode-button-border,transparent)] bg-[var(--vscode-button-secondaryBackground,#3c3c3c)] px-2 py-0.5 text-[11px] text-[var(--vscode-button-secondaryForeground,#ccc)] hover:opacity-90 disabled:opacity-40";
-  const btnDangerClass =
-    "rounded border border-[var(--vscode-button-border,transparent)] bg-[var(--vscode-errorForeground,#f44)] px-2 py-0.5 text-[11px] text-white hover:opacity-90 disabled:opacity-40";
 
   return (
     <div className="flex flex-col gap-2">
@@ -96,15 +80,6 @@ export function ResizableMetaEditor({ value, selectedNodeId }: ResizableMetaEdit
               placeholder="50% or 200px"
               className={`${INPUT_CLASS} w-24`}
             />
-            <button
-              type="button"
-              className={btnDangerClass}
-              disabled={meta.panels.length <= 2}
-              onClick={() => removePanel(idx)}
-              title="削除"
-            >
-              ✕
-            </button>
           </div>
         ))}
       </div>
