@@ -44,8 +44,8 @@ shadcn/ui 公式コンポーネントの実装状況と確認状態を管理す�
 | Accordion    | Implemented | [x]       |                                        |
 | Collapsible  | Implemented | [x]       |                                        |
 | Tabs         | Implemented | [x]       |                                        |
-| Resizable    | Implemented | [ ]       |                                        |
-| Scroll Area  | Implemented | [ ]       |                                        |
+| Resizable    | Implemented | [x]       |                                        |
+| Scroll Area  | Implemented | [x]       |                                        |
 | Aspect Ratio | Implemented | [ ]       |                                        |
 | Separator    | Implemented | [ ]       |                                        |
 | Sidebar      | TBD         | [ ]       |                                        |
@@ -110,7 +110,7 @@ shadcn/ui 公式コンポーネントの実装状況と確認状態を管理す�
 
 ## Summary
 
-- **Confirmed**: 30
+- **Confirmed**: 32
 - **Implemented**: 45
 - **Planned**: 2 (Native Select, Date Picker)
 - **TBD**: 8 (Button Group, Input Group, Input OTP, Sidebar, Data Table, Typography, Kbd, Empty, Spinner, Item)
