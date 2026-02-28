@@ -273,6 +273,14 @@ export function PropEditor() {
     return null;
   }
 
+  if (componentName === "ResizablePanelSlot") {
+    return (
+      <div className="px-3 py-2 text-xs text-[var(--vscode-descriptionForeground,#777)] italic">
+        サイズは親の Resizable コンポーネントで管理されます
+      </div>
+    );
+  }
+
   const handlePropChange = (key: string, value: unknown) => {
     actions.setProp(selectedNodeId, (props: Record<string, unknown>) => {
       props[key] = value;

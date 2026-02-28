@@ -1,7 +1,6 @@
 import { Element, useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 import type { ReactNode } from "react";
-import { CraftContainer } from "../layout/CraftContainer";
 
 /** Internal canvas slot for each resizable panel */
 export const ResizablePanelSlot: UserComponent<{ children?: ReactNode }> = ({ children }) => {
@@ -139,10 +138,8 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
             overflow: "hidden",
           }}
         >
-          <div className="flex-1 overflow-auto">
-            <Element id={`panel_${panel.key}`} is={ResizablePanelSlot} canvas>
-              <Element is={CraftContainer} canvas />
-            </Element>
+          <div className="flex-1 min-w-0 min-h-0 overflow-auto">
+            <Element id={`panel_${panel.key}`} is={ResizablePanelSlot} canvas />
           </div>
           {/* Visual handle between panels */}
           {idx < meta.panels.length - 1 && (
