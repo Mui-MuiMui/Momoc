@@ -31,10 +31,21 @@ ResizablePanelSlot.craft = {
   },
 };
 
+export function getPanelFlex(size: number | string): string {
+  if (typeof size === "string") {
+    const s = size.trim();
+    if (/^\d+(\.\d+)?%$/.test(s)) { const pct = parseFloat(s); return `${pct} ${pct} 0%`; }
+    if (/\d+(px|rem|em|vw|vh)$/.test(s)) return `0 0 ${s}`;
+    const n = parseFloat(s); if (!isNaN(n)) return `${n} ${n} 0%`;
+  }
+  const n = typeof size === "number" ? size : parseFloat(String(size));
+  return `${n} ${n} 0%`;
+}
+
 export interface ResizableMeta {
   direction: "horizontal" | "vertical";
   nextKey: number;
-  panels: Array<{ key: number; size: number }>;
+  panels: Array<{ key: number; size: number | string }>;
 }
 
 const DEFAULT_PANEL_META: ResizableMeta = {
@@ -122,7 +133,7 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
           className="flex"
           style={{
             flexDirection: isVertical ? "column" : "row",
-            flex: `0 0 ${panel.size}%`,
+            flex: getPanelFlex(panel.size),
             minWidth: isVertical ? undefined : 0,
             minHeight: isVertical ? 0 : undefined,
             overflow: "hidden",
@@ -150,12 +161,17 @@ export const CraftResizable: UserComponent<CraftResizableProps> = ({
                   )}
                 >
                   {isVertical ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-2.5 w-2.5 rotate-90">
-                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    /* vertical direction → horizontal separator → GripHorizontal (3col×2row) */
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5">
+                      <circle cx="5" cy="9" r="1.2"/><circle cx="12" cy="9" r="1.2"/><circle cx="19" cy="9" r="1.2"/>
+                      <circle cx="5" cy="15" r="1.2"/><circle cx="12" cy="15" r="1.2"/><circle cx="19" cy="15" r="1.2"/>
                     </svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-2.5 w-2.5">
-                      <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+                    /* horizontal direction → vertical separator → GripVertical (2col×3row) */
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="h-2.5 w-2.5">
+                      <circle cx="9" cy="5" r="1.2"/><circle cx="15" cy="5" r="1.2"/>
+                      <circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/>
+                      <circle cx="9" cy="19" r="1.2"/><circle cx="15" cy="19" r="1.2"/>
                     </svg>
                   )}
                 </div>

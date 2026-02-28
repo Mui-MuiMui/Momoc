@@ -1134,21 +1134,77 @@ export function Calendar(props: any) {
   return <div className={cls} {...rest}><div className="text-sm font-medium text-center">Calendar</div></div>;
 }`,
 
-  resizable: `import { cn } from "@/components/ui/_cn";
-export function ResizablePanelGroup(props: any) {
-  const { className = "", children, direction = "horizontal", ...rest } = props;
-  const cls = cn("flex overflow-hidden", direction === "vertical" ? "flex-col" : "flex-row", className);
-  return <div className={cls} style={{ height: "100%" }} {...rest}>{children}</div>;
+  resizable: `import { createContext, useContext, useRef } from "react";
+import { cn } from "@/components/ui/_cn";
+const PanelCtx = createContext(null);
+export function ResizablePanelGroup(props) {
+  const { className = "", children, direction = "horizontal", style, ...rest } = props;
+  const isVertical = direction === "vertical";
+  const cls = cn("flex", isVertical ? "flex-col" : "flex-row", className);
+  return (
+    <PanelCtx.Provider value={{ isVertical }}>
+      <div className={cls} style={{ width: "100%", height: "100%", ...style }} {...rest}>{children}</div>
+    </PanelCtx.Provider>
+  );
 }
-export function ResizablePanel(props: any) {
-  const { className = "", children, defaultSize = 50, ...rest } = props;
-  return <div className={cn("overflow-auto", className)} style={{ flex: "0 0 " + defaultSize + "%" }} {...rest}>{children}</div>;
+export function ResizablePanel(props) {
+  const { className = "", children, defaultSize = 50, style, ...rest } = props;
+  const flexVal = (style && style.flex) ? style.flex : (defaultSize + " " + defaultSize + " 0%");
+  return (
+    <div className={cn("overflow-auto min-w-0 min-h-0", className)} style={{ ...style, flex: flexVal }} {...rest}>
+      {children}
+    </div>
+  );
 }
-export function ResizableHandle(props: any) {
+export function ResizableHandle(props) {
   const { className = "", withHandle = false, ...rest } = props;
-  return <div className={cn("bg-border flex-shrink-0 flex items-center justify-center", className)} style={{ width: "4px", cursor: "col-resize" }} {...rest}>
-    {withHandle && <div style={{ width: "3px", height: "24px", borderRadius: "2px", background: "hsl(var(--border))", opacity: 0.7 }} />}
-  </div>;
+  const ctx = useContext(PanelCtx);
+  const isVertical = ctx ? ctx.isVertical : false;
+  const ref = useRef(null);
+  function onPointerDown(e) {
+    e.preventDefault();
+    const el = ref.current; if (!el) return;
+    const prev = el.previousElementSibling;
+    const next = el.nextElementSibling;
+    if (!prev || !next) return;
+    const parent = el.parentElement;
+    const parentSize = isVertical ? parent.getBoundingClientRect().height : parent.getBoundingClientRect().width;
+    const prevFlex0 = parseFloat(prev.style.flex) || 50;
+    const nextFlex0 = parseFloat(next.style.flex) || 50;
+    const startPos = isVertical ? e.clientY : e.clientX;
+    el.setPointerCapture(e.pointerId);
+    function onMove(ev) {
+      const deltaPct = ((isVertical ? ev.clientY : ev.clientX) - startPos) / parentSize * 100;
+      const newPrev = Math.max(5, Math.min(prevFlex0 + nextFlex0 - 5, prevFlex0 + deltaPct));
+      const newNext = (prevFlex0 + nextFlex0) - newPrev;
+      prev.style.flex = newPrev + " " + newPrev + " 0%";
+      next.style.flex = newNext + " " + newNext + " 0%";
+    }
+    function onUp() {
+      el.releasePointerCapture(e.pointerId);
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+    }
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+  }
+  return (
+    <div ref={ref}
+      className={cn("bg-border flex-shrink-0 flex items-center justify-center select-none",
+        isVertical ? "h-[4px] w-full cursor-row-resize" : "w-[4px] h-full cursor-col-resize",
+        className)}
+      onPointerDown={onPointerDown} {...rest}>
+      {withHandle && (
+        <div style={{
+          width: isVertical ? "32px" : "3px",
+          height: isVertical ? "3px" : "24px",
+          borderRadius: "2px",
+          background: "hsl(var(--border))",
+          opacity: 0.7
+        }} />
+      )}
+    </div>
+  );
 }`,
 
   carousel: `import { cn } from "@/components/ui/_cn";

@@ -24,29 +24,39 @@ export function ResizableMetaEditor({ value, selectedNodeId }: ResizableMetaEdit
     updateMeta({ ...meta, direction });
   }
 
-  function setSize(idx: number, size: number) {
+  function setSize(idx: number, size: string) {
     const newPanels = meta.panels.map((p, i) => (i === idx ? { ...p, size } : p));
     updateMeta({ ...meta, panels: newPanels });
   }
 
+  const allNumeric = meta.panels.every((p) => typeof p.size === "number" || /^\d+(\.\d+)?%?$/.test(String(p.size).trim()));
+
   function addPanel() {
     const newKey = meta.nextKey;
-    const splitSize = Math.floor(50 / meta.panels.length);
-    const newPanels = [
-      ...meta.panels.map((p) => ({ ...p, size: Math.max(10, p.size - splitSize) })),
-      { key: newKey, size: 50 },
-    ];
-    updateMeta({ ...meta, nextKey: newKey + 1, panels: newPanels });
+    if (allNumeric) {
+      const splitSize = Math.floor(50 / meta.panels.length);
+      const newPanels = [
+        ...meta.panels.map((p) => ({ ...p, size: Math.max(10, Number(p.size) - splitSize) })),
+        { key: newKey, size: 50 },
+      ];
+      updateMeta({ ...meta, nextKey: newKey + 1, panels: newPanels });
+    } else {
+      updateMeta({ ...meta, nextKey: newKey + 1, panels: [...meta.panels, { key: newKey, size: 50 }] });
+    }
   }
 
   function removePanel(idx: number) {
     if (meta.panels.length <= 2) return;
-    const removed = meta.panels[idx];
-    const distributeSize = Math.floor(removed.size / (meta.panels.length - 1));
-    const newPanels = meta.panels
-      .filter((_, i) => i !== idx)
-      .map((p) => ({ ...p, size: p.size + distributeSize }));
-    updateMeta({ ...meta, panels: newPanels });
+    if (allNumeric) {
+      const removed = meta.panels[idx];
+      const distributeSize = Math.floor(Number(removed.size) / (meta.panels.length - 1));
+      const newPanels = meta.panels
+        .filter((_, i) => i !== idx)
+        .map((p) => ({ ...p, size: Number(p.size) + distributeSize }));
+      updateMeta({ ...meta, panels: newPanels });
+    } else {
+      updateMeta({ ...meta, panels: meta.panels.filter((_, i) => i !== idx) });
+    }
   }
 
   const btnClass =
@@ -80,14 +90,12 @@ export function ResizableMetaEditor({ value, selectedNodeId }: ResizableMetaEdit
               Panel {idx + 1}
             </span>
             <input
-              type="number"
-              min={5}
-              max={95}
+              type="text"
               value={panel.size}
-              onChange={(e) => setSize(idx, Number(e.target.value))}
-              className={`${INPUT_CLASS} w-16`}
+              onChange={(e) => setSize(idx, e.target.value)}
+              placeholder="50% or 200px"
+              className={`${INPUT_CLASS} w-24`}
             />
-            <span className="text-[10px] text-[var(--vscode-descriptionForeground,#888)]">%</span>
             <button
               type="button"
               className={btnDangerClass}
@@ -101,10 +109,12 @@ export function ResizableMetaEditor({ value, selectedNodeId }: ResizableMetaEdit
         ))}
       </div>
 
-      {/* Size total hint */}
-      <div className="text-[10px] text-[var(--vscode-descriptionForeground,#777)]">
-        合計: {meta.panels.reduce((s, p) => s + p.size, 0)}%
-      </div>
+      {/* Size total hint — only when all panels use numeric/% sizes */}
+      {allNumeric && (
+        <div className="text-[10px] text-[var(--vscode-descriptionForeground,#777)]">
+          合計: {meta.panels.reduce((s, p) => s + Number(p.size), 0)}%
+        </div>
+      )}
 
       {/* Add panel */}
       <button type="button" className={btnClass} onClick={addPanel}>
