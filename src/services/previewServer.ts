@@ -153,11 +153,25 @@ export async function startPreviewServer(
           await vscode.workspace.fs.readFile(linkedFileUri),
         );
         const linkedDoc = parseMocFile(linkedContent);
-        // Remove min-h-screen from linked components (they render inside overlays, not as full pages)
-        let linkedTsxSource = linkedDoc.tsxSource.replace(/\bmin-h-screen\b/g, "");
-        const linkedTsx = linkedDoc.imports
-          ? `${linkedDoc.imports}\n${linkedTsxSource}`
-          : linkedTsxSource;
+        // Re-generate TSX from craftState (SSOT) so linked .moc always reflects
+        // the latest renderContextMenu / renderMenubar output, not stale stored TSX.
+        let linkedTsx: string;
+        const linkedCraftState = linkedDoc.editorData?.craftState as Record<string, Record<string, unknown>> | undefined;
+        if (linkedCraftState) {
+          const linkedComponentName = extractComponentName(linkedDoc.tsxSource) || "LinkedComponent";
+          const linkedMemos = linkedDoc.editorData?.memos;
+          const linkedGenerated = craftStateToTsx(linkedCraftState, linkedComponentName, linkedMemos);
+          const linkedTsxSource = linkedGenerated.tsxSource.replace(/\bmin-h-screen\b/g, "");
+          linkedTsx = linkedGenerated.imports
+            ? `${linkedGenerated.imports}\n${linkedTsxSource}`
+            : linkedTsxSource;
+        } else {
+          // Fallback: use stored TSX if no craftState available
+          const linkedTsxSource = linkedDoc.tsxSource.replace(/\bmin-h-screen\b/g, "");
+          linkedTsx = linkedDoc.imports
+            ? `${linkedDoc.imports}\n${linkedTsxSource}`
+            : linkedTsxSource;
+        }
         // Skip empty .moc files entirely (no hash registration = no import map entry)
         if (!linkedTsx.trim()) {
           console.warn(`[Momoc] Skipping empty linked .moc: ${relPath}`);
