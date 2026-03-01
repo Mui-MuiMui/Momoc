@@ -152,7 +152,7 @@ export const CraftDatePicker: UserComponent<CraftDatePickerProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("relative inline-block", className)}
+      className={cn("relative", className)}
       style={{
         width: width !== "auto" ? width : undefined,
         height: height !== "auto" ? height : undefined,
@@ -161,7 +161,8 @@ export const CraftDatePicker: UserComponent<CraftDatePickerProps> = ({
       {/* Input row */}
       <div
         className={cn(
-          "flex h-9 w-full rounded-md border border-input overflow-hidden",
+          "flex w-full rounded-md border border-input overflow-hidden",
+          height !== "auto" ? "h-full" : "h-9",
           disabled && "opacity-50 cursor-not-allowed",
         )}
       >
@@ -172,7 +173,7 @@ export const CraftDatePicker: UserComponent<CraftDatePickerProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           onChange={(e) => editable && !enabled && setInputValue(e.target.value)}
-          className="flex-1 bg-transparent px-3 py-1 text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
+          className="flex-1 bg-transparent px-3 py-1 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
           style={{ pointerEvents: enabled ? "none" : undefined }}
         />
         <button

@@ -909,6 +909,8 @@ export function DatePicker(props) {
     placeholder = "日付を選択...",
     editable = false,
     disabled = false,
+    width = "auto",
+    height = "auto",
     className = "",
     style: _style,
     calendarBorderClass = "",
@@ -964,11 +966,11 @@ export function DatePicker(props) {
     return cn("inline-flex items-center justify-center rounded-md text-sm h-8 w-8", hoverBgClass ? (hoveredDay === d ? hoverBgClass : "") : "hover:bg-accent hover:text-accent-foreground");
   };
   return (
-    <div className={cn("relative inline-block", className)} {...rest}>
-      <div className={cn("flex h-9 w-full rounded-md border border-input overflow-hidden", disabled && "opacity-50 cursor-not-allowed")}>
+    <div className={cn("relative", className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }} {...rest}>
+      <div className={cn("flex w-full rounded-md border border-input overflow-hidden", height !== "auto" ? "h-full" : "h-9", disabled && "opacity-50 cursor-not-allowed")}>
         <input type="text" value={inputValue} readOnly={!editable} placeholder={placeholder} disabled={disabled}
           onChange={(e) => editable && setInputValue(e.target.value)}
-          className="flex-1 bg-transparent px-3 py-1 text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed" />
+          className="flex-1 bg-transparent px-3 py-1 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed" />
         <button type="button" disabled={disabled} onClick={() => !disabled && setOpen((v) => !v)}
           className={cn("flex items-center justify-center px-2.5 border-l border-input hover:bg-accent transition-colors", buttonBgClass)}>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
