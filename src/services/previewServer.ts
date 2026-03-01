@@ -1522,10 +1522,13 @@ export function ContextMenuContent(props: any) {
   return <><div className="fixed inset-0 z-40" onClick={() => ctx.setPos(null)} /><div className={"fixed z-50 " + cls} style={{ ...props.style, left: ctx.pos.x, top: ctx.pos.y }}>{props.children}</div></>;
 }
 export function ContextMenuItem(props: any) {
-  return <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">{props.children}</div>;
+  const base = "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent";
+  return <div className={props.className ? props.className + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none" : base}>{props.children}</div>;
 }
 export function ContextMenuCheckboxItem(props: any) {
-  return <div className="relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent"><span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">{props.checked ? "✓" : ""}</span>{props.children}</div>;
+  const [checked, setChecked] = useState(!!props.checked);
+  const base = "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent";
+  return <div className={props.className ? props.className + " relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none" : base} onClick={() => setChecked((v: boolean) => !v)}><span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">{checked ? "✓" : ""}</span>{props.children}</div>;
 }
 export function ContextMenuSeparator() { return <div className="my-1 h-px bg-border" />; }
 export function ContextMenuLabel(props: any) {
