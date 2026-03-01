@@ -1645,17 +1645,11 @@ function renderDataTable(
   for (const col of cols) {
     if (col.type === "actions") {
       let buttonsJsx: string;
-      const actionButtons = (col as { actionButtons?: Array<{ label?: string; bgClass?: string; textClass?: string; borderClass?: string; borderWidth?: string; shadowClass?: string }> }).actionButtons;
+      const actionButtons = (col as { actionButtons?: Array<{ label?: string; className?: string }> }).actionButtons;
       if (actionButtons && actionButtons.length > 0) {
         const btns = actionButtons.map((btn) => {
-          const classes = ["rounded", "px-2", "py-1", "text-xs"];
-          if (btn.bgClass) classes.push(btn.bgClass);
-          if (btn.textClass) classes.push(btn.textClass);
-          if (btn.borderClass) { classes.push("border"); classes.push(btn.borderClass); }
-          if (btn.borderWidth) classes.push(btn.borderWidth);
-          if (btn.shadowClass) classes.push(btn.shadowClass);
-          if (!btn.bgClass) classes.push("hover:bg-accent");
-          return `<button type="button" className="${classes.join(" ")}">${escapeJsString(btn.label || "···")}</button>`;
+          const btnClassName = `inline-flex items-center rounded px-2 py-1 text-xs${btn.className ? ` ${btn.className}` : " hover:bg-accent"}`;
+          return `<button type="button" className="${escapeAttr(btnClassName)}">${escapeJsString(btn.label || "···")}</button>`;
         });
         buttonsJsx = `<div className="flex items-center gap-1">${btns.join("")}</div>`;
       } else {

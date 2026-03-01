@@ -5,11 +5,7 @@ import { cn } from "../../utils/cn";
 
 export interface ActionButton {
   label: string;
-  bgClass?: string;
-  textClass?: string;
-  borderClass?: string;
-  borderWidth?: string;
-  shadowClass?: string;
+  className?: string; // full Tailwind className string
 }
 
 export interface ColumnDef {
@@ -413,14 +409,8 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
                                     key={bi}
                                     type="button"
                                     className={cn(
-                                      "rounded px-2 py-1 text-xs",
-                                      btn.bgClass,
-                                      btn.textClass,
-                                      btn.borderClass && "border",
-                                      btn.borderClass,
-                                      btn.borderWidth,
-                                      btn.shadowClass,
-                                      !btn.bgClass && "hover:bg-accent",
+                                      "inline-flex items-center rounded px-2 py-1 text-xs",
+                                      btn.className || "hover:bg-accent",
                                     )}
                                   >
                                     {btn.label || "···"}
