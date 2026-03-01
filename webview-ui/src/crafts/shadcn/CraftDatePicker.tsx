@@ -173,7 +173,7 @@ export const CraftDatePicker: UserComponent<CraftDatePickerProps> = ({
           placeholder={placeholder}
           disabled={disabled}
           onChange={(e) => editable && !enabled && setInputValue(e.target.value)}
-          className="flex-1 bg-transparent px-3 py-1 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
+          className="flex-1 min-w-0 bg-transparent px-3 py-1 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed"
           style={{ pointerEvents: enabled ? "none" : undefined }}
         />
         <button
