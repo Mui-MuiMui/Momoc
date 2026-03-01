@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 import { type MenuData, type MenuItemDef, type TopLevelMenuDef } from "./CraftMenubar";
@@ -36,6 +37,8 @@ interface CraftContextMenuProps {
   panelBorderClass?: string;
   panelBorderWidth?: string;
   panelShadowClass?: string;
+  hoverBgClass?: string;
+  hoverTextClass?: string;
   shortcutTextClass?: string;
 }
 
@@ -49,11 +52,16 @@ export const CraftContextMenu: UserComponent<CraftContextMenuProps> = ({
   panelBorderClass = "",
   panelBorderWidth = "",
   panelShadowClass = "",
+  hoverBgClass = "",
+  hoverTextClass = "",
   shortcutTextClass = "",
 }) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   const menus = parseMenuData(menuData);
 
@@ -64,6 +72,20 @@ export const CraftContextMenu: UserComponent<CraftContextMenuProps> = ({
     : panelBorderWidth === "8" ? "border-8"
     : panelBorderWidth === "1" ? "border"
     : "border";
+
+  const getChecked = (key: string, initial: boolean) =>
+    key in checkedItems ? checkedItems[key] : initial;
+
+  const toggleChecked = (key: string, initial: boolean) =>
+    setCheckedItems((prev) => ({ ...prev, [key]: !(key in prev ? prev[key] : initial) }));
+
+  const itemCls = (key: string, base: string) =>
+    cn(
+      base,
+      hoverBgClass || hoverTextClass
+        ? hoveredItem === key ? cn(hoverBgClass, hoverTextClass) : ""
+        : "hover:bg-accent",
+    );
 
   return (
     <div
@@ -91,16 +113,21 @@ export const CraftContextMenu: UserComponent<CraftContextMenuProps> = ({
             <div className="px-2 py-1.5 text-xs font-semibold">{menu.label}</div>
           )}
           {menu.items.map((item: MenuItemDef, j: number) => {
+            const key = `${sectionIdx}-${j}`;
             if (item.type === "separator") {
               return <div key={j} className="my-1 h-px bg-border" />;
             }
             if (item.type === "checkbox") {
+              const checked = getChecked(key, item.checked ?? false);
               return (
                 <div
                   key={j}
-                  className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent"
+                  className={itemCls(key, "flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none")}
+                  onMouseEnter={() => setHoveredItem(key)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  onClick={() => toggleChecked(key, item.checked ?? false)}
                 >
-                  <span className="mr-2 w-4 text-center text-xs">{item.checked ? "✓" : ""}</span>
+                  <span className="mr-2 w-4 text-center text-xs">{checked ? "✓" : ""}</span>
                   <span className="flex-1">{item.label}</span>
                   {item.shortcut && (
                     <span className={cn("ml-auto text-xs", shortcutTextClass || "text-muted-foreground")}>{item.shortcut}</span>
@@ -111,7 +138,9 @@ export const CraftContextMenu: UserComponent<CraftContextMenuProps> = ({
             return (
               <div
                 key={j}
-                className="flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent"
+                className={itemCls(key, "flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none")}
+                onMouseEnter={() => setHoveredItem(key)}
+                onMouseLeave={() => setHoveredItem(null)}
               >
                 <span className="flex-1">{item.label}</span>
                 {item.shortcut && (
@@ -138,6 +167,8 @@ CraftContextMenu.craft = {
     panelBorderClass: "",
     panelBorderWidth: "",
     panelShadowClass: "",
+    hoverBgClass: "",
+    hoverTextClass: "",
     shortcutTextClass: "",
   },
   rules: {

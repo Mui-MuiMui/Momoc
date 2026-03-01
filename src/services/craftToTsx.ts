@@ -1616,8 +1616,17 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
   const panelBorderClass = (node.props?.panelBorderClass as string) || "";
   const panelBorderWidth = (node.props?.panelBorderWidth as string) || "";
   const panelShadowClass = (node.props?.panelShadowClass as string) || "";
+  const hoverBgClass = (node.props?.hoverBgClass as string) || "";
+  const hoverTextClass = (node.props?.hoverTextClass as string) || "";
   const shortcutTextClass = (node.props?.shortcutTextClass as string) || "";
   const shortcutCls = shortcutTextClass || "text-muted-foreground";
+
+  // Item hover className: use custom classes if set, otherwise rely on shadcn/ui defaults
+  const itemHoverCls = [
+    hoverBgClass ? `hover:${hoverBgClass}` : "",
+    hoverTextClass ? `hover:${hoverTextClass}` : "",
+  ].filter(Boolean).join(" ");
+  const itemClassAttr = itemHoverCls ? ` className="${escapeAttr(itemHoverCls)}"` : "";
 
   const panelBwClass = panelBorderWidth === "0" ? "border-0"
     : panelBorderWidth === "2" ? "border-2"
@@ -1655,12 +1664,12 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
         lines.push(`${pad}  <ContextMenuSeparator />`);
       } else if (item.type === "checkbox") {
         const checkedAttr = item.checked ? " checked" : "";
-        lines.push(`${pad}  <ContextMenuCheckboxItem${checkedAttr}>`);
+        lines.push(`${pad}  <ContextMenuCheckboxItem${checkedAttr}${itemClassAttr}>`);
         lines.push(`${pad}    ${escapeJsx(item.label || "")}`);
         if (item.shortcut) lines.push(`${pad}    <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
         lines.push(`${pad}  </ContextMenuCheckboxItem>`);
       } else {
-        lines.push(`${pad}  <ContextMenuItem>`);
+        lines.push(`${pad}  <ContextMenuItem${itemClassAttr}>`);
         lines.push(`${pad}    ${escapeJsx(item.label || "")}`);
         if (item.shortcut) lines.push(`${pad}    <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
         lines.push(`${pad}  </ContextMenuItem>`);
