@@ -1285,7 +1285,7 @@ export function TooltipContent(props: any) {
     left: "top-1/2 -translate-y-1/2 right-full mr-2",
     right: "top-1/2 -translate-y-1/2 left-full ml-2",
   };
-  const cls = \`absolute \${pos[side] || pos.top} z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-nowrap \${props.className || ""}\`.trim();
+  const cls = \`absolute \${pos[side] || pos.top} z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-pre-line \${props.className || ""}\`.trim();
   return <div className={cls}>{props.children}</div>;
 }`,
 
