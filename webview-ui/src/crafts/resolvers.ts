@@ -34,6 +34,7 @@ import { CraftToggleGroup } from "./shadcn/CraftToggleGroup";
 import { CraftSelect } from "./shadcn/CraftSelect";
 import { CraftCombobox } from "./shadcn/CraftCombobox";
 import { CraftCalendar } from "./shadcn/CraftCalendar";
+import { CraftDatePicker } from "./shadcn/CraftDatePicker";
 import { CraftResizable, ResizablePanelSlot } from "./shadcn/CraftResizable";
 import { CraftCarousel } from "./shadcn/CraftCarousel";
 import { CraftChart } from "./shadcn/CraftChart";
@@ -93,6 +94,7 @@ export const resolvers = {
   CraftSelect,
   CraftCombobox,
   CraftCalendar,
+  CraftDatePicker,
   CraftResizable,
   ResizablePanelSlot,
   CraftCarousel,
@@ -305,7 +307,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "ArrowLeftRight",
     defaultProps: {},
-    enabled: false,
+    enabled: true,
   },
   {
     resolverKey: "CraftProgress",
@@ -410,6 +412,14 @@ export const paletteItems: PaletteItem[] = [
     label: "Calendar",
     category: "shadcn",
     icon: "Calendar",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftDatePicker",
+    label: "Date Picker",
+    category: "shadcn",
+    icon: "CalendarDays",
     defaultProps: {},
     enabled: true,
   },

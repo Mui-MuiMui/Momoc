@@ -191,6 +191,11 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: false,
   },
+  CraftDatePicker: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: false,
+  },
   CraftProgress: {
     tag: "Progress",
     importFrom: "@/components/ui/progress",
@@ -421,6 +426,11 @@ const PAGINATION_IMPORT = {
   names: ["Pagination", "PaginationContent", "PaginationItem", "PaginationLink", "PaginationPrevious", "PaginationNext"],
 };
 
+const DATE_PICKER_IMPORT = {
+  from: "@/components/ui/date-picker",
+  names: ["DatePicker"],
+};
+
 /** Default ContextMenu data (matches DEFAULT_CONTEXTMENU_DATA in CraftContextMenu.tsx) */
 const DEFAULT_CONTEXTMENU_DATA_STR = JSON.stringify([
   { label: "", items: [{ type: "item", label: "Open", shortcut: "Ctrl+O" }, { type: "item", label: "Edit" }, { type: "separator" }, { type: "checkbox", label: "Show Details", checked: false }, { type: "separator" }, { type: "item", label: "Delete" }] },
@@ -473,6 +483,9 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   // Phase 2
   CraftSelect: { items: "Option 1,Option 2,Option 3", placeholder: "Select an option", tooltipText: "", tooltipSide: "" },
   CraftCalendar: { todayBgClass: "", todayTextClass: "" },
+  CraftDatePicker: { mode: "date", dateFormat: "yyyy/MM/dd", placeholder: "日付を選択...", editable: false, disabled: false,
+    calendarBorderClass: "", calendarShadowClass: "", todayBgClass: "", todayTextClass: "", todayBorderClass: "", todayShadowClass: "",
+    selectedBgClass: "", selectedTextClass: "", selectedBorderClass: "", selectedShadowClass: "", buttonBgClass: "", hoverBgClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
   CraftChart: { chartType: "bar" },
@@ -643,6 +656,12 @@ export function craftStateToTsx(
       for (const name of PAGINATION_IMPORT.names) {
         addImport(PAGINATION_IMPORT.from, name);
       }
+      return;
+    }
+
+    // CraftDatePicker: add date-picker import
+    if (resolvedName === "CraftDatePicker") {
+      addImport(DATE_PICKER_IMPORT.from, "DatePicker");
       return;
     }
 
@@ -1126,6 +1145,11 @@ export function craftStateToTsx(
     // Pagination special case: render full pagination structure
     if (resolvedName === "CraftPagination") {
       return `${mocComments}\n${renderPagination(node, indent)}`;
+    }
+
+    // DatePicker special case
+    if (resolvedName === "CraftDatePicker") {
+      return `${mocComments}\n${renderDatePicker(node, indent)}`;
     }
 
     // Table special case: render as LinkedNodes table
@@ -1764,6 +1788,50 @@ function renderPagination(node: CraftNodeData, indent: number): string {
   lines.push(`${pad}  </PaginationContent>`);
   lines.push(`${pad}</Pagination>`);
   return lines.join("\n");
+}
+
+function renderDatePicker(node: CraftNodeData, indent: number): string {
+  const pad = "  ".repeat(indent);
+  const styleAttr = buildStyleAttr(node.props);
+
+  const props: string[] = [];
+
+  const mode = (node.props?.mode as string) || "date";
+  if (mode !== "date") props.push(`mode="${escapeAttr(mode)}"`);
+
+  const dateFormat = (node.props?.dateFormat as string) || "yyyy/MM/dd";
+  if (dateFormat !== "yyyy/MM/dd") props.push(`dateFormat="${escapeAttr(dateFormat)}"`);
+
+  const placeholder = (node.props?.placeholder as string) || "";
+  if (placeholder) props.push(`placeholder="${escapeAttr(placeholder)}"`);
+
+  if (node.props?.editable) props.push(`editable`);
+  if (node.props?.disabled) props.push(`disabled`);
+
+  const className = (node.props?.className as string) || "";
+  if (className) props.push(`className="${escapeAttr(className)}"`);
+
+  const stylingProps: [string, string][] = [
+    ["calendarBorderClass", ""],
+    ["calendarShadowClass", ""],
+    ["todayBgClass", ""],
+    ["todayTextClass", ""],
+    ["todayBorderClass", ""],
+    ["todayShadowClass", ""],
+    ["selectedBgClass", ""],
+    ["selectedTextClass", ""],
+    ["selectedBorderClass", ""],
+    ["selectedShadowClass", ""],
+    ["buttonBgClass", ""],
+    ["hoverBgClass", ""],
+  ];
+  for (const [key] of stylingProps) {
+    const val = (node.props?.[key] as string) || "";
+    if (val) props.push(`${key}="${escapeAttr(val)}"`);
+  }
+
+  const propsStr = props.length > 0 ? " " + props.join(" ") : "";
+  return `${pad}<DatePicker${propsStr}${styleAttr} />`;
 }
 
 function renderMenubar(node: CraftNodeData, indent: number): string {

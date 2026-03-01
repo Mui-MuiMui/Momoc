@@ -103,6 +103,12 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Pagination: {
     activeShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
   },
+  DatePicker: {
+    mode: ["date", "datetime"],
+    calendarShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    todayShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    selectedShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+  },
 };
 
 /** Property names rendered as a button group (toggle buttons) per component. */
@@ -135,13 +141,13 @@ const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath"]);
 const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor", "labelColor"]);
 
 /** Props that use the Tailwind bg class palette picker UI (stores "bg-red-500" style class names). */
-const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass"]);
+const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass", "selectedBgClass"]);
 
 /** Props that use the Tailwind border class palette picker UI (stores "border-red-500" style class names). */
-const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass"]);
+const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass", "calendarBorderClass", "todayBorderClass", "selectedBorderClass"]);
 
 /** Props that use the Tailwind text class palette picker UI (stores "text-red-500" style class names). */
-const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass", "hoverTextClass", "buttonTextClass", "dropdownTextClass", "shortcutTextClass", "panelTextClass", "activeTextClass"]);
+const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass", "hoverTextClass", "buttonTextClass", "dropdownTextClass", "shortcutTextClass", "panelTextClass", "activeTextClass", "selectedTextClass"]);
 
 /**
  * Tailwind CSS color palette (hex) — same data as TailwindEditor.tsx.
@@ -537,6 +543,44 @@ export function PropEditor() {
             onChange={(e) => handlePropChange(key, e.target.value)}
             className={`${INPUT_CLASS} w-full`}
             placeholder="Tailwind classes..."
+          />
+        </div>
+      );
+    }
+
+    // Custom UI for dateFormat (preset select + free text input)
+    if (key === "dateFormat") {
+      const DATE_FORMAT_PRESETS: { label: string; value: string }[] = [
+        { label: "(custom)", value: "" },
+        { label: "yyyy/MM/dd", value: "yyyy/MM/dd" },
+        { label: "MM/dd/yyyy", value: "MM/dd/yyyy" },
+        { label: "dd/MM/yyyy", value: "dd/MM/yyyy" },
+        { label: "yyyy-MM-dd", value: "yyyy-MM-dd" },
+      ];
+      const currentValue = String(value ?? "");
+      const matchesPreset = DATE_FORMAT_PRESETS.some((p) => p.value === currentValue && p.value !== "");
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
+            {key}
+          </label>
+          <select
+            value={matchesPreset ? currentValue : ""}
+            onChange={(e) => e.target.value !== "" && handlePropChange(key, e.target.value)}
+            className={`${INPUT_CLASS} w-full`}
+          >
+            {DATE_FORMAT_PRESETS.map((preset) => (
+              <option key={preset.label} value={preset.value}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={currentValue}
+            onChange={(e) => handlePropChange(key, e.target.value)}
+            className={`${INPUT_CLASS} w-full`}
+            placeholder="例: yyyy/MM/dd HH:mm"
           />
         </div>
       );
