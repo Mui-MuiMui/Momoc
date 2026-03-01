@@ -61,13 +61,16 @@ graph TD
 ```
 MVP作成 [v0.0.4をリリース済] 
 ↓
-shadcn/uiのコンポーネントを追加 [現在対応中]
+shadcn/uiのコンポーネントを追加 [現在対応中 (完了時でv0.5.xx相当。作業時にバージョンアップするつもりが上げ忘れて現在v0.0.xxを刻んでます。終わったらv0.5.0にします。)]
 ↓
-プロパティ要素の拡充
+プロパティ要素の拡充(作業時:v0.6.xx相当予定)(完了後アルファからベータバージョンへ昇格)
 ↓
-アイコン(SVG)配置機能の追加
+アイコン(SVG)配置機能の追加(作業時:v0.7.xx相当予定)
 ↓
-UIの整理 ←この段階でver1.0.0程度を見込んでいます。
+UIの整理(作業時:v0.8.xx相当予定)
+↓
+リリース(v1.0.x予定)
+
 ```
 
 ---
@@ -125,11 +128,13 @@ We use this checklist to manage implementation progress.
 ```
 Build MVP [v0.0.4 Released]
 ↓
-Add shadcn/ui Components [In Progress]
+Add shadcn/ui Components [In Progress (Expected v0.5.xx when complete. Intended to bump versions during work but forgot, currently on v0.0.xx. Will jump to v0.5.0 when done.)]
 ↓
-Expand Property Options
+Expand Property Options (Expected v0.6.xx) (Promotion from alpha to beta upon completion)
 ↓
-Add Icon (SVG) Support
+Add Icon (SVG) Placement Feature (Expected v0.7.xx)
 ↓
-UI/UX Polish ← Expected around v1.0.0
+UI/UX Polish (Expected v0.8.xx)
+↓
+Release (v1.0.x planned)
 ```
