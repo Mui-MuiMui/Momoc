@@ -186,13 +186,6 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: [],
     isContainer: true,
   },
-  CraftPagination: {
-    tag: "Pagination",
-    importFrom: "@/components/ui/pagination",
-    importName: "Pagination",
-    propsMap: ["className"],
-    isContainer: false,
-  },
   CraftProgress: {
     tag: "Progress",
     importFrom: "@/components/ui/progress",
@@ -418,6 +411,11 @@ const TOOLTIP_IMPORT = { from: "@/components/ui/tooltip", names: ["TooltipProvid
 
 const CONTEXT_MENU_IMPORT = { from: "@/components/ui/context-menu", names: ["ContextMenu", "ContextMenuTrigger", "ContextMenuContent", "ContextMenuItem", "ContextMenuCheckboxItem", "ContextMenuSeparator", "ContextMenuLabel"] };
 
+const PAGINATION_IMPORT = {
+  from: "@/components/ui/pagination",
+  names: ["Pagination", "PaginationContent", "PaginationItem", "PaginationLink", "PaginationPrevious", "PaginationNext"],
+};
+
 /** Default ContextMenu data (matches DEFAULT_CONTEXTMENU_DATA in CraftContextMenu.tsx) */
 const DEFAULT_CONTEXTMENU_DATA_STR = JSON.stringify([
   { label: "", items: [{ type: "item", label: "Open", shortcut: "Ctrl+O" }, { type: "item", label: "Edit" }, { type: "separator" }, { type: "checkbox", label: "Show Details", checked: false }, { type: "separator" }, { type: "item", label: "Delete" }] },
@@ -631,6 +629,14 @@ export function craftStateToTsx(
     if (resolvedName === "CraftContextMenu") {
       for (const name of ["ContextMenuContent", "ContextMenuItem", "ContextMenuCheckboxItem", "ContextMenuSeparator", "ContextMenuLabel"]) {
         addImport(CONTEXT_MENU_IMPORT.from, name);
+      }
+      return;
+    }
+
+    // CraftPagination: add pagination sub-component imports
+    if (resolvedName === "CraftPagination") {
+      for (const name of PAGINATION_IMPORT.names) {
+        addImport(PAGINATION_IMPORT.from, name);
       }
       return;
     }
@@ -1110,6 +1116,11 @@ export function craftStateToTsx(
     // ContextMenu special case: render from JSON menuData
     if (resolvedName === "CraftContextMenu") {
       return `${mocComments}\n${renderContextMenu(node, indent)}`;
+    }
+
+    // Pagination special case: render full pagination structure
+    if (resolvedName === "CraftPagination") {
+      return `${mocComments}\n${renderPagination(node, indent)}`;
     }
 
     // Table special case: render as LinkedNodes table
@@ -1678,6 +1689,75 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
   }
 
   lines.push(`${pad}</ContextMenuContent>`);
+  return lines.join("\n");
+}
+
+function renderPagination(node: CraftNodeData, indent: number): string {
+  const pad = "  ".repeat(indent);
+  const className = (node.props?.className as string) || "";
+  const styleAttr = buildStyleAttr(node.props);
+  const totalPages = (node.props?.totalPages as number) || 5;
+  const currentPage = (node.props?.currentPage as number) || 1;
+
+  const hoverBgClass = (node.props?.hoverBgClass as string) || "";
+  const hoverTextClass = (node.props?.hoverTextClass as string) || "";
+  const activeBgClass = (node.props?.activeBgClass as string) || "";
+  const activeTextClass = (node.props?.activeTextClass as string) || "";
+  const activeBorderClass = (node.props?.activeBorderClass as string) || "";
+  const activeBorderWidth = (node.props?.activeBorderWidth as string) || "";
+  const activeShadowClass = (node.props?.activeShadowClass as string) || "";
+
+  const activeBwClass = activeBorderWidth === "0" ? "border-0"
+    : activeBorderWidth === "2" ? "border-2"
+    : activeBorderWidth === "4" ? "border-4"
+    : activeBorderWidth === "8" ? "border-8"
+    : activeBorderWidth === "1" ? "border" : "border";
+
+  const activeCls = [
+    activeBwClass,
+    activeBorderClass || "border-input",
+    activeBgClass || "bg-background",
+    activeShadowClass || "shadow-sm",
+    activeTextClass,
+  ].filter(Boolean).join(" ");
+
+  const itemHoverCls = [
+    hoverBgClass ? `hover:${hoverBgClass}` : "",
+    hoverTextClass ? `hover:${hoverTextClass}` : "",
+  ].filter(Boolean).join(" ") || "hover:bg-accent hover:text-accent-foreground";
+
+  const navCls = ["flex w-full", className].filter(Boolean).join(" ");
+
+  const lines: string[] = [];
+  lines.push(`${pad}<Pagination className="${escapeAttr(navCls)}"${styleAttr}>`);
+  lines.push(`${pad}  <PaginationContent>`);
+
+  lines.push(`${pad}    <PaginationItem>`);
+  lines.push(`${pad}      <PaginationPrevious href="#" className="${escapeAttr(itemHoverCls)}" />`);
+  lines.push(`${pad}    </PaginationItem>`);
+
+  for (let page = 1; page <= totalPages; page++) {
+    if (page === currentPage) {
+      lines.push(`${pad}    <PaginationItem>`);
+      lines.push(`${pad}      <PaginationLink href="#" isActive className="${escapeAttr(activeCls)}">`);
+      lines.push(`${pad}        ${page}`);
+      lines.push(`${pad}      </PaginationLink>`);
+      lines.push(`${pad}    </PaginationItem>`);
+    } else {
+      lines.push(`${pad}    <PaginationItem>`);
+      lines.push(`${pad}      <PaginationLink href="#" className="${escapeAttr(itemHoverCls)}">`);
+      lines.push(`${pad}        ${page}`);
+      lines.push(`${pad}      </PaginationLink>`);
+      lines.push(`${pad}    </PaginationItem>`);
+    }
+  }
+
+  lines.push(`${pad}    <PaginationItem>`);
+  lines.push(`${pad}      <PaginationNext href="#" className="${escapeAttr(itemHoverCls)}" />`);
+  lines.push(`${pad}    </PaginationItem>`);
+
+  lines.push(`${pad}  </PaginationContent>`);
+  lines.push(`${pad}</Pagination>`);
   return lines.join("\n");
 }
 
