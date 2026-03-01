@@ -970,7 +970,7 @@ export function DatePicker(props) {
       <div className={cn("flex w-full rounded-md border border-input overflow-hidden", height !== "auto" ? "h-full" : "h-9", disabled && "opacity-50 cursor-not-allowed")}>
         <input type="text" value={inputValue} readOnly={!editable} placeholder={placeholder} disabled={disabled}
           onChange={(e) => editable && setInputValue(e.target.value)}
-          className="flex-1 bg-transparent px-3 py-1 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed" />
+          className="flex-1 min-w-0 bg-transparent px-3 py-1 placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed" />
         <button type="button" disabled={disabled} onClick={() => !disabled && setOpen((v) => !v)}
           className={cn("flex items-center justify-center px-2.5 border-l border-input hover:bg-accent transition-colors", buttonBgClass)}>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
