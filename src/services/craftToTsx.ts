@@ -918,10 +918,12 @@ export function craftStateToTsx(
       const innerChildren = children.map((id) => renderNode(id, indent + 2)).filter(Boolean);
       const cardBody = [];
       if (title) {
+        const escapedTitle = title.includes("\n") ? `{"${escapeJsString(title)}"}` : escapeJsx(title);
+        const escapedDesc = desc.includes("\n") ? `{"${escapeJsString(desc)}"}` : escapeJsx(desc);
         cardBody.push(`${pad}    <div className="p-6">`);
-        cardBody.push(`${pad}      <h3 className="text-lg font-semibold whitespace-pre-line">${escapeJsx(title)}</h3>`);
+        cardBody.push(`${pad}      <h3 className="text-lg font-semibold whitespace-pre-line">${escapedTitle}</h3>`);
         if (desc) {
-          cardBody.push(`${pad}      <p className="text-sm text-muted-foreground whitespace-pre-line">${escapeJsx(desc)}</p>`);
+          cardBody.push(`${pad}      <p className="text-sm text-muted-foreground whitespace-pre-line">${escapedDesc}</p>`);
         }
         cardBody.push(`${pad}    </div>`);
       }
@@ -952,10 +954,12 @@ export function craftStateToTsx(
       const alertBody: string[] = [];
       alertBody.push(`${pad}  <${icon} className="h-4 w-4" />`);
       if (title) {
-        alertBody.push(`${pad}  <h5 className="mb-1 font-medium leading-none tracking-tight whitespace-pre-line">${escapeJsx(title)}</h5>`);
+        const escapedTitle = title.includes("\n") ? `{"${escapeJsString(title)}"}` : escapeJsx(title);
+        alertBody.push(`${pad}  <h5 className="mb-1 font-medium leading-none tracking-tight whitespace-pre-line">${escapedTitle}</h5>`);
       }
       if (desc) {
-        alertBody.push(`${pad}  <div className="text-sm [&_p]:leading-relaxed whitespace-pre-line">${escapeJsx(desc)}</div>`);
+        const escapedDesc = desc.includes("\n") ? `{"${escapeJsString(desc)}"}` : escapeJsx(desc);
+        alertBody.push(`${pad}  <div className="text-sm [&_p]:leading-relaxed whitespace-pre-line">${escapedDesc}</div>`);
       }
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${alertBody.join("\n")}\n${pad}</${tag}>`;
       return rendered;
