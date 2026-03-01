@@ -502,7 +502,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
     calendarBorderClass: "", calendarShadowClass: "", todayBgClass: "", todayTextClass: "", todayBorderClass: "", todayShadowClass: "",
     selectedBgClass: "", selectedTextClass: "", selectedBorderClass: "", selectedShadowClass: "", buttonBgClass: "", hoverBgClass: "" },
   CraftDataTable: { filterType: "none", pageable: false, pageSize: "10", selectable: false, columnToggle: false, stickyHeader: false, pinnedLeft: "0",
-    headerBgClass: "", hoverRowClass: "", selectedRowClass: "", headerTextClass: "", headerBorderClass: "", tableBorderClass: "" },
+    headerBgClass: "", hoverRowClass: "", selectedRowClass: "", headerTextClass: "", headerHoverTextClass: "", headerBorderClass: "", tableBorderClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
   CraftChart: { chartType: "bar" },
@@ -1698,12 +1698,14 @@ function renderDataTable(
   const hoverRowClass = (node.props?.hoverRowClass as string) || "";
   const selectedRowClass = (node.props?.selectedRowClass as string) || "";
   const headerTextClass = (node.props?.headerTextClass as string) || "";
+  const headerHoverTextClass = (node.props?.headerHoverTextClass as string) || "";
   const headerBorderClass = (node.props?.headerBorderClass as string) || "";
   const tableBorderClass = (node.props?.tableBorderClass as string) || "";
   if (headerBgClass) dtProps.push(`headerBgClass="${escapeAttr(headerBgClass)}"`);
   if (hoverRowClass) dtProps.push(`hoverRowClass="${escapeAttr(hoverRowClass)}"`);
   if (selectedRowClass) dtProps.push(`selectedRowClass="${escapeAttr(selectedRowClass)}"`);
   if (headerTextClass) dtProps.push(`headerTextClass="${escapeAttr(headerTextClass)}"`);
+  if (headerHoverTextClass) dtProps.push(`headerHoverTextClass="${escapeAttr(headerHoverTextClass)}"`);
   if (headerBorderClass) dtProps.push(`headerBorderClass="${escapeAttr(headerBorderClass)}"`);
   if (tableBorderClass) dtProps.push(`tableBorderClass="${escapeAttr(tableBorderClass)}"`);
 

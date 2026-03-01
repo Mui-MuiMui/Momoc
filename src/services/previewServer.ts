@@ -1715,7 +1715,7 @@ export function DataTable(props) {
     filterType = "none", pageable = false, pageSize = 10,
     selectable = false, columnToggle = false, stickyHeader = false, pinnedLeft = 0,
     className = "", headerBgClass = "", hoverRowClass = "", selectedRowClass = "",
-    headerTextClass = "", headerBorderClass = "", tableBorderClass = "",
+    headerTextClass = "", headerHoverTextClass = "", headerBorderClass = "", tableBorderClass = "",
     style: _style, width, height, ...rest
   } = props;
   const cols = parseColDefs(columns);
@@ -1754,8 +1754,8 @@ export function DataTable(props) {
   const displayRows = pageable ? rows.slice((page - 1) * pageSizeNum, page * pageSizeNum) : rows;
   const visibleCols = cols.filter(c => !hiddenCols.has(c.id ?? c.accessorKey ?? c.key));
   const containerStyle = {};
-  if (width && width !== "auto") containerStyle.width = /^\\d/.test(String(width)) && !String(width).includes("%") ? String(width) + "px" : String(width);
-  if (height && height !== "auto") containerStyle.height = /^\\d/.test(String(height)) && !String(height).includes("%") ? String(height) + "px" : String(height);
+  if (width && width !== "auto") containerStyle.width = /^\\d+(\\.\\d+)?$/.test(String(width)) ? String(width) + "px" : String(width);
+  if (height && height !== "auto") containerStyle.height = /^\\d+(\\.\\d+)?$/.test(String(height)) ? String(height) + "px" : String(height);
   const headerSt = stickyHeader ? { position: "sticky", top: 0, zIndex: 2 } : {};
   function getPinnedStyle(colIdx) {
     if (colIdx >= pinnedLeftNum) return {};
@@ -1785,14 +1785,14 @@ export function DataTable(props) {
       </div>}
     </div>}
     <div className={cn("overflow-auto rounded-md border", borderCls)}>
-      <table className="w-full caption-bottom border-collapse text-sm">
+      <table className="min-w-full caption-bottom border-collapse text-sm">
         <thead className={cn("border-b", headerBgClass || "bg-muted/50", headerBorderClass)} style={headerSt}>
           <tr>
             {selectable && <th className={cn("w-10 px-2 py-2 text-left", headerTextClass)} style={{ width: 40 }}><input type="checkbox" checked={displayRows.length > 0 && selectedRows.size === displayRows.length} onChange={() => selectedRows.size === displayRows.length ? setSelectedRows(new Set()) : setSelectedRows(new Set(displayRows.map((_, i) => i)))} /></th>}
             {visibleCols.map((col, ci) => {
               const key = col.id ?? col.accessorKey ?? String(ci);
               const isSorted = sortCol === key;
-              return <th key={key} className={cn("px-3 py-2 text-left text-xs font-medium", headerTextClass || "text-muted-foreground", col.enableSorting && "cursor-pointer select-none hover:text-foreground")} style={{ ...(col.size ? { width: col.size } : {}), ...getPinnedStyle(ci) }} onClick={() => col.enableSorting && handleSort(key)}>
+              return <th key={key} className={cn("px-3 py-2 text-left text-xs font-medium", headerTextClass || "text-muted-foreground", col.enableSorting && \`cursor-pointer select-none \${headerHoverTextClass ? \`hover:\${headerHoverTextClass}\` : "hover:text-foreground"}\`)} style={{ ...(col.size ? { width: col.size } : {}), ...getPinnedStyle(ci) }} onClick={() => col.enableSorting && handleSort(key)}>
                 <div className="flex items-center gap-1">
                   <span>{getHeader(col)}</span>
                   {col.enableSorting && <span className="text-muted-foreground/60">{isSorted ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span>}

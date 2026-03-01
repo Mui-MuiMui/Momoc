@@ -100,6 +100,7 @@ interface CraftDataTableProps {
   hoverRowClass?: string;
   selectedRowClass?: string;
   headerTextClass?: string;
+  headerHoverTextClass?: string;
   headerBorderClass?: string;
   tableBorderClass?: string;
 }
@@ -121,6 +122,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
   hoverRowClass = "",
   selectedRowClass = "",
   headerTextClass = "",
+  headerHoverTextClass = "",
   headerBorderClass = "",
   tableBorderClass = "",
 }) => {
@@ -292,7 +294,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
 
       {/* Table */}
       <div className={cn("overflow-auto rounded-md border", borderCls)}>
-        <table className="w-full caption-bottom border-collapse text-sm">
+        <table className="min-w-full caption-bottom border-collapse text-sm">
           <thead
             className={cn("border-b", headerBgClass || "bg-muted/50", headerBorderClass)}
             style={headerStyle}
@@ -311,7 +313,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
               {visibleCols.map((col, colIdx) => {
                 const isSorted = sortCol === col.key;
                 const colStyle: React.CSSProperties = {
-                  ...(col.width ? { width: col.width } : {}),
+                  ...(col.width ? { width: normalizeCssSize(col.width) } : {}),
                   ...getPinnedStyle(colIdx),
                 };
                 return (
@@ -320,7 +322,10 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
                     className={cn(
                       "px-3 py-2 text-left text-xs font-medium",
                       headerTextClass || "text-muted-foreground",
-                      col.sortable && !enabled && "cursor-pointer select-none hover:text-foreground",
+                      col.sortable && !enabled && cn(
+                        "cursor-pointer select-none",
+                        headerHoverTextClass ? `hover:${headerHoverTextClass}` : "hover:text-foreground",
+                      ),
                     )}
                     style={colStyle}
                     onClick={() => col.sortable && handleSort(col.key)}
@@ -388,7 +393,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
                   )}
                   {visibleCols.map((col, colIdx) => {
                     const colStyle: React.CSSProperties = {
-                      ...(col.width ? { width: col.width } : {}),
+                      ...(col.width ? { width: normalizeCssSize(col.width) } : {}),
                       ...getPinnedStyle(colIdx),
                     };
                     return (
@@ -516,6 +521,7 @@ CraftDataTable.craft = {
     hoverRowClass: "",
     selectedRowClass: "",
     headerTextClass: "",
+    headerHoverTextClass: "",
     headerBorderClass: "",
     tableBorderClass: "",
   },
