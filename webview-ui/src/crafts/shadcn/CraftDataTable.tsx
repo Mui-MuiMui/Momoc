@@ -198,7 +198,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
     for (let i = 0; i < colIdx; i++) {
       left += parseInt(visibleCols[i]?.width ?? "120") || 120;
     }
-    return { position: "sticky", left, background: "var(--background, white)", zIndex: 1 };
+    return { position: "sticky", left, zIndex: 1 };
   }
 
   function handleSort(key: string) {
@@ -313,7 +313,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
               {visibleCols.map((col, colIdx) => {
                 const isSorted = sortCol === col.key;
                 const colStyle: React.CSSProperties = {
-                  ...(col.width ? { width: normalizeCssSize(col.width) } : {}),
+                  ...(col.width ? { width: normalizeCssSize(col.width), minWidth: normalizeCssSize(col.width) } : {}),
                   ...getPinnedStyle(colIdx),
                 };
                 return (
@@ -323,6 +323,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
                       "px-3 py-2 text-left text-xs font-medium border-b",
                       headerTextClass || "text-muted-foreground",
                       headerBorderClass,
+                      colIdx < pinnedLeftNum && (headerBgClass || "bg-muted/50"),
                       col.sortable && !enabled && cn(
                         "cursor-pointer select-none",
                         headerHoverTextClass ? `hover:${headerHoverTextClass}` : "hover:text-foreground",
@@ -377,7 +378,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
                 <tr
                   key={rowIdx}
                   className={cn(
-                    "border-b transition-colors",
+                    "border-b transition-colors group",
                     borderCls,
                     !enabled && hoverRowClass ? `hover:${hoverRowClass}` : !enabled ? "hover:bg-muted/50" : "",
                     isSelected && (selectedRowClass || "bg-muted"),
@@ -395,11 +396,24 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
                   )}
                   {visibleCols.map((col, colIdx) => {
                     const colStyle: React.CSSProperties = {
-                      ...(col.width ? { width: normalizeCssSize(col.width) } : {}),
+                      ...(col.width ? { width: normalizeCssSize(col.width), minWidth: normalizeCssSize(col.width) } : {}),
                       ...getPinnedStyle(colIdx),
                     };
                     return (
-                      <td key={col.key} className="px-3 py-2 text-sm" style={colStyle}>
+                      <td
+                        key={col.key}
+                        className={cn(
+                          "px-3 py-2 text-sm transition-colors",
+                          colIdx < pinnedLeftNum && "bg-background",
+                          colIdx < pinnedLeftNum && (
+                            !enabled && hoverRowClass
+                              ? `group-hover:${hoverRowClass}`
+                              : !enabled ? "group-hover:bg-muted/50" : ""
+                          ),
+                          colIdx < pinnedLeftNum && isSelected && (selectedRowClass || "bg-muted"),
+                        )}
+                        style={colStyle}
+                      >
                         {col.type === "slot" ? (
                           rowIdx === 0 ? (
                             <Element id={`dt_slot_${col.key}`} is={DataTableSlot} canvas />
