@@ -57,3 +57,5 @@
   - [e2e-testing-patterns](.agents\skills\e2e-testing-patterns)
 - **コーディングに関するスキル**
   - [clean-code](.agents\skills\clean-code)
+- **ダイアグラムに関するスキル**
+  - [drawio-diagram](.agents\skills\drawio-diagram)
