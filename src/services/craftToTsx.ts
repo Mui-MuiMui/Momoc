@@ -1701,6 +1701,8 @@ function renderDataTable(
   const headerHoverTextClass = (node.props?.headerHoverTextClass as string) || "";
   const headerBorderClass = (node.props?.headerBorderClass as string) || "";
   const tableBorderClass = (node.props?.tableBorderClass as string) || "";
+  const sortIconClass = (node.props?.sortIconClass as string) || "";
+  const filterIconClass = (node.props?.filterIconClass as string) || "";
   if (headerBgClass) dtProps.push(`headerBgClass="${escapeAttr(headerBgClass)}"`);
   if (hoverRowClass) dtProps.push(`hoverRowClass="${escapeAttr(hoverRowClass)}"`);
   if (selectedRowClass) dtProps.push(`selectedRowClass="${escapeAttr(selectedRowClass)}"`);
@@ -1708,6 +1710,8 @@ function renderDataTable(
   if (headerHoverTextClass) dtProps.push(`headerHoverTextClass="${escapeAttr(headerHoverTextClass)}"`);
   if (headerBorderClass) dtProps.push(`headerBorderClass="${escapeAttr(headerBorderClass)}"`);
   if (tableBorderClass) dtProps.push(`tableBorderClass="${escapeAttr(tableBorderClass)}"`);
+  if (sortIconClass) dtProps.push(`sortIconClass="${escapeAttr(sortIconClass)}"`);
+  if (filterIconClass) dtProps.push(`filterIconClass="${escapeAttr(filterIconClass)}"`);
   const nodeWidth = (node.props?.width as string) || "";
   const nodeHeight = (node.props?.height as string) || "";
   if (nodeWidth && nodeWidth !== "auto") dtProps.push(`width="${escapeAttr(nodeWidth)}"`);

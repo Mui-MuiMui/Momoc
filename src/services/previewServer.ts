@@ -1797,7 +1797,7 @@ export function DataTable(props) {
                 <div className="flex items-center gap-1">
                   <span>{getHeader(col)}</span>
                   {col.enableSorting && <span className={cn(sortIconClass || "text-muted-foreground/60")}>{isSorted ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span>}
-                  {filterType === "header" && col.accessorKey && <button type="button" className={cn("ml-auto rounded p-0.5 text-xs opacity-40 hover:opacity-100", filterIconClass || "text-muted-foreground", activeHeaderFilter === key && "text-primary opacity-100")} onClick={e => { e.stopPropagation(); setActiveHeaderFilter(v => v === key ? null : key); }}>⌕</button>}
+                  {filterType === "header" && col.accessorKey && <button type="button" className={cn("ml-auto rounded p-0.5 text-xs hover:opacity-100", filterIconClass ? "" : "opacity-40", filterIconClass || "text-muted-foreground", activeHeaderFilter === key && "text-primary opacity-100")} onClick={e => { e.stopPropagation(); setActiveHeaderFilter(v => v === key ? null : key); }}>⌕</button>}
                 </div>
                 {filterType === "header" && activeHeaderFilter === key && <input type="text" placeholder="Filter..." className="mt-1 w-full rounded border border-border bg-background px-1 py-0.5 text-xs font-normal" value={headerFilters[key] ?? ""} onChange={e => setHeaderFilters(p => ({ ...p, [key]: e.target.value }))} onClick={e => e.stopPropagation()} autoFocus />}
               </th>;

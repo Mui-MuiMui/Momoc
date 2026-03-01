@@ -347,7 +347,8 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
                         <button
                           type="button"
                           className={cn(
-                            "ml-auto rounded p-0.5 text-xs opacity-40 hover:opacity-100",
+                            "ml-auto rounded p-0.5 text-xs hover:opacity-100",
+                            filterIconClass ? "" : "opacity-40",
                             filterIconClass || "text-muted-foreground",
                             activeHeaderFilter === col.key && "text-primary opacity-100",
                           )}
