@@ -418,6 +418,14 @@ const TOOLTIP_IMPORT = { from: "@/components/ui/tooltip", names: ["TooltipProvid
 
 const CONTEXT_MENU_IMPORT = { from: "@/components/ui/context-menu", names: ["ContextMenu", "ContextMenuTrigger", "ContextMenuContent"] };
 
+/** Default Menubar data (matches DEFAULT_MENUBAR_DATA in CraftMenubar.tsx) */
+const DEFAULT_MENUBAR_DATA_STR = JSON.stringify([
+  { label: "File", items: [{ type: "item", label: "New File", shortcut: "Ctrl+N" }, { type: "item", label: "Open...", shortcut: "Ctrl+O" }, { type: "separator" }, { type: "checkbox", label: "Auto Save", checked: false }, { type: "separator" }, { type: "item", label: "Exit" }] },
+  { label: "Edit", items: [{ type: "item", label: "Undo", shortcut: "Ctrl+Z" }, { type: "item", label: "Redo", shortcut: "Ctrl+Y" }, { type: "separator" }, { type: "item", label: "Cut", shortcut: "Ctrl+X" }, { type: "item", label: "Copy", shortcut: "Ctrl+C" }, { type: "item", label: "Paste", shortcut: "Ctrl+V" }] },
+  { label: "View", items: [{ type: "checkbox", label: "Word Wrap", checked: false }, { type: "separator" }, { type: "item", label: "Zoom In", shortcut: "Ctrl++" }, { type: "item", label: "Zoom Out", shortcut: "Ctrl+-" }] },
+  { label: "Help", items: [{ type: "item", label: "Documentation" }, { type: "item", label: "About" }] },
+]);
+
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
@@ -471,7 +479,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftPopover: { triggerText: "Open Popover", linkedMocPath: "" },
   CraftHoverCard: { triggerText: "Hover me", linkedMocPath: "" },
   CraftNavigationMenu: {},
-  CraftMenubar: { items: "File,Edit,View,Help", linkedMocPath: "" },
+  CraftMenubar: { menuData: DEFAULT_MENUBAR_DATA_STR },
   CraftCommand: { placeholder: "Type a command or search...", items: "Calendar,Search,Settings", linkedMocPath: "" },
   CraftCombobox: { placeholder: "Select an option...", items: "Apple,Banana,Cherry", linkedMocPath: "", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
   CraftTooltip: { triggerText: "Hover", text: "Tooltip text" },
@@ -1081,6 +1089,11 @@ export function craftStateToTsx(
       return `${mocComments}\n${renderNavigationMenu(node, craftState, indent, renderNode)}`;
     }
 
+    // Menubar special case: render from JSON menuData
+    if (resolvedName === "CraftMenubar") {
+      return `${mocComments}\n${renderMenubar(node, indent)}`;
+    }
+
     // Table special case: render as LinkedNodes table
     if (resolvedName === "CraftTable") {
       return `${mocComments}\n${renderTable(node, craftState, indent, renderNode)}`;
@@ -1551,6 +1564,65 @@ function renderNavigationMenu(
   lines.push(`${pad}  </ul>`);
   lines.push(`${pad}</nav>`);
 
+  return lines.join("\n");
+}
+
+interface MenuItemDef {
+  type: "item" | "checkbox" | "separator";
+  label?: string;
+  shortcut?: string;
+  checked?: boolean;
+}
+
+interface TopLevelMenuDef {
+  label: string;
+  items: MenuItemDef[];
+}
+
+function renderMenubar(node: CraftNodeData, indent: number): string {
+  const pad = "  ".repeat(indent);
+  let menus: TopLevelMenuDef[] = [];
+  try {
+    const parsed = JSON.parse((node.props?.menuData as string) || "[]");
+    if (Array.isArray(parsed)) menus = parsed as TopLevelMenuDef[];
+  } catch {
+    menus = [];
+  }
+  const className = (node.props?.className as string) || "";
+  const styleAttr = buildStyleAttr(node.props);
+  const barCls = ["flex h-9 items-center space-x-1 rounded-md border bg-background p-1", className]
+    .filter(Boolean).join(" ");
+
+  const lines: string[] = [];
+  lines.push(`${pad}<div className="${escapeAttr(barCls)}"${styleAttr}>`);
+
+  for (const menu of menus) {
+    lines.push(`${pad}  <div className="relative group">`);
+    lines.push(`${pad}    <button type="button" className="flex cursor-default select-none items-center rounded-sm px-3 py-1 text-sm font-medium outline-none hover:bg-accent hover:text-accent-foreground">`);
+    lines.push(`${pad}      ${escapeJsx(menu.label || "")}`);
+    lines.push(`${pad}    </button>`);
+    lines.push(`${pad}    <div className="hidden group-hover:block absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-md border bg-popover p-1 shadow-md">`);
+    for (const item of (menu.items || [])) {
+      if (item.type === "separator") {
+        lines.push(`${pad}      <div className="my-1 h-px bg-border" />`);
+      } else if (item.type === "checkbox") {
+        lines.push(`${pad}      <div className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">`);
+        lines.push(`${pad}        <span className="mr-2 w-4 text-center text-xs">${item.checked ? "✓" : ""}</span>`);
+        lines.push(`${pad}        <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
+        if (item.shortcut) lines.push(`${pad}        <span className="ml-auto text-xs tracking-widest text-muted-foreground">${escapeJsx(item.shortcut)}</span>`);
+        lines.push(`${pad}      </div>`);
+      } else {
+        lines.push(`${pad}      <div className="flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent">`);
+        lines.push(`${pad}        <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
+        if (item.shortcut) lines.push(`${pad}        <span className="ml-auto text-xs tracking-widest text-muted-foreground">${escapeJsx(item.shortcut)}</span>`);
+        lines.push(`${pad}      </div>`);
+      }
+    }
+    lines.push(`${pad}    </div>`);
+    lines.push(`${pad}  </div>`);
+  }
+
+  lines.push(`${pad}</div>`);
   return lines.join("\n");
 }
 

@@ -48,7 +48,7 @@ import { CraftContextMenu } from "./shadcn/CraftContextMenu";
 import { CraftPopover } from "./shadcn/CraftPopover";
 import { CraftHoverCard } from "./shadcn/CraftHoverCard";
 import { CraftNavigationMenu, NavMenuSlot } from "./shadcn/CraftNavigationMenu";
-import { CraftMenubar } from "./shadcn/CraftMenubar";
+import { CraftMenubar, DEFAULT_MENUBAR_DATA } from "./shadcn/CraftMenubar";
 import { CraftCommand } from "./shadcn/CraftCommand";
 import { CraftTooltip } from "./shadcn/CraftTooltip";
 import { CraftSonner } from "./shadcn/CraftSonner";
@@ -459,8 +459,8 @@ export const paletteItems: PaletteItem[] = [
     label: "Menubar",
     category: "shadcn",
     icon: "Menu",
-    defaultProps: {},
-    enabled: false,
+    defaultProps: { menuData: JSON.stringify(DEFAULT_MENUBAR_DATA) },
+    enabled: true,
   },
   {
     resolverKey: "CraftCommand",

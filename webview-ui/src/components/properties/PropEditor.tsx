@@ -5,6 +5,7 @@ import { IconCombobox } from "./IconCombobox";
 import { TableMetaEditor } from "./TableMetaEditor";
 import { TabMetaEditor } from "./TabMetaEditor";
 import { ResizableMetaEditor } from "./ResizableMetaEditor";
+import { MenubarMetaEditor } from "./MenubarMetaEditor";
 import { useEditorStore } from "../../stores/editorStore";
 
 /** Mapping of property names to their allowed values (select options). */
@@ -411,6 +412,17 @@ export function PropEditor() {
     if (key === "panelMeta" && selectedNodeId) {
       return (
         <ResizableMetaEditor
+          key={key}
+          value={String(value ?? "")}
+          selectedNodeId={selectedNodeId}
+        />
+      );
+    }
+
+    // Custom UI for menuData (menubar structure editor)
+    if (key === "menuData" && selectedNodeId) {
+      return (
+        <MenubarMetaEditor
           key={key}
           value={String(value ?? "")}
           selectedNodeId={selectedNodeId}
