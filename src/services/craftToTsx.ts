@@ -627,9 +627,9 @@ export function craftStateToTsx(
       }
     }
 
-    // CraftContextMenu: add full context-menu sub-component imports
+    // CraftContextMenu: add only item-level sub-component imports (no wrapper/trigger)
     if (resolvedName === "CraftContextMenu") {
-      for (const name of CONTEXT_MENU_IMPORT.names) {
+      for (const name of ["ContextMenuItem", "ContextMenuCheckboxItem", "ContextMenuSeparator", "ContextMenuLabel"]) {
         addImport(CONTEXT_MENU_IMPORT.from, name);
       }
       return;
@@ -1606,73 +1606,44 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
   } catch {
     menus = [];
   }
-  const className = (node.props?.className as string) || "";
-  const styleAttr = buildStyleAttr(node.props);
 
   // Panel styling
-  const panelBgClass = (node.props?.panelBgClass as string) || "";
-  const panelTextClass = (node.props?.panelTextClass as string) || "";
-  const panelBorderClass = (node.props?.panelBorderClass as string) || "";
-  const panelBorderWidth = (node.props?.panelBorderWidth as string) || "";
-  const panelShadowClass = (node.props?.panelShadowClass as string) || "";
   const shortcutTextClass = (node.props?.shortcutTextClass as string) || "";
   const shortcutCls = shortcutTextClass || "text-muted-foreground";
 
-  const panelBwClass = panelBorderWidth === "0" ? "border-0"
-    : panelBorderWidth === "2" ? "border-2"
-    : panelBorderWidth === "4" ? "border-4"
-    : panelBorderWidth === "8" ? "border-8"
-    : panelBorderWidth === "1" ? "border" : "border";
-
-  const panelCls = [
-    "min-w-[160px]",
-    panelBgClass || "bg-popover",
-    panelBwClass,
-    panelBorderClass,
-    panelShadowClass || "shadow-md",
-    panelTextClass,
-    className,
-  ].filter(Boolean).join(" ");
-
-  const triggerCls = "flex items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground";
-
+  // CraftContextMenu exports only the menu items (no <ContextMenu> wrapper / trigger).
+  // It is intended to be used as contextMenuMocPath content inside a container's
+  // <ContextMenuContent>, so only the items are rendered here.
   const lines: string[] = [];
-  lines.push(`${pad}<ContextMenu>`);
-  lines.push(`${pad}  <ContextMenuTrigger asChild>`);
-  lines.push(`${pad}    <div className="${escapeAttr(triggerCls)}"${styleAttr}>`);
-  lines.push(`${pad}      Right-click me`);
-  lines.push(`${pad}    </div>`);
-  lines.push(`${pad}  </ContextMenuTrigger>`);
-  lines.push(`${pad}  <ContextMenuContent className="${escapeAttr(panelCls)}">`);
+  lines.push(`${pad}<>`);
 
   for (let sectionIdx = 0; sectionIdx < menus.length; sectionIdx++) {
     const menu = menus[sectionIdx];
     if (sectionIdx > 0) {
-      lines.push(`${pad}    <ContextMenuSeparator />`);
+      lines.push(`${pad}  <ContextMenuSeparator />`);
     }
     if (menu.label) {
-      lines.push(`${pad}    <ContextMenuLabel>${escapeJsx(menu.label)}</ContextMenuLabel>`);
+      lines.push(`${pad}  <ContextMenuLabel>${escapeJsx(menu.label)}</ContextMenuLabel>`);
     }
     for (const item of (menu.items || [])) {
       if (item.type === "separator") {
-        lines.push(`${pad}    <ContextMenuSeparator />`);
+        lines.push(`${pad}  <ContextMenuSeparator />`);
       } else if (item.type === "checkbox") {
         const checkedAttr = item.checked ? " checked" : "";
-        lines.push(`${pad}    <ContextMenuCheckboxItem${checkedAttr}>`);
-        lines.push(`${pad}      ${escapeJsx(item.label || "")}`);
-        if (item.shortcut) lines.push(`${pad}      <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
-        lines.push(`${pad}    </ContextMenuCheckboxItem>`);
+        lines.push(`${pad}  <ContextMenuCheckboxItem${checkedAttr}>`);
+        lines.push(`${pad}    ${escapeJsx(item.label || "")}`);
+        if (item.shortcut) lines.push(`${pad}    <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
+        lines.push(`${pad}  </ContextMenuCheckboxItem>`);
       } else {
-        lines.push(`${pad}    <ContextMenuItem>`);
-        lines.push(`${pad}      ${escapeJsx(item.label || "")}`);
-        if (item.shortcut) lines.push(`${pad}      <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
-        lines.push(`${pad}    </ContextMenuItem>`);
+        lines.push(`${pad}  <ContextMenuItem>`);
+        lines.push(`${pad}    ${escapeJsx(item.label || "")}`);
+        if (item.shortcut) lines.push(`${pad}    <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
+        lines.push(`${pad}  </ContextMenuItem>`);
       }
     }
   }
 
-  lines.push(`${pad}  </ContextMenuContent>`);
-  lines.push(`${pad}</ContextMenu>`);
+  lines.push(`${pad}</>`);
   return lines.join("\n");
 }
 
