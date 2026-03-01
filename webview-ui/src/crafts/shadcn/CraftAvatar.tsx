@@ -17,6 +17,7 @@ interface CraftAvatarProps {
   className?: string;
   tooltipText?: string;
   tooltipSide?: string;
+  borderColor?: string;
 }
 
 export const CraftAvatar: UserComponent<CraftAvatarProps> = ({
@@ -28,6 +29,7 @@ export const CraftAvatar: UserComponent<CraftAvatarProps> = ({
   className = "",
   tooltipText = "",
   tooltipSide = "",
+  borderColor = "",
 }) => {
   const {
     connectors: { connect, drag },
@@ -41,14 +43,16 @@ export const CraftAvatar: UserComponent<CraftAvatarProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn(
-        "relative flex shrink-0 rounded-full",
+        "relative flex shrink-0 overflow-hidden rounded-full",
         SIZE_CLASSES[size] ?? SIZE_CLASSES.default,
+        borderColor && "border-2",
+        borderColor,
         className,
       )}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       {resolvedSrc ? (
-        <img src={resolvedSrc} alt={fallback} className="aspect-square h-full w-full overflow-hidden rounded-full" />
+        <img src={resolvedSrc} alt={fallback} className="aspect-square h-full w-full" />
       ) : (
         <span className="flex h-full w-full items-center justify-center rounded-full bg-muted text-sm font-medium">
           {fallback}
@@ -69,6 +73,7 @@ CraftAvatar.craft = {
     className: "",
     tooltipText: "",
     tooltipSide: "",
+    borderColor: "",
   },
   rules: {
     canDrag: () => true,

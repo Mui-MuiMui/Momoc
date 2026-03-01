@@ -777,13 +777,13 @@ export function AspectRatio(props: any) {
   avatar: `import { cn } from "@/components/ui/_cn";
 const SIZE_CLASSES: Record<string, string> = { sm: "h-8 w-8", default: "h-10 w-10", lg: "h-16 w-16" };
 export function Avatar(props: any) {
-  const { className = "", src, fallback = "AB", size = "default", style: _style, ...rest } = props;
+  const { className = "", src, fallback = "AB", size = "default", borderColor = "", style: _style, ...rest } = props;
   const sizeClass = SIZE_CLASSES[size] ?? SIZE_CLASSES.default;
-  const cls = cn("relative flex shrink-0 rounded-full", sizeClass, className);
+  const cls = cn("relative flex shrink-0 overflow-hidden rounded-full", sizeClass, borderColor && "border-2", borderColor, className);
   return (
     <span className={cls} {...rest}>
       {src ? (
-        <img src={src} alt={fallback} className="aspect-square h-full w-full overflow-hidden rounded-full" />
+        <img src={src} alt={fallback} className="aspect-square h-full w-full" />
       ) : (
         <span className="flex h-full w-full items-center justify-center rounded-full bg-muted text-sm font-medium">
           {fallback}
