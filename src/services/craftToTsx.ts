@@ -1594,7 +1594,7 @@ function renderDataTable(
   const pad = "  ".repeat(indent);
 
   // Parse column defs
-  let cols: Array<{ key: string; label?: string; type?: string; sortable?: boolean; width?: number }> = [];
+  let cols: Array<{ key: string; label?: string; type?: string; sortable?: boolean; width?: string }> = [];
   try {
     const rawDefs = (node.props?.columnDefs as string) || "";
     const parsed = JSON.parse(rawDefs);
@@ -1678,7 +1678,12 @@ function renderDataTable(
     } else {
       const parts: string[] = [`accessorKey: "${escapeJsString(col.key)}"`, `header: "${escapeJsString(col.label ?? col.key)}"`];
       if (col.sortable) parts.push("enableSorting: true");
-      if (col.width) parts.push(`size: ${col.width}`);
+      if (col.width) {
+        const numVal = parseInt(String(col.width));
+        if (!isNaN(numVal) && !String(col.width).includes("%")) {
+          parts.push(`size: ${numVal}`);
+        }
+      }
       colItems.push(`{ ${parts.join(", ")} }`);
     }
   }

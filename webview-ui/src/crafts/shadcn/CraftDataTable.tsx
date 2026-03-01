@@ -17,7 +17,7 @@ export interface ColumnDef {
   label?: string;
   type?: "data" | "actions" | "slot";
   sortable?: boolean;
-  width?: number; // px
+  width?: string; // e.g. "120", "120px", "50%"
   actionButtons?: ActionButton[]; // type==="actions" のみ使用
 }
 
@@ -198,7 +198,7 @@ export const CraftDataTable: UserComponent<CraftDataTableProps> = ({
     if (colIdx >= pinnedLeftNum) return {};
     let left = selectable ? 40 : 0;
     for (let i = 0; i < colIdx; i++) {
-      left += visibleCols[i]?.width ?? 120;
+      left += parseInt(visibleCols[i]?.width ?? "120") || 120;
     }
     return { position: "sticky", left, background: "var(--background, white)", zIndex: 1 };
   }
