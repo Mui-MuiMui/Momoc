@@ -1694,4 +1694,140 @@ export function ContextMenuSeparator() { return <div className="my-1 h-px bg-bor
 export function ContextMenuLabel(props: any) {
   return <div className="px-2 py-1.5 text-xs font-semibold">{props.children}</div>;
 }`,
+
+  "data-table": `import { cn } from "@/components/ui/_cn";
+import { useState } from "react";
+function parseColDefs(cols) {
+  if (!Array.isArray(cols)) return [];
+  return cols;
+}
+function getHeader(col) { return col.header ?? col.id ?? col.accessorKey ?? ""; }
+function getCell(col, row) {
+  if (typeof col.cell === "function") {
+    try { return col.cell({ row: { original: row, getValue: (k) => row[k] } }); } catch { return null; }
+  }
+  if (col.accessorKey) return String(row[col.accessorKey] ?? "");
+  return null;
+}
+export function DataTable(props) {
+  const {
+    columns = [], data = [],
+    filterType = "none", pageable = false, pageSize = 10,
+    selectable = false, columnToggle = false, stickyHeader = false, pinnedLeft = 0,
+    className = "", headerBgClass = "", hoverRowClass = "", selectedRowClass = "",
+    headerTextClass = "", headerBorderClass = "", tableBorderClass = "",
+    style: _style, width, height, ...rest
+  } = props;
+  const cols = parseColDefs(columns);
+  const pageSizeNum = Math.max(1, Number(pageSize) || 10);
+  const pinnedLeftNum = Math.max(0, Number(pinnedLeft) || 0);
+  const [sortCol, setSortCol] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+  const [filterValue, setFilterValue] = useState("");
+  const [filterCol, setFilterCol] = useState("all");
+  const [headerFilters, setHeaderFilters] = useState({});
+  const [activeHeaderFilter, setActiveHeaderFilter] = useState(null);
+  const [page, setPage] = useState(1);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [hiddenCols, setHiddenCols] = useState(new Set());
+  const [showColToggle, setShowColToggle] = useState(false);
+  let rows = [...data];
+  if (filterType === "bar" && filterValue) {
+    rows = rows.filter(row => {
+      if (filterCol === "all") return cols.filter(c => c.accessorKey).some(c => String(row[c.accessorKey] ?? "").toLowerCase().includes(filterValue.toLowerCase()));
+      return String(row[filterCol] ?? "").toLowerCase().includes(filterValue.toLowerCase());
+    });
+  }
+  if (filterType === "header") {
+    for (const [k, v] of Object.entries(headerFilters)) {
+      if (v) rows = rows.filter(row => String(row[k] ?? "").toLowerCase().includes(v.toLowerCase()));
+    }
+  }
+  if (sortCol) {
+    rows = [...rows].sort((a, b) => {
+      const av = String(a[sortCol] ?? ""), bv = String(b[sortCol] ?? "");
+      return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+  }
+  const totalRows = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSizeNum));
+  const displayRows = pageable ? rows.slice((page - 1) * pageSizeNum, page * pageSizeNum) : rows;
+  const visibleCols = cols.filter(c => !hiddenCols.has(c.id ?? c.accessorKey ?? c.key));
+  const containerStyle = {};
+  if (width && width !== "auto") containerStyle.width = /^\\d/.test(String(width)) && !String(width).includes("%") ? String(width) + "px" : String(width);
+  if (height && height !== "auto") containerStyle.height = /^\\d/.test(String(height)) && !String(height).includes("%") ? String(height) + "px" : String(height);
+  const headerSt = stickyHeader ? { position: "sticky", top: 0, zIndex: 2 } : {};
+  function getPinnedStyle(colIdx) {
+    if (colIdx >= pinnedLeftNum) return {};
+    let left = selectable ? 40 : 0;
+    for (let i = 0; i < colIdx; i++) left += (visibleCols[i]?.size ?? 120);
+    return { position: "sticky", left, background: "var(--background,white)", zIndex: 1 };
+  }
+  function handleSort(key) {
+    if (sortCol === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(key); setSortDir("asc"); }
+  }
+  const borderCls = tableBorderClass || "border-border";
+  return <div className={cn("flex flex-col gap-2", className)} style={containerStyle}>
+    {(filterType === "bar" || columnToggle) && <div className="flex items-center gap-2">
+      {filterType === "bar" && <>
+        <select className="rounded border border-border bg-background px-2 py-1 text-xs" value={filterCol} onChange={e => setFilterCol(e.target.value)}>
+          <option value="all">All</option>
+          {cols.filter(c => c.accessorKey).map(c => <option key={c.accessorKey} value={c.accessorKey}>{getHeader(c)}</option>)}
+        </select>
+        <input type="text" placeholder="Filter..." className="flex-1 rounded border border-border bg-background px-2 py-1 text-xs" value={filterValue} onChange={e => setFilterValue(e.target.value)} />
+      </>}
+      {columnToggle && <div className="relative ml-auto">
+        <button type="button" className="rounded border border-border bg-background px-2 py-1 text-xs hover:bg-accent" onClick={() => setShowColToggle(v => !v)}>Columns ▾</button>
+        {showColToggle && <div className="absolute right-0 top-full z-50 mt-1 min-w-[140px] rounded border border-border bg-background p-2 shadow-md">
+          {cols.map(c => { const k = c.id ?? c.accessorKey ?? ""; return <label key={k} className="flex cursor-pointer items-center gap-1 py-0.5 text-xs"><input type="checkbox" checked={!hiddenCols.has(k)} onChange={() => setHiddenCols(prev => { const next = new Set(prev); next.has(k) ? next.delete(k) : next.add(k); return next; })} />{getHeader(c)}</label>; })}
+        </div>}
+      </div>}
+    </div>}
+    <div className={cn("overflow-auto rounded-md border", borderCls)}>
+      <table className="w-full caption-bottom border-collapse text-sm">
+        <thead className={cn("border-b", headerBgClass || "bg-muted/50", headerBorderClass)} style={headerSt}>
+          <tr>
+            {selectable && <th className={cn("w-10 px-2 py-2 text-left", headerTextClass)} style={{ width: 40 }}><input type="checkbox" checked={displayRows.length > 0 && selectedRows.size === displayRows.length} onChange={() => selectedRows.size === displayRows.length ? setSelectedRows(new Set()) : setSelectedRows(new Set(displayRows.map((_, i) => i)))} /></th>}
+            {visibleCols.map((col, ci) => {
+              const key = col.id ?? col.accessorKey ?? String(ci);
+              const isSorted = sortCol === key;
+              return <th key={key} className={cn("px-3 py-2 text-left text-xs font-medium", headerTextClass || "text-muted-foreground", col.enableSorting && "cursor-pointer select-none hover:text-foreground")} style={{ ...(col.size ? { width: col.size } : {}), ...getPinnedStyle(ci) }} onClick={() => col.enableSorting && handleSort(key)}>
+                <div className="flex items-center gap-1">
+                  <span>{getHeader(col)}</span>
+                  {col.enableSorting && <span className="text-muted-foreground/60">{isSorted ? (sortDir === "asc" ? "↑" : "↓") : "↕"}</span>}
+                  {filterType === "header" && col.accessorKey && <button type="button" className={cn("ml-auto rounded p-0.5 text-xs opacity-40 hover:opacity-100", activeHeaderFilter === key && "text-primary opacity-100")} onClick={e => { e.stopPropagation(); setActiveHeaderFilter(v => v === key ? null : key); }}>⌕</button>}
+                </div>
+                {filterType === "header" && activeHeaderFilter === key && <input type="text" placeholder="Filter..." className="mt-1 w-full rounded border border-border bg-background px-1 py-0.5 text-xs font-normal" value={headerFilters[key] ?? ""} onChange={e => setHeaderFilters(p => ({ ...p, [key]: e.target.value }))} onClick={e => e.stopPropagation()} autoFocus />}
+              </th>;
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {displayRows.map((row, ri) => {
+            const isSelected = selectedRows.has(ri);
+            return <tr key={ri} className={cn("border-b transition-colors", hoverRowClass ? \`hover:\${hoverRowClass}\` : "hover:bg-muted/50", isSelected && (selectedRowClass || "bg-muted"))}>
+              {selectable && <td className="w-10 px-2 py-2" style={{ width: 40 }}><input type="checkbox" checked={isSelected} onChange={() => { const next = new Set(selectedRows); next.has(ri) ? next.delete(ri) : next.add(ri); setSelectedRows(next); }} /></td>}
+              {visibleCols.map((col, ci) => {
+                const key = col.id ?? col.accessorKey ?? String(ci);
+                return <td key={key} className="px-3 py-2 text-sm" style={{ ...(col.size ? { width: col.size } : {}), ...getPinnedStyle(ci) }}>{getCell(col, row)}</td>;
+              })}
+            </tr>;
+          })}
+          {displayRows.length === 0 && <tr><td colSpan={visibleCols.length + (selectable ? 1 : 0)} className="px-3 py-8 text-center text-sm text-muted-foreground">No results.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+    {pageable && <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <span>{selectable ? \`\${selectedRows.size} of \${totalRows} row(s) selected.\` : \`\${totalRows} row(s)\`}</span>
+      <div className="flex items-center gap-1">
+        <button type="button" className="rounded border border-border px-2 py-1 hover:bg-accent disabled:opacity-40" disabled={page <= 1} onClick={() => setPage(1)}>«</button>
+        <button type="button" className="rounded border border-border px-2 py-1 hover:bg-accent disabled:opacity-40" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>‹</button>
+        <span className="px-2">Page {page} of {totalPages}</span>
+        <button type="button" className="rounded border border-border px-2 py-1 hover:bg-accent disabled:opacity-40" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>›</button>
+        <button type="button" className="rounded border border-border px-2 py-1 hover:bg-accent disabled:opacity-40" disabled={page >= totalPages} onClick={() => setPage(totalPages)}>»</button>
+      </div>
+    </div>}
+  </div>;
+}`,
 };

@@ -11,6 +11,7 @@ import { CraftLabel } from "./shadcn/CraftLabel";
 import { CraftSeparator } from "./shadcn/CraftSeparator";
 import { CraftBadge } from "./shadcn/CraftBadge";
 import { CraftTable, TableCellSlot } from "./shadcn/CraftTable";
+import { CraftDataTable, DataTableSlot, DEFAULT_COLUMN_DEFS_STR, DEFAULT_CSV_DATA } from "./shadcn/CraftDataTable";
 // Phase 1: Simple components
 import { CraftAccordion } from "./shadcn/CraftAccordion";
 import { CraftAlert } from "./shadcn/CraftAlert";
@@ -69,6 +70,8 @@ export const resolvers = {
   CraftBadge,
   CraftTable,
   TableCellSlot,
+  CraftDataTable,
+  DataTableSlot,
   // Phase 1
   CraftAccordion,
   CraftAlert,
@@ -241,6 +244,17 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Table",
     defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftDataTable",
+    label: "Data Table",
+    category: "shadcn",
+    icon: "Table2",
+    defaultProps: {
+      columnDefs: DEFAULT_COLUMN_DEFS_STR,
+      csvData: DEFAULT_CSV_DATA,
+    },
     enabled: true,
   },
   {

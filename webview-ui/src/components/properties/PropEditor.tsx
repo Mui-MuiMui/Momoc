@@ -109,6 +109,9 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
     todayShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
     selectedShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
   },
+  "Data Table": {
+    filterType: ["none", "header", "bar"],
+  },
 };
 
 /** Property names rendered as a button group (toggle buttons) per component. */
@@ -126,6 +129,10 @@ const BUTTON_GROUP_PROPS: Record<string, Record<string, string[]>> = {
   Pagination: {
     activeBorderWidth: ["", "0", "1", "2", "4", "8"],
   },
+  "Data Table": {
+    pageSize: ["", "5", "10", "20", "50"],
+    pinnedLeft: ["", "0", "1", "2", "3"],
+  },
 };
 
 const INPUT_CLASS =
@@ -141,13 +148,13 @@ const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath"]);
 const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor", "labelColor"]);
 
 /** Props that use the Tailwind bg class palette picker UI (stores "bg-red-500" style class names). */
-const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass", "selectedBgClass"]);
+const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass", "selectedBgClass", "headerBgClass", "hoverRowClass", "selectedRowClass"]);
 
 /** Props that use the Tailwind border class palette picker UI (stores "border-red-500" style class names). */
-const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass", "calendarBorderClass", "todayBorderClass", "selectedBorderClass"]);
+const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass", "calendarBorderClass", "todayBorderClass", "selectedBorderClass", "headerBorderClass", "tableBorderClass"]);
 
 /** Props that use the Tailwind text class palette picker UI (stores "text-red-500" style class names). */
-const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass", "hoverTextClass", "buttonTextClass", "dropdownTextClass", "shortcutTextClass", "panelTextClass", "activeTextClass", "selectedTextClass"]);
+const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass", "hoverTextClass", "buttonTextClass", "dropdownTextClass", "shortcutTextClass", "panelTextClass", "activeTextClass", "selectedTextClass", "headerTextClass"]);
 
 /**
  * Tailwind CSS color palette (hex) — same data as TailwindEditor.tsx.
@@ -412,6 +419,36 @@ export function PropEditor() {
   const activeGroups = GROUP_ORDER.filter((g) => (grouped.get(g)?.length ?? 0) > 0);
 
   function renderProp(key: string, value: unknown) {
+    // Custom UI for columnDefs (Data Table column definitions JSON)
+    if (key === "columnDefs") {
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">columnDefs (JSON)</label>
+          <textarea
+            value={String(value ?? "")}
+            onChange={(e) => handlePropChange(key, e.target.value)}
+            rows={6}
+            className={`${INPUT_CLASS} w-full resize-y font-mono text-[10px]`}
+          />
+        </div>
+      );
+    }
+
+    // Custom UI for csvData (Data Table CSV data)
+    if (key === "csvData") {
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">csvData (CSV)</label>
+          <textarea
+            value={String(value ?? "")}
+            onChange={(e) => handlePropChange(key, e.target.value)}
+            rows={5}
+            className={`${INPUT_CLASS} w-full resize-y font-mono text-[10px]`}
+          />
+        </div>
+      );
+    }
+
     // Custom UI for tableMeta (table structure editor)
     if (key === "tableMeta" && selectedNodeId) {
       return (

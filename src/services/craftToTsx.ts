@@ -196,6 +196,16 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: false,
   },
+  CraftDataTable: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: false,
+  },
+  DataTableSlot: {
+    tag: "div",
+    propsMap: [],
+    isContainer: true,
+  },
   CraftProgress: {
     tag: "Progress",
     importFrom: "@/components/ui/progress",
@@ -431,6 +441,11 @@ const DATE_PICKER_IMPORT = {
   names: ["DatePicker"],
 };
 
+const DATA_TABLE_IMPORT = {
+  from: "@/components/ui/data-table",
+  names: ["DataTable"],
+};
+
 /** Default ContextMenu data (matches DEFAULT_CONTEXTMENU_DATA in CraftContextMenu.tsx) */
 const DEFAULT_CONTEXTMENU_DATA_STR = JSON.stringify([
   { label: "", items: [{ type: "item", label: "Open", shortcut: "Ctrl+O" }, { type: "item", label: "Edit" }, { type: "separator" }, { type: "checkbox", label: "Show Details", checked: false }, { type: "separator" }, { type: "item", label: "Delete" }] },
@@ -486,6 +501,8 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftDatePicker: { mode: "date", dateFormat: "yyyy/MM/dd", placeholder: "日付を選択...", editable: false, disabled: false,
     calendarBorderClass: "", calendarShadowClass: "", todayBgClass: "", todayTextClass: "", todayBorderClass: "", todayShadowClass: "",
     selectedBgClass: "", selectedTextClass: "", selectedBorderClass: "", selectedShadowClass: "", buttonBgClass: "", hoverBgClass: "" },
+  CraftDataTable: { filterType: "none", pageable: false, pageSize: "10", selectable: false, columnToggle: false, stickyHeader: false, pinnedLeft: "0",
+    headerBgClass: "", hoverRowClass: "", selectedRowClass: "", headerTextClass: "", headerBorderClass: "", tableBorderClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
   CraftChart: { chartType: "bar" },
@@ -662,6 +679,15 @@ export function craftStateToTsx(
     // CraftDatePicker: add date-picker import
     if (resolvedName === "CraftDatePicker") {
       addImport(DATE_PICKER_IMPORT.from, "DatePicker");
+      return;
+    }
+
+    // CraftDataTable: add data-table import and traverse slot linkedNodes
+    if (resolvedName === "CraftDataTable") {
+      addImport(DATA_TABLE_IMPORT.from, "DataTable");
+      for (const linkedId of Object.values(node.linkedNodes || {})) {
+        collectImports(linkedId);
+      }
       return;
     }
 
@@ -1152,6 +1178,11 @@ export function craftStateToTsx(
       return `${mocComments}\n${renderDatePicker(node, indent)}`;
     }
 
+    // DataTable special case
+    if (resolvedName === "CraftDataTable") {
+      return `${mocComments}\n${renderDataTable(node, craftState, indent, renderNode)}`;
+    }
+
     // Table special case: render as LinkedNodes table
     if (resolvedName === "CraftTable") {
       return `${mocComments}\n${renderTable(node, craftState, indent, renderNode)}`;
@@ -1551,6 +1582,123 @@ function renderTable(
   }
 
   lines.push(`${pad}</Table>`);
+  return lines.join("\n");
+}
+
+function renderDataTable(
+  node: CraftNodeData,
+  craftState: CraftSerializedState,
+  indent: number,
+  renderNodeFn: (nodeId: string, indent: number) => string,
+): string {
+  const pad = "  ".repeat(indent);
+
+  // Parse column defs
+  let cols: Array<{ key: string; label?: string; type?: string; sortable?: boolean; width?: number }> = [];
+  try {
+    const rawDefs = (node.props?.columnDefs as string) || "";
+    const parsed = JSON.parse(rawDefs);
+    if (Array.isArray(parsed)) cols = parsed;
+  } catch {
+    cols = [
+      { key: "name", label: "Name", sortable: true },
+      { key: "status", label: "Status", sortable: true },
+      { key: "email", label: "Email" },
+      { key: "actions", type: "actions" },
+    ];
+  }
+
+  // Parse CSV data
+  let dataRows: Array<Record<string, string>> = [];
+  try {
+    const rawCsv = (node.props?.csvData as string) || "";
+    const lines = rawCsv.trim().split("\n");
+    if (lines.length >= 2) {
+      const headers = lines[0].split(",").map((h) => h.trim());
+      dataRows = lines.slice(1).map((line) => {
+        const vals = line.split(",").map((v) => v.trim());
+        const row: Record<string, string> = {};
+        headers.forEach((h, i) => { row[h] = vals[i] ?? ""; });
+        return row;
+      });
+    }
+  } catch {
+    // leave empty
+  }
+
+  const className = (node.props?.className as string) || "";
+  const styleAttr = buildStyleAttr(node.props);
+  const classNameAttr = className ? ` className="${escapeAttr(className)}"` : "";
+
+  const filterType = (node.props?.filterType as string) || "none";
+  const pageable = !!(node.props?.pageable);
+  const pageSize = parseInt((node.props?.pageSize as string) || "10") || 10;
+  const selectable = !!(node.props?.selectable);
+  const columnToggle = !!(node.props?.columnToggle);
+  const stickyHeader = !!(node.props?.stickyHeader);
+  const pinnedLeft = parseInt((node.props?.pinnedLeft as string) || "0") || 0;
+
+  const lines: string[] = [];
+
+  // Generate columns array inline
+  const colItems: string[] = [];
+  for (const col of cols) {
+    if (col.type === "actions") {
+      colItems.push(
+        `{ id: "${escapeJsString(col.key)}", header: "${escapeJsString(col.label ?? "")}", cell: () => <button type="button" className="h-8 w-8 rounded-md hover:bg-accent">···</button> }`,
+      );
+    } else if (col.type === "slot") {
+      // Resolve slot children from linkedNodes
+      const slotNodeId = node.linkedNodes?.[`dt_slot_${col.key}`];
+      const slotNode = slotNodeId ? craftState[slotNodeId] : null;
+      const slotChildren = (slotNode?.nodes || []).map((childId) => renderNodeFn(childId, 0)).filter(Boolean);
+      const slotContent = slotChildren.length > 0
+        ? slotChildren.join(" ")
+        : `{/* slot: ${escapeJsString(col.key)} */}`;
+      colItems.push(
+        `{ id: "${escapeJsString(col.key)}", header: "${escapeJsString(col.label ?? col.key)}", cell: () => <div className="min-h-[32px] flex items-center">${slotContent}</div> }`,
+      );
+    } else {
+      const parts: string[] = [`accessorKey: "${escapeJsString(col.key)}"`, `header: "${escapeJsString(col.label ?? col.key)}"`];
+      if (col.sortable) parts.push("enableSorting: true");
+      if (col.width) parts.push(`size: ${col.width}`);
+      colItems.push(`{ ${parts.join(", ")} }`);
+    }
+  }
+
+  // Build prop attributes for DataTable
+  const dtProps: string[] = [];
+  dtProps.push(`columns={[${colItems.join(", ")}]}`);
+  dtProps.push(`data={[${dataRows.map((row) => `{ ${Object.entries(row).map(([k, v]) => `${k}: "${escapeJsString(v)}"`).join(", ")} }`).join(", ")}]}`);
+  if (filterType !== "none") dtProps.push(`filterType="${filterType}"`);
+  if (pageable) dtProps.push("pageable");
+  if (pageable && pageSize !== 10) dtProps.push(`pageSize={${pageSize}}`);
+  if (selectable) dtProps.push("selectable");
+  if (columnToggle) dtProps.push("columnToggle");
+  if (stickyHeader) dtProps.push("stickyHeader");
+  if (pinnedLeft > 0) dtProps.push(`pinnedLeft={${pinnedLeft}}`);
+
+  const headerBgClass = (node.props?.headerBgClass as string) || "";
+  const hoverRowClass = (node.props?.hoverRowClass as string) || "";
+  const selectedRowClass = (node.props?.selectedRowClass as string) || "";
+  const headerTextClass = (node.props?.headerTextClass as string) || "";
+  const headerBorderClass = (node.props?.headerBorderClass as string) || "";
+  const tableBorderClass = (node.props?.tableBorderClass as string) || "";
+  if (headerBgClass) dtProps.push(`headerBgClass="${escapeAttr(headerBgClass)}"`);
+  if (hoverRowClass) dtProps.push(`hoverRowClass="${escapeAttr(hoverRowClass)}"`);
+  if (selectedRowClass) dtProps.push(`selectedRowClass="${escapeAttr(selectedRowClass)}"`);
+  if (headerTextClass) dtProps.push(`headerTextClass="${escapeAttr(headerTextClass)}"`);
+  if (headerBorderClass) dtProps.push(`headerBorderClass="${escapeAttr(headerBorderClass)}"`);
+  if (tableBorderClass) dtProps.push(`tableBorderClass="${escapeAttr(tableBorderClass)}"`);
+
+  lines.push(`${pad}<DataTable`);
+  for (const p of dtProps) {
+    lines.push(`${pad}  ${p}`);
+  }
+  if (className) lines.push(`${pad}  ${classNameAttr.trim()}`);
+  if (styleAttr) lines.push(`${pad}  ${styleAttr.trim()}`);
+  lines.push(`${pad}/>`);
+
   return lines.join("\n");
 }
 
