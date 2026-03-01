@@ -1607,15 +1607,40 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
     menus = [];
   }
 
+  const className = (node.props?.className as string) || "";
+  const styleAttr = buildStyleAttr(node.props);
+
   // Panel styling
+  const panelBgClass = (node.props?.panelBgClass as string) || "";
+  const panelTextClass = (node.props?.panelTextClass as string) || "";
+  const panelBorderClass = (node.props?.panelBorderClass as string) || "";
+  const panelBorderWidth = (node.props?.panelBorderWidth as string) || "";
+  const panelShadowClass = (node.props?.panelShadowClass as string) || "";
   const shortcutTextClass = (node.props?.shortcutTextClass as string) || "";
   const shortcutCls = shortcutTextClass || "text-muted-foreground";
 
-  // CraftContextMenu exports only the menu items (no <ContextMenu> wrapper / trigger).
-  // It is intended to be used as contextMenuMocPath content inside a container's
-  // <ContextMenuContent>, so only the items are rendered here.
+  const panelBwClass = panelBorderWidth === "0" ? "border-0"
+    : panelBorderWidth === "2" ? "border-2"
+    : panelBorderWidth === "4" ? "border-4"
+    : panelBorderWidth === "8" ? "border-8"
+    : panelBorderWidth === "1" ? "border" : "border";
+
+  const panelCls = [
+    "rounded-md p-1",
+    panelBgClass || "bg-popover",
+    panelBwClass,
+    panelBorderClass,
+    panelShadowClass || "shadow-md",
+    panelTextClass,
+    className,
+  ].filter(Boolean).join(" ");
+
+  // CraftContextMenu renders as a styled panel div containing menu items.
+  // The panel applies all styling props (bg, border, shadow, width, height).
+  // When used as contextMenuMocPath content, the developer places these items
+  // inside their container's <ContextMenuContent>.
   const lines: string[] = [];
-  lines.push(`${pad}<>`);
+  lines.push(`${pad}<div className="${escapeAttr(panelCls)}"${styleAttr}>`);
 
   for (let sectionIdx = 0; sectionIdx < menus.length; sectionIdx++) {
     const menu = menus[sectionIdx];
@@ -1643,7 +1668,7 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
     }
   }
 
-  lines.push(`${pad}</>`);
+  lines.push(`${pad}</div>`);
   return lines.join("\n");
 }
 
