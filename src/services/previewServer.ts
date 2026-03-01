@@ -1502,8 +1502,10 @@ export function ContextMenuTrigger(props: any) {
 }
 export function ContextMenuContent(props: any) {
   const ctx = useContext(Ctx);
-  if (!ctx?.pos) return null;
-  return <><div className="fixed inset-0 z-40" onClick={() => ctx?.setPos(null)} /><div className="fixed z-50 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md" style={{ left: ctx.pos.x, top: ctx.pos.y }}>{props.children}</div></>;
+  const cls = props.className || "min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md";
+  if (!ctx) return <div className={cls} style={props.style}>{props.children}</div>;
+  if (!ctx.pos) return null;
+  return <><div className="fixed inset-0 z-40" onClick={() => ctx.setPos(null)} /><div className={"fixed z-50 " + cls} style={{ ...props.style, left: ctx.pos.x, top: ctx.pos.y }}>{props.children}</div></>;
 }
 export function ContextMenuItem(props: any) {
   return <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">{props.children}</div>;

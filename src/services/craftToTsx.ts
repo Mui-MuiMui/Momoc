@@ -627,9 +627,9 @@ export function craftStateToTsx(
       }
     }
 
-    // CraftContextMenu: add only item-level sub-component imports (no wrapper/trigger)
+    // CraftContextMenu: exports <ContextMenuContent> + item-level components
     if (resolvedName === "CraftContextMenu") {
-      for (const name of ["ContextMenuItem", "ContextMenuCheckboxItem", "ContextMenuSeparator", "ContextMenuLabel"]) {
+      for (const name of ["ContextMenuContent", "ContextMenuItem", "ContextMenuCheckboxItem", "ContextMenuSeparator", "ContextMenuLabel"]) {
         addImport(CONTEXT_MENU_IMPORT.from, name);
       }
       return;
@@ -867,15 +867,15 @@ export function craftStateToTsx(
     const contextMenuMocPath = props?.contextMenuMocPath as string | undefined;
     if (!contextMenuMocPath) return rendered;
 
+    // The linked .moc (CraftContextMenu) exports <ContextMenuContent> itself,
+    // so we place the linked placeholder directly at the ContextMenu level.
     const contentComment = `{/* linked: ${escapeJsx(contextMenuMocPath)} */}`;
     return [
       `${pad}<ContextMenu>`,
       `${pad}  <ContextMenuTrigger asChild>`,
       rendered,
       `${pad}  </ContextMenuTrigger>`,
-      `${pad}  <ContextMenuContent>`,
-      `${pad}    ${contentComment}`,
-      `${pad}  </ContextMenuContent>`,
+      `${pad}  ${contentComment}`,
       `${pad}</ContextMenu>`,
     ].join("\n");
   }
@@ -1635,12 +1635,12 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
     className,
   ].filter(Boolean).join(" ");
 
-  // CraftContextMenu renders as a styled panel div containing menu items.
-  // The panel applies all styling props (bg, border, shadow, width, height).
-  // When used as contextMenuMocPath content, the developer places these items
-  // inside their container's <ContextMenuContent>.
+  // CraftContextMenu renders as <ContextMenuContent> so that:
+  //   - standalone preview: fallback renders as a static panel (no parent Ctx)
+  //   - contextMenuMocPath usage: the linked .moc IS the <ContextMenuContent>
+  //     (wrapWithContextMenu places the linked placeholder directly at ContextMenu level)
   const lines: string[] = [];
-  lines.push(`${pad}<div className="${escapeAttr(panelCls)}"${styleAttr}>`);
+  lines.push(`${pad}<ContextMenuContent className="${escapeAttr(panelCls)}"${styleAttr}>`);
 
   for (let sectionIdx = 0; sectionIdx < menus.length; sectionIdx++) {
     const menu = menus[sectionIdx];
@@ -1668,7 +1668,7 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
     }
   }
 
-  lines.push(`${pad}</div>`);
+  lines.push(`${pad}</ContextMenuContent>`);
   return lines.join("\n");
 }
 
