@@ -1176,7 +1176,7 @@ export function CommandSeparator({ className = "", ...rest }: any) {
 
   calendar: `import { cn } from "@/components/ui/_cn";
 export function Calendar(props: any) {
-  const { className = "", style } = props;
+  const { className = "", style, todayBgClass = "" } = props;
   const days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
   const today = new Date();
   const currentDay = today.getDate();
@@ -1204,7 +1204,7 @@ export function Calendar(props: any) {
         {cells.map((d, i) => (
           <div key={i} className="text-center p-0">
             {d !== null ? (
-              <button type="button" className={cn("inline-flex items-center justify-center rounded-md text-sm h-8 w-8", d === currentDay ? "bg-primary text-primary-foreground" : "hover:bg-accent hover:text-accent-foreground")}>
+              <button type="button" className={cn("inline-flex items-center justify-center rounded-md text-sm h-8 w-8", d === currentDay ? cn(todayBgClass || "bg-primary", "text-primary-foreground") : "hover:bg-accent hover:text-accent-foreground")}>
                 {d}
               </button>
             ) : null}

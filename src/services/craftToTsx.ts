@@ -272,7 +272,7 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     tag: "Calendar",
     importFrom: "@/components/ui/calendar",
     importName: "Calendar",
-    propsMap: ["className"],
+    propsMap: ["className", "todayBgClass"],
     isContainer: false,
   },
   CraftResizable: {
@@ -451,7 +451,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftToggleGroup: { items: "Bold,Italic,Underline", type: "single", variant: "default", size: "default", disabled: false, gap: "1", orientation: "horizontal", tooltipText: "", tooltipSide: "", descriptions: "", cardBorderColor: "", cardBgColor: "", descriptionColor: "" },
   // Phase 2
   CraftSelect: { items: "Option 1,Option 2,Option 3", placeholder: "Select an option", tooltipText: "", tooltipSide: "" },
-  CraftCalendar: {},
+  CraftCalendar: { todayBgClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
   CraftChart: { chartType: "bar" },
