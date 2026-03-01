@@ -66,6 +66,21 @@ interface CraftMenubarProps {
   width?: string;
   height?: string;
   className?: string;
+  // Button styling
+  buttonBgClass?: string;
+  buttonTextClass?: string;
+  buttonBorderClass?: string;
+  buttonBorderWidth?: string;
+  buttonShadowClass?: string;
+  hoverBgClass?: string;
+  hoverTextClass?: string;
+  // Dropdown styling
+  dropdownBgClass?: string;
+  dropdownTextClass?: string;
+  dropdownBorderClass?: string;
+  dropdownBorderWidth?: string;
+  dropdownShadowClass?: string;
+  shortcutTextClass?: string;
 }
 
 export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
@@ -73,6 +88,19 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
   width = "auto",
   height = "auto",
   className = "",
+  buttonBgClass = "",
+  buttonTextClass = "",
+  buttonBorderClass = "",
+  buttonBorderWidth = "",
+  buttonShadowClass = "",
+  hoverBgClass = "",
+  hoverTextClass = "",
+  dropdownBgClass = "",
+  dropdownTextClass = "",
+  dropdownBorderClass = "",
+  dropdownBorderWidth = "",
+  dropdownShadowClass = "",
+  shortcutTextClass = "",
 }) => {
   const {
     connectors: { connect, drag },
@@ -83,6 +111,21 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const menus = parseMenuData(menuData);
+
+  const btnBorderWidthClass =
+    buttonBorderWidth === "0" ? "border-0"
+    : buttonBorderWidth === "2" ? "border-2"
+    : buttonBorderWidth === "4" ? "border-4"
+    : buttonBorderWidth === "8" ? "border-8"
+    : buttonBorderWidth === "1" ? "border"
+    : "";
+
+  const dropBorderWidthClass =
+    dropdownBorderWidth === "0" ? "border-0"
+    : dropdownBorderWidth === "2" ? "border-2"
+    : dropdownBorderWidth === "4" ? "border-4"
+    : dropdownBorderWidth === "8" ? "border-8"
+    : "border";
 
   return (
     <div
@@ -105,9 +148,14 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
             onClick={() => setActiveIndex(activeIndex === i ? null : i)}
             className={cn(
               "flex cursor-default select-none items-center rounded-sm px-3 py-1 text-sm font-medium outline-none",
+              buttonBgClass,
+              buttonTextClass,
+              btnBorderWidthClass,
+              buttonBorderClass,
+              buttonShadowClass,
               activeIndex === i
-                ? "bg-accent text-accent-foreground"
-                : "hover:bg-accent hover:text-accent-foreground",
+                ? cn(hoverBgClass || "bg-accent", hoverTextClass || "text-accent-foreground")
+                : cn(!hoverBgClass && "hover:bg-accent", !hoverTextClass && "hover:text-accent-foreground"),
             )}
           >
             {menu.label}
@@ -115,7 +163,14 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
 
           {activeIndex === i && (
             <div
-              className="absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-md border bg-popover p-1 shadow-md"
+              className={cn(
+                "absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-md p-1",
+                dropdownBgClass || "bg-popover",
+                dropBorderWidthClass,
+                dropdownBorderClass,
+                dropdownShadowClass || "shadow-md",
+                dropdownTextClass,
+              )}
               onMouseLeave={enabled ? undefined : () => setActiveIndex(null)}
             >
               {menu.items.map((item, j) => {
@@ -131,7 +186,7 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
                       <span className="mr-2 w-4 text-center text-xs">{item.checked ? "✓" : ""}</span>
                       <span className="flex-1">{item.label}</span>
                       {item.shortcut && (
-                        <span className="ml-auto text-xs text-muted-foreground">{item.shortcut}</span>
+                        <span className={cn("ml-auto text-xs", shortcutTextClass || "text-muted-foreground")}>{item.shortcut}</span>
                       )}
                     </div>
                   );
@@ -143,7 +198,7 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
                   >
                     <span className="flex-1">{item.label}</span>
                     {item.shortcut && (
-                      <span className="ml-auto text-xs text-muted-foreground">{item.shortcut}</span>
+                      <span className={cn("ml-auto text-xs", shortcutTextClass || "text-muted-foreground")}>{item.shortcut}</span>
                     )}
                   </div>
                 );
@@ -163,6 +218,19 @@ CraftMenubar.craft = {
     width: "auto",
     height: "auto",
     className: "",
+    buttonBgClass: "",
+    buttonTextClass: "",
+    buttonBorderClass: "",
+    buttonBorderWidth: "",
+    buttonShadowClass: "",
+    hoverBgClass: "",
+    hoverTextClass: "",
+    dropdownBgClass: "",
+    dropdownTextClass: "",
+    dropdownBorderClass: "",
+    dropdownBorderWidth: "",
+    dropdownShadowClass: "",
+    shortcutTextClass: "",
   },
   rules: {
     canDrag: () => true,

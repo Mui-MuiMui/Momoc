@@ -1593,15 +1593,56 @@ function renderMenubar(node: CraftNodeData, indent: number): string {
   const barCls = ["flex h-9 items-center space-x-1 rounded-md border bg-background p-1", className]
     .filter(Boolean).join(" ");
 
+  // Button styling
+  const buttonBgClass = (node.props?.buttonBgClass as string) || "";
+  const buttonTextClass = (node.props?.buttonTextClass as string) || "";
+  const buttonBorderClass = (node.props?.buttonBorderClass as string) || "";
+  const buttonBorderWidth = (node.props?.buttonBorderWidth as string) || "";
+  const buttonShadowClass = (node.props?.buttonShadowClass as string) || "";
+  const hoverBgClass = (node.props?.hoverBgClass as string) || "";
+  const hoverTextClass = (node.props?.hoverTextClass as string) || "";
+  const btnBwClass = buttonBorderWidth === "0" ? "border-0"
+    : buttonBorderWidth === "2" ? "border-2"
+    : buttonBorderWidth === "4" ? "border-4"
+    : buttonBorderWidth === "8" ? "border-8"
+    : buttonBorderWidth === "1" ? "border" : "";
+  const btnCls = [
+    "flex cursor-default select-none items-center rounded-sm px-3 py-1 text-sm font-medium outline-none",
+    buttonBgClass, buttonTextClass, btnBwClass, buttonBorderClass, buttonShadowClass,
+    hoverBgClass ? `hover:${hoverBgClass}` : "hover:bg-accent",
+    hoverTextClass ? `hover:${hoverTextClass}` : "hover:text-accent-foreground",
+  ].filter(Boolean).join(" ");
+
+  // Dropdown styling
+  const dropdownBgClass = (node.props?.dropdownBgClass as string) || "";
+  const dropdownTextClass = (node.props?.dropdownTextClass as string) || "";
+  const dropdownBorderClass = (node.props?.dropdownBorderClass as string) || "";
+  const dropdownBorderWidth = (node.props?.dropdownBorderWidth as string) || "";
+  const dropdownShadowClass = (node.props?.dropdownShadowClass as string) || "";
+  const shortcutTextClass = (node.props?.shortcutTextClass as string) || "";
+  const dropBwClass = dropdownBorderWidth === "0" ? "border-0"
+    : dropdownBorderWidth === "2" ? "border-2"
+    : dropdownBorderWidth === "4" ? "border-4"
+    : dropdownBorderWidth === "8" ? "border-8"
+    : "border";
+  const dropCls = [
+    "hidden group-hover:block absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-md p-1",
+    dropdownBgClass || "bg-popover",
+    dropBwClass, dropdownBorderClass,
+    dropdownShadowClass || "shadow-md",
+    dropdownTextClass,
+  ].filter(Boolean).join(" ");
+  const shortcutCls = shortcutTextClass || "text-muted-foreground";
+
   const lines: string[] = [];
   lines.push(`${pad}<div className="${escapeAttr(barCls)}"${styleAttr}>`);
 
   for (const menu of menus) {
     lines.push(`${pad}  <div className="relative group">`);
-    lines.push(`${pad}    <button type="button" className="flex cursor-default select-none items-center rounded-sm px-3 py-1 text-sm font-medium outline-none hover:bg-accent hover:text-accent-foreground">`);
+    lines.push(`${pad}    <button type="button" className="${escapeAttr(btnCls)}">`);
     lines.push(`${pad}      ${escapeJsx(menu.label || "")}`);
     lines.push(`${pad}    </button>`);
-    lines.push(`${pad}    <div className="hidden group-hover:block absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-md border bg-popover p-1 shadow-md">`);
+    lines.push(`${pad}    <div className="${escapeAttr(dropCls)}">`);
     for (const item of (menu.items || [])) {
       if (item.type === "separator") {
         lines.push(`${pad}      <div className="my-1 h-px bg-border" />`);
@@ -1609,12 +1650,12 @@ function renderMenubar(node: CraftNodeData, indent: number): string {
         lines.push(`${pad}      <div className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent">`);
         lines.push(`${pad}        <span className="mr-2 w-4 text-center text-xs">${item.checked ? "✓" : ""}</span>`);
         lines.push(`${pad}        <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
-        if (item.shortcut) lines.push(`${pad}        <span className="ml-auto text-xs tracking-widest text-muted-foreground">${escapeJsx(item.shortcut)}</span>`);
+        if (item.shortcut) lines.push(`${pad}        <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
         lines.push(`${pad}      </div>`);
       } else {
         lines.push(`${pad}      <div className="flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent">`);
         lines.push(`${pad}        <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
-        if (item.shortcut) lines.push(`${pad}        <span className="ml-auto text-xs tracking-widest text-muted-foreground">${escapeJsx(item.shortcut)}</span>`);
+        if (item.shortcut) lines.push(`${pad}        <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
         lines.push(`${pad}      </div>`);
       }
     }
