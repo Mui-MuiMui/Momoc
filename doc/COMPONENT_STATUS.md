@@ -56,7 +56,7 @@ shadcn/ui 公式コンポーネントの実装状況と確認状態を管理す�
 | Component   | Status      | Confirmed | Notes                                                        |
 | ----------- | ----------- | --------- | ------------------------------------------------------------ |
 | Table       | Implemented | [x]       |                                                              |
-| Data Table  | Planned     | [ ]       | Table の高機能版（ソート・フィルタ等）                       |
+| Data Table  | Implemented | [x]       | Table の高機能版（ソート・フィルタ等）                       |
 | Badge       | Implemented | [x]       |                                                              |
 | Avatar      | Implemented | [x]       |                                                              |
 | Calendar    | Implemented | [x]       |                                                              |
@@ -107,8 +107,8 @@ shadcn/ui 公式コンポーネントの実装状況と確認状態を管理す�
 
 ## Summary
 
-- **Confirmed**: 41
-- **Implemented**: 46
-- **Planned**: 1 (Date Picker)
-- **TBD**: 9 (Button Group, Input Group, Input OTP, Sidebar, Typography, Kbd, Empty, Spinner, Item)
-- **Not Planned**: 5 (Toast, Field, Direction, Native Select, ContextMenu in Utility)
+- **Confirmed**: 42
+- **Implemented**: 47
+- **Planned**: 0
+- **TBD**: 9 (Button Group, Input Group, Input OTP, Sidebar, Item, Typography, Kbd, Empty, Spinner)
+- **Not Planned**: 5 (Toast, Field, Native Select, Direction, ContextMenu in Utility)
