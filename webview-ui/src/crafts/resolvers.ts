@@ -47,7 +47,7 @@ import { CraftDropdownMenu } from "./shadcn/CraftDropdownMenu";
 import { CraftContextMenu } from "./shadcn/CraftContextMenu";
 import { CraftPopover } from "./shadcn/CraftPopover";
 import { CraftHoverCard } from "./shadcn/CraftHoverCard";
-import { CraftNavigationMenu } from "./shadcn/CraftNavigationMenu";
+import { CraftNavigationMenu, NavMenuSlot } from "./shadcn/CraftNavigationMenu";
 import { CraftMenubar } from "./shadcn/CraftMenubar";
 import { CraftCommand } from "./shadcn/CraftCommand";
 import { CraftTooltip } from "./shadcn/CraftTooltip";
@@ -108,6 +108,7 @@ export const resolvers = {
   CraftPopover,
   CraftHoverCard,
   CraftNavigationMenu,
+  NavMenuSlot,
   CraftMenubar,
   CraftCommand,
   CraftTooltip,
@@ -410,7 +411,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Calendar",
     defaultProps: {},
-    enabled: false,
+    enabled: true,
   },
   {
     resolverKey: "CraftResizable",
@@ -451,7 +452,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Navigation",
     defaultProps: {},
-    enabled: false,
+    enabled: true,
   },
   {
     resolverKey: "CraftMenubar",

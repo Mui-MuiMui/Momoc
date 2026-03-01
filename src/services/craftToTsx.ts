@@ -362,7 +362,7 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
   CraftNavigationMenu: {
     tag: "nav",
     propsMap: ["className"],
-    isContainer: false,
+    isContainer: true,
   },
   CraftMenubar: {
     tag: "div",
@@ -465,7 +465,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftContextMenu: { linkedMocPath: "" },
   CraftPopover: { triggerText: "Open Popover", linkedMocPath: "" },
   CraftHoverCard: { triggerText: "Hover me", linkedMocPath: "" },
-  CraftNavigationMenu: { items: "Home,About,Services,Contact", linkedMocPath: "" },
+  CraftNavigationMenu: {},
   CraftMenubar: { items: "File,Edit,View,Help", linkedMocPath: "" },
   CraftCommand: { placeholder: "Type a command or search...", items: "Calendar,Search,Settings", linkedMocPath: "" },
   CraftCombobox: { placeholder: "Select an option...", items: "Apple,Banana,Cherry", linkedMocPath: "", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
