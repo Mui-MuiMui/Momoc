@@ -109,6 +109,9 @@ const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassNa
 /** Props that use the Tailwind border class palette picker UI (stores "border-red-500" style class names). */
 const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor"]);
 
+/** Props that use the Tailwind text class palette picker UI (stores "text-red-500" style class names). */
+const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass"]);
+
 /**
  * Tailwind CSS color palette (hex) — same data as TailwindEditor.tsx.
  */
@@ -768,6 +771,101 @@ export function PropEditor() {
             onChange={(e) => handlePropChange(key, e.target.value)}
             className={`${INPUT_CLASS} w-full`}
             placeholder="border-gray-300 ..."
+          />
+        </div>
+      );
+    }
+
+    // Custom UI for Tailwind text class palette props (todayTextClass)
+    if (TAILWIND_TEXT_PALETTE_PROPS.has(key)) {
+      const currentValue = String(value ?? "");
+      const textInfo = parseTailwindColorClass(currentValue, "text");
+      const family = colorFamilies[key] || textInfo?.family || "gray";
+      const setFamily = (f: string) => setColorFamilies((prev) => ({ ...prev, [key]: f }));
+      const isActive = (s: string) => currentValue === `text-${family}-${s}`;
+
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
+            {key}
+          </label>
+          {/* Special colors: none / black / white */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => handlePropChange(key, "")}
+              className={`rounded px-1.5 py-0.5 text-[10px] transition-colors ${
+                !currentValue
+                  ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+                  : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+              }`}
+            >
+              none
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePropChange(key, currentValue === "text-black" ? "" : "text-black")}
+              title="black"
+              className={`h-3.5 w-3.5 rounded-sm border border-[var(--vscode-input-border,#555)] transition-all ${
+                currentValue === "text-black" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+              }`}
+              style={{ backgroundColor: "#000" }}
+            />
+            <button
+              type="button"
+              onClick={() => handlePropChange(key, currentValue === "text-white" ? "" : "text-white")}
+              title="white"
+              className={`h-3.5 w-3.5 rounded-sm border border-[var(--vscode-input-border,#555)] transition-all ${
+                currentValue === "text-white" ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+              }`}
+              style={{ backgroundColor: "#fff" }}
+            />
+            {textInfo && (
+              <span className="ml-auto shrink-0 text-[9px] text-[var(--vscode-descriptionForeground,#888)]">
+                {textInfo.family}-{textInfo.shade}
+              </span>
+            )}
+          </div>
+          {/* Palette family selector */}
+          <div className="flex flex-wrap gap-1">
+            {PALETTE_FAMILIES.map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFamily(f)}
+                title={f}
+                className={`h-3.5 w-3.5 rounded-sm transition-all ${
+                  family === f ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-110"
+                }`}
+                style={{ backgroundColor: CP[f]["500"] }}
+              />
+            ))}
+          </div>
+          {/* Shade swatches */}
+          <div className="flex gap-0.5">
+            {PALETTE_SHADES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => handlePropChange(key, isActive(s) ? "" : `text-${family}-${s}`)}
+                title={`${family}-${s}`}
+                className={`h-4 flex-1 rounded-sm transition-all ${
+                  isActive(s) ? "ring-2 ring-[var(--vscode-focusBorder,#007fd4)] ring-offset-1 ring-offset-[var(--vscode-editor-background,#1e1e1e)]" : "hover:scale-y-125"
+                }`}
+                style={{ backgroundColor: CP[family][s] }}
+              />
+            ))}
+          </div>
+          <div className="flex justify-between text-[8px] text-[var(--vscode-descriptionForeground,#666)]">
+            <span>50</span><span>500</span><span>950</span>
+          </div>
+          {/* Editable text field for fine-tuning */}
+          <input
+            type="text"
+            value={currentValue}
+            onChange={(e) => handlePropChange(key, e.target.value)}
+            className={`${INPUT_CLASS} w-full`}
+            placeholder="text-gray-700 ..."
           />
         </div>
       );
