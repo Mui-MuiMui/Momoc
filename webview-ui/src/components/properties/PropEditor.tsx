@@ -24,7 +24,7 @@ const PROP_OPTIONS: Record<string, string[]> = {
   overlayType: ["none", "dialog", "alert-dialog", "sheet", "drawer", "popover", "dropdown-menu"],
   sheetSide: ["top", "right", "bottom", "left"],
   tooltipSide: ["", "top", "right", "bottom", "left"],
-  tooltipTrigger: ["", "hover", "focus"],
+  tooltipTrigger: ["hover", "focus"],
   toastPosition: ["bottom-right", "bottom-left", "top-right", "top-left"],
 };
 
@@ -226,30 +226,19 @@ const OVERLAY_CLASS_PRESETS: { label: string; value: string }[] = [
 
 // --- Property grouping ---
 
-type PropGroup = "common" | "flow" | "absolute" | "panel" | "component";
+type PropGroup = "common" | "flow" | "absolute" | "component";
 
 const GROUP_LABELS: Record<PropGroup, string> = {
   common: "共通",
   flow: "フロー配置",
   absolute: "自由配置",
-  panel: "インタラクション",
   component: "コンポーネント",
 };
 
-const GROUP_ORDER: PropGroup[] = ["common", "flow", "absolute", "panel", "component"];
+const GROUP_ORDER: PropGroup[] = ["common", "flow", "absolute", "component"];
 
 /** 共通プロパティ (width/height) — 常時表示 */
 const COMMON_KEYS = new Set(["width", "height"]);
-
-/** インタラクション共通プロパティ — 対象外コンポーネント以外で常時表示 */
-const PANEL_COMMON_KEYS = new Set(["tooltipText", "tooltipSide", "tooltipTrigger", "contextMenuMocPath"]);
-
-/** インタラクションパネルを表示しないコンポーネント（Tooltip/ContextMenu 自身・スロット系） */
-const PANEL_EXCLUDED_COMPONENTS = new Set([
-  "Tooltip", "ContextMenu", "FreeCanvas",
-  "ResizablePanelSlot", "TableCellSlot", "DataTableSlot",
-  "NavMenuSlot", "CollapsibleSlot", "TabContentSlot",
-]);
 
 /** フロー配置専用プロパティ — layoutMode === "flow" のみ表示 */
 const FLOW_KEYS = new Set([
@@ -410,19 +399,12 @@ export function PropEditor() {
     ? Array.from(ABSOLUTE_KEYS).map((k) => [k, selectedProps[k] ?? ABSOLUTE_DEFAULTS[k]])
     : [];
 
-  // インタラクション共通グループ: 対象外コンポーネント以外で常時表示、selectedProps に無ければ ""
-  const isPanelExcluded = PANEL_EXCLUDED_COMPONENTS.has(componentName);
-  const panelEntries: [string, unknown][] = isPanelExcluded
-    ? []
-    : Array.from(PANEL_COMMON_KEYS).map((k) => [k, selectedProps[k] ?? ""]);
-
-  // コンポーネントグループ: craftDefaultProps に定義されているキーのうち、レイアウト系・パネル共通を除いたもの
+  // コンポーネントグループ: craftDefaultProps に定義されているキーのうち、レイアウト系を除いたもの
   const componentEntries: [string, unknown][] = Object.entries(selectedProps).filter(
     ([key]) =>
       key !== "children" &&
       key !== "className" &&
       !LAYOUT_ALL_KEYS.has(key) &&
-      !PANEL_COMMON_KEYS.has(key) &&
       !excludedProps.has(key) &&
       (craftDefaultProps ? key in craftDefaultProps : true),
   );
@@ -431,7 +413,6 @@ export function PropEditor() {
     ["common", commonEntries],
     ["flow", flowEntries],
     ["absolute", absoluteEntries],
-    ["panel", panelEntries],
     ["component", componentEntries],
   ]);
 
