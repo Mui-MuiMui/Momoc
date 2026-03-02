@@ -36,7 +36,6 @@ export const CraftDiv: UserComponent<CraftDivProps> = ({
 CraftDiv.craft = {
   displayName: "Div",
   props: {
-    contextMenuMocPath: "",
     width: "auto",
     height: "auto",
     className: "",

@@ -45,7 +45,7 @@ import { CraftDialog } from "./shadcn/CraftDialog";
 import { CraftAlertDialog } from "./shadcn/CraftAlertDialog";
 import { CraftSheet } from "./shadcn/CraftSheet";
 import { CraftDrawer } from "./shadcn/CraftDrawer";
-import { CraftDropdownMenu } from "./shadcn/CraftDropdownMenu";
+import { CraftDropdownMenu, DEFAULT_DROPDOWN_DATA } from "./shadcn/CraftDropdownMenu";
 import { CraftContextMenu, DEFAULT_CONTEXTMENU_DATA } from "./shadcn/CraftContextMenu";
 import { CraftPopover } from "./shadcn/CraftPopover";
 import { CraftHoverCard } from "./shadcn/CraftHoverCard";
@@ -296,7 +296,7 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "ChevronRight",
     defaultProps: {},
-    enabled: false,
+    enabled: true,
   },
   {
     resolverKey: "CraftCheckbox",
@@ -471,6 +471,14 @@ export const paletteItems: PaletteItem[] = [
   },
   // Phase 4: Overlay components (standalone kept in palette)
   {
+    resolverKey: "CraftHoverCard",
+    label: "Hover Card",
+    category: "shadcn",
+    icon: "MousePointer",
+    defaultProps: {},
+    enabled: true,
+  },
+  {
     resolverKey: "CraftNavigationMenu",
     label: "Navigation Menu",
     category: "shadcn",
@@ -484,6 +492,14 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Menu",
     defaultProps: { menuData: JSON.stringify(DEFAULT_MENUBAR_DATA) },
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftDropdownMenu",
+    label: "Dropdown Menu",
+    category: "shadcn",
+    icon: "ChevronDown",
+    defaultProps: { menuData: JSON.stringify(DEFAULT_DROPDOWN_DATA) },
     enabled: true,
   },
   {

@@ -135,8 +135,6 @@ CraftToggleGroup.craft = {
     disabled: false,
     gap: "1",
     orientation: "horizontal",
-    tooltipText: "",
-    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

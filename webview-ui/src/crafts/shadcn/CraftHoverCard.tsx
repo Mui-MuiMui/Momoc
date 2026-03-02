@@ -4,6 +4,10 @@ import { cn } from "../../utils/cn";
 interface CraftHoverCardProps {
   triggerText?: string;
   linkedMocPath?: string;
+  cardBorderClass?: string;
+  cardBorderWidth?: string;
+  cardShadowClass?: string;
+  cardBorderRadius?: string;
   width?: string;
   height?: string;
   className?: string;
@@ -12,6 +16,10 @@ interface CraftHoverCardProps {
 export const CraftHoverCard: UserComponent<CraftHoverCardProps> = ({
   triggerText = "Hover me",
   linkedMocPath = "",
+  cardBorderClass = "",
+  cardBorderWidth = "",
+  cardShadowClass = "",
+  cardBorderRadius = "rounded-md",
   width = "auto",
   height = "auto",
   className = "",
@@ -44,6 +52,10 @@ CraftHoverCard.craft = {
   props: {
     triggerText: "Hover me",
     linkedMocPath: "",
+    cardBorderClass: "",
+    cardBorderWidth: "",
+    cardShadowClass: "",
+    cardBorderRadius: "rounded-md",
     width: "auto",
     height: "auto",
     className: "",

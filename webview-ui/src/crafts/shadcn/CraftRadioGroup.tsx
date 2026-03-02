@@ -142,8 +142,6 @@ CraftRadioGroup.craft = {
     cardBorderColor: "",
     cardBgColor: "",
     descriptionColor: "",
-    tooltipText: "",
-    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

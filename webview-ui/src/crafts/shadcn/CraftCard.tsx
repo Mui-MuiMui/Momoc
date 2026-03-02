@@ -63,7 +63,6 @@ CraftCard.craft = {
   props: {
     title: "Card Title",
     description: "",
-    contextMenuMocPath: "",
     linkedMocPath: "",
     width: "auto",
     height: "auto",

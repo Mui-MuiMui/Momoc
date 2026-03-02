@@ -63,8 +63,6 @@ CraftCheckbox.craft = {
     label: "Accept terms",
     checked: false,
     disabled: false,
-    tooltipText: "",
-    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

@@ -47,8 +47,6 @@ CraftSelect.craft = {
   props: {
     items: "Option 1,Option 2,Option 3",
     placeholder: "Select an option",
-    tooltipText: "",
-    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

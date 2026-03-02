@@ -67,8 +67,6 @@ CraftAvatar.craft = {
     width: "auto",
     height: "auto",
     className: "",
-    tooltipText: "",
-    tooltipSide: "",
   },
   rules: {
     canDrag: () => true,

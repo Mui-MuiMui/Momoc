@@ -54,8 +54,6 @@ CraftLabel.craft = {
   props: {
     text: "Label",
     htmlFor: "",
-    tooltipText: "",
-    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

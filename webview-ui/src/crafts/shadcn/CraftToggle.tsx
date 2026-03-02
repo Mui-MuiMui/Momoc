@@ -97,8 +97,6 @@ CraftToggle.craft = {
     pressed: false,
     disabled: false,
     icon: "",
-    tooltipText: "",
-    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

@@ -25,6 +25,8 @@ const PROP_OPTIONS: Record<string, string[]> = {
   sheetSide: ["top", "right", "bottom", "left"],
   tooltipSide: ["", "top", "right", "bottom", "left"],
   tooltipTrigger: ["hover", "focus"],
+  hoverCardSide: ["bottom", "top", "left", "right"],
+  hoverCardTrigger: ["hover", "focus"],
   toastPosition: ["bottom-right", "bottom-left", "top-right", "top-left"],
 };
 
@@ -101,6 +103,14 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   ContextMenu: {
     panelShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
   },
+  DropdownMenu: {
+    triggerShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    dropdownShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+  },
+  HoverCard: {
+    cardShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    cardBorderRadius: ["", "rounded", "rounded-md", "rounded-lg", "rounded-xl"],
+  },
   Pagination: {
     activeShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
   },
@@ -127,6 +137,13 @@ const BUTTON_GROUP_PROPS: Record<string, Record<string, string[]>> = {
   ContextMenu: {
     panelBorderWidth: ["", "0", "1", "2", "4", "8"],
   },
+  DropdownMenu: {
+    triggerBorderWidth: ["", "0", "1", "2", "4", "8"],
+    dropdownBorderWidth: ["", "0", "1", "2", "4", "8"],
+  },
+  HoverCard: {
+    cardBorderWidth: ["", "0", "1", "2", "4", "8"],
+  },
   Pagination: {
     activeBorderWidth: ["", "0", "1", "2", "4", "8"],
   },
@@ -143,19 +160,19 @@ const INPUT_CLASS =
 const MULTILINE_PROPS = new Set(["text", "title", "description", "placeholder", "label", "triggerText", "tooltipText", "toastText"]);
 
 /** Props that use the .moc file browse UI (text input + browse button). */
-const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath"]);
+const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath", "hoverCardMocPath"]);
 
 /** Props that use the color palette picker UI (stores hex values). */
 const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor", "labelColor"]);
 
 /** Props that use the Tailwind bg class palette picker UI (stores "bg-red-500" style class names). */
-const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass", "selectedBgClass", "headerBgClass", "hoverRowClass", "selectedRowClass"]);
+const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "triggerBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass", "selectedBgClass", "headerBgClass", "hoverRowClass", "selectedRowClass"]);
 
 /** Props that use the Tailwind border class palette picker UI (stores "border-red-500" style class names). */
-const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass", "calendarBorderClass", "todayBorderClass", "selectedBorderClass", "headerBorderClass", "tableBorderClass"]);
+const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "triggerBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass", "calendarBorderClass", "todayBorderClass", "selectedBorderClass", "headerBorderClass", "tableBorderClass", "cardBorderClass"]);
 
 /** Props that use the Tailwind text class palette picker UI (stores "text-red-500" style class names). */
-const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass", "hoverTextClass", "buttonTextClass", "dropdownTextClass", "shortcutTextClass", "panelTextClass", "activeTextClass", "selectedTextClass", "headerTextClass", "headerHoverTextClass", "sortIconClass", "filterIconClass"]);
+const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass", "hoverTextClass", "buttonTextClass", "triggerTextClass", "dropdownTextClass", "shortcutTextClass", "checkTextClass", "panelTextClass", "activeTextClass", "selectedTextClass", "headerTextClass", "headerHoverTextClass", "sortIconClass", "filterIconClass"]);
 
 /**
  * Tailwind CSS color palette (hex) — same data as TailwindEditor.tsx.
@@ -239,6 +256,37 @@ const GROUP_ORDER: PropGroup[] = ["common", "flow", "absolute", "component"];
 
 /** 共通プロパティ (width/height) — 常時表示 */
 const COMMON_KEYS = new Set(["width", "height"]);
+
+/** インタラクション共通プロパティ — 対象外コンポーネント以外で常時表示 */
+const INTERACTION_KEYS = new Set(["tooltipText", "tooltipSide", "tooltipTrigger", "hoverCardMocPath", "hoverCardSide", "hoverCardTrigger", "contextMenuMocPath"]);
+
+/** インタラクション共通プロパティのグループ間セパレーターマーカー（表示順に定義） */
+const INTERACTION_ORDERED: string[] = [
+  "__sep__",
+  "tooltipText", "tooltipSide", "tooltipTrigger",
+  "__sep__",
+  "hoverCardMocPath", "hoverCardSide", "hoverCardTrigger",
+  "__sep__",
+  "contextMenuMocPath",
+];
+
+/** インタラクションプロパティを表示しないコンポーネント（Tooltip/ContextMenu自身・スロット系） */
+const INTERACTION_EXCLUDED_COMPONENTS = new Set([
+  "Tooltip", "ContextMenu", "HoverCard", "FreeCanvas",
+  "ResizablePanelSlot", "TableCellSlot", "DataTableSlot",
+  "NavMenuSlot", "CollapsibleSlot", "TabContentSlot",
+]);
+
+/** インタラクションプロパティのデフォルト値 */
+const INTERACTION_DEFAULTS: Record<string, unknown> = {
+  tooltipText: "",
+  tooltipSide: "",
+  tooltipTrigger: "hover",
+  contextMenuMocPath: "",
+  hoverCardMocPath: "",
+  hoverCardSide: "bottom",
+  hoverCardTrigger: "hover",
+};
 
 /** フロー配置専用プロパティ — layoutMode === "flow" のみ表示 */
 const FLOW_KEYS = new Set([
@@ -399,18 +447,25 @@ export function PropEditor() {
     ? Array.from(ABSOLUTE_KEYS).map((k) => [k, selectedProps[k] ?? ABSOLUTE_DEFAULTS[k]])
     : [];
 
-  // コンポーネントグループ: craftDefaultProps に定義されているキーのうち、レイアウト系を除いたもの
+  // インタラクション共通: 対象外コンポーネント以外で常時表示、selectedProps に無ければデフォルト値
+  const isInteractionExcluded = INTERACTION_EXCLUDED_COMPONENTS.has(componentName);
+  const interactionEntries: [string, unknown][] = isInteractionExcluded
+    ? []
+    : INTERACTION_ORDERED.map((k) => [k, k === "__sep__" ? null : (selectedProps[k] ?? INTERACTION_DEFAULTS[k])]);
+
+  // コンポーネントグループ: craftDefaultProps に定義されているキーのうち、レイアウト系・インタラクション系を除いたもの
   const componentEntries: [string, unknown][] = Object.entries(selectedProps).filter(
     ([key]) =>
       key !== "children" &&
       key !== "className" &&
       !LAYOUT_ALL_KEYS.has(key) &&
+      !INTERACTION_KEYS.has(key) &&
       !excludedProps.has(key) &&
       (craftDefaultProps ? key in craftDefaultProps : true),
   );
 
   const grouped = new Map<PropGroup, [string, unknown][]>([
-    ["common", commonEntries],
+    ["common", [...commonEntries, ...interactionEntries]],
     ["flow", flowEntries],
     ["absolute", absoluteEntries],
     ["component", componentEntries],
@@ -1291,11 +1346,15 @@ export function PropEditor() {
             >
               <span className="text-[10px]">{isCollapsed ? "\u25b6" : "\u25bc"}</span>
               {GROUP_LABELS[group]}
-              <span className="ml-auto text-[10px] font-normal opacity-60">{entries.length}</span>
+              <span className="ml-auto text-[10px] font-normal opacity-60">{entries.filter(([k]) => k !== "__sep__").length}</span>
             </button>
             {!isCollapsed && (
               <div className="flex flex-col gap-2">
-                {entries.map(([key, value]) => renderProp(key, value))}
+                {entries.map(([key, value], i) =>
+                  key === "__sep__"
+                    ? <hr key={`sep-${i}`} className="border-[var(--vscode-panel-border,#444)]" />
+                    : renderProp(key, value)
+                )}
               </div>
             )}
           </div>

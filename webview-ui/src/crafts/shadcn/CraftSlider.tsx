@@ -65,8 +65,6 @@ CraftSlider.craft = {
     className: "",
     fillClassName: "",
     trackClassName: "",
-    tooltipText: "",
-    tooltipSide: "",
   },
   rules: {
     canDrag: () => true,

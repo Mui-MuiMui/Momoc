@@ -124,8 +124,6 @@ CraftButton.craft = {
     overlayWidth: "",
     overlayHeight: "",
     overlayClassName: "",
-    tooltipText: "",
-    tooltipSide: "",
     toastText: "",
     toastPosition: "bottom-right",
     width: "auto",

@@ -351,11 +351,8 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     isContainer: false,
   },
   CraftDropdownMenu: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["className"],
-    textProp: "triggerText",
+    tag: "div",
+    propsMap: [],
     isContainer: false,
   },
   CraftContextMenu: {
@@ -424,7 +421,8 @@ const OVERLAY_IMPORTS: Record<string, { from: string; names: string[] }> = {
   sheet: { from: "@/components/ui/sheet", names: ["Sheet", "SheetTrigger", "SheetContent"] },
   drawer: { from: "@/components/ui/drawer", names: ["Drawer", "DrawerTrigger", "DrawerContent"] },
   popover: { from: "@/components/ui/popover", names: ["Popover", "PopoverTrigger", "PopoverContent"] },
-  "dropdown-menu": { from: "@/components/ui/dropdown-menu", names: ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent"] },
+  "dropdown-menu": { from: "@/components/ui/dropdown-menu", names: ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuCheckboxItem", "DropdownMenuSeparator", "DropdownMenuLabel", "DropdownMenuShortcut"] },
+  "hover-card": { from: "@/components/ui/hover-card", names: ["HoverCard", "HoverCardTrigger", "HoverCardContent"] },
 };
 
 const TOOLTIP_IMPORT = { from: "@/components/ui/tooltip", names: ["TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent"] };
@@ -459,6 +457,11 @@ const DEFAULT_MENUBAR_DATA_STR = JSON.stringify([
   { label: "Help", items: [{ type: "item", label: "Documentation" }, { type: "item", label: "About" }] },
 ]);
 
+/** Default DropdownMenu data (matches DEFAULT_DROPDOWN_DATA in CraftDropdownMenu.tsx) */
+const DEFAULT_DROPDOWN_DATA_STR = JSON.stringify([
+  { label: "", items: [{ type: "item", label: "Profile" }, { type: "item", label: "Settings" }, { type: "separator" }, { type: "checkbox", label: "Notifications", checked: false }, { type: "separator" }, { type: "item", label: "Log out" }] },
+]);
+
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
@@ -481,7 +484,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftAlert: { title: "Alert", description: "This is an alert message.", variant: "default", icon: "AlertCircle" },
   CraftAspectRatio: { ratio: 1.78, width: "auto", height: "auto" },
   CraftAvatar: { src: "", fallback: "AB", size: "default", width: "auto", height: "auto", tooltipText: "", tooltipSide: "" },
-  CraftBreadcrumb: { items: "Home,Products,Current" },
+  CraftBreadcrumb: { items: "Home,Products,Current", maxVisible: "0" },
   CraftCheckbox: { label: "Accept terms", checked: false, disabled: false, tooltipText: "", tooltipSide: "" },
   CraftCollapsible: { open: false, triggerStyle: "chevron", linkedMocPath: "" },
   CraftPagination: { totalPages: 5, currentPage: 1 },
@@ -512,10 +515,10 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftAlertDialog: { triggerText: "Open Alert", linkedMocPath: "" },
   CraftSheet: { triggerText: "Open Sheet", side: "right", linkedMocPath: "" },
   CraftDrawer: { triggerText: "Open Drawer", linkedMocPath: "" },
-  CraftDropdownMenu: { triggerText: "Open Menu", linkedMocPath: "" },
+  CraftDropdownMenu: { triggerText: "Open Menu", menuData: DEFAULT_DROPDOWN_DATA_STR },
   CraftContextMenu: { menuData: DEFAULT_CONTEXTMENU_DATA_STR },
   CraftPopover: { triggerText: "Open Popover", linkedMocPath: "" },
-  CraftHoverCard: { triggerText: "Hover me", linkedMocPath: "" },
+  CraftHoverCard: { triggerText: "Hover me", linkedMocPath: "", cardBorderRadius: "rounded-md" },
   CraftNavigationMenu: {},
   CraftMenubar: { menuData: DEFAULT_MENUBAR_DATA_STR },
   CraftCommand: { placeholder: "Type a command or search...", items: "Calendar,Search,Settings", linkedMocPath: "" },
@@ -574,6 +577,20 @@ export function craftStateToTsx(
       addImport("@/components/ui/accordion", "AccordionItem");
       addImport("@/components/ui/accordion", "AccordionTrigger");
       addImport("@/components/ui/accordion", "AccordionContent");
+    }
+
+    // Collect breadcrumb sub-component imports
+    if (resolvedName === "CraftBreadcrumb") {
+      addImport("@/components/ui/breadcrumb", "BreadcrumbList");
+      addImport("@/components/ui/breadcrumb", "BreadcrumbItem");
+      addImport("@/components/ui/breadcrumb", "BreadcrumbLink");
+      addImport("@/components/ui/breadcrumb", "BreadcrumbPage");
+      addImport("@/components/ui/breadcrumb", "BreadcrumbSeparator");
+      addImport("@/components/ui/breadcrumb", "BreadcrumbEllipsis");
+      addImport("@/components/ui/dropdown-menu", "DropdownMenu");
+      addImport("@/components/ui/dropdown-menu", "DropdownMenuTrigger");
+      addImport("@/components/ui/dropdown-menu", "DropdownMenuContent");
+      addImport("@/components/ui/dropdown-menu", "DropdownMenuItem");
     }
 
     // Collect collapsible sub-component imports
@@ -660,10 +677,39 @@ export function craftStateToTsx(
       }
     }
 
+    // Collect hover-card imports for containers with hoverCardMocPath
+    const hoverCardMocPathProp = node.props?.hoverCardMocPath as string | undefined;
+    if (hoverCardMocPathProp) {
+      const hcImport = OVERLAY_IMPORTS["hover-card"];
+      for (const name of hcImport.names) {
+        addImport(hcImport.from, name);
+      }
+    }
+
     // CraftContextMenu: exports <ContextMenuContent> + item-level components
     if (resolvedName === "CraftContextMenu") {
       for (const name of ["ContextMenuContent", "ContextMenuItem", "ContextMenuCheckboxItem", "ContextMenuSeparator", "ContextMenuLabel"]) {
         addImport(CONTEXT_MENU_IMPORT.from, name);
+      }
+      return;
+    }
+
+    // CraftDropdownMenu: full dropdown-menu structure
+    if (resolvedName === "CraftDropdownMenu") {
+      for (const name of OVERLAY_IMPORTS["dropdown-menu"].names) {
+        addImport(OVERLAY_IMPORTS["dropdown-menu"].from, name);
+      }
+      return;
+    }
+
+    // CraftHoverCard: add hover-card imports when linkedMocPath is set
+    if (resolvedName === "CraftHoverCard") {
+      const linkedMocPath = node.props?.linkedMocPath as string | undefined;
+      if (linkedMocPath) {
+        const hcImport = OVERLAY_IMPORTS["hover-card"];
+        for (const name of hcImport.names) {
+          addImport(hcImport.from, name);
+        }
       }
       return;
     }
@@ -936,6 +982,25 @@ export function craftStateToTsx(
     ].join("\n");
   }
 
+  /** Wrap rendered element with HoverCard if hoverCardMocPath is set */
+  function wrapWithHoverCard(rendered: string, props: Record<string, unknown>, pad: string): string {
+    const hoverCardMocPath = props?.hoverCardMocPath as string | undefined;
+    if (!hoverCardMocPath) return rendered;
+
+    const side = (props?.hoverCardSide as string) || "bottom";
+    const contentComment = `{/* linked: ${escapeJsx(hoverCardMocPath)} */}`;
+    return [
+      `${pad}<HoverCard>`,
+      `${pad}  <HoverCardTrigger asChild>`,
+      rendered,
+      `${pad}  </HoverCardTrigger>`,
+      `${pad}  <HoverCardContent side="${side}">`,
+      `${pad}    ${contentComment}`,
+      `${pad}  </HoverCardContent>`,
+      `${pad}</HoverCard>`,
+    ].join("\n");
+  }
+
   function renderNode(nodeId: string, indent: number): string {
     const node = craftState[nodeId];
     if (!node) return "";
@@ -943,6 +1008,19 @@ export function craftStateToTsx(
     const resolvedName = getResolvedName(node);
     const mapping = COMPONENT_MAP[resolvedName];
     const pad = "  ".repeat(indent);
+
+    // Common interaction wrappers applied to all components
+    const tooltipTrigger = (node.props?.tooltipTrigger as string) || "hover";
+    const hoverCardMocPath = node.props?.hoverCardMocPath as string | undefined;
+    const applyCommonWrappers = (s: string): string => {
+      let r = wrapWithContextMenu(s, node.props, pad);
+      r = wrapWithHoverCard(r, node.props, pad);
+      // HoverCard が設定されている場合は Tooltip をスキップ（HoverCard 優先）
+      if (!hoverCardMocPath) {
+        r = wrapWithTooltip(r, node.props, pad, tooltipTrigger);
+      }
+      return r;
+    };
 
     if (!mapping) {
       // Unknown component - render as comment
@@ -1031,9 +1109,7 @@ export function craftStateToTsx(
       } else {
         rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
       }
-      rendered = wrapWithContextMenu(rendered, node.props, pad);
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Alert special case: render with icon, title, description
@@ -1052,12 +1128,17 @@ export function craftStateToTsx(
         alertBody.push(`${pad}  <div className="text-sm [&_p]:leading-relaxed whitespace-pre-line">${escapedDesc}</div>`);
       }
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${alertBody.join("\n")}\n${pad}</${tag}>`;
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Accordion special case: render with AccordionItem/Trigger/Content
     if (resolvedName === "CraftAccordion") {
-      return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`);
+    }
+
+    // Breadcrumb special case: render with BreadcrumbList/Item/Link/Page/Separator/Ellipsis
+    if (resolvedName === "CraftBreadcrumb") {
+      return applyCommonWrappers(`${mocComments}\n${renderBreadcrumb(node.props, classNameAttr, styleAttr, pad)}`);
     }
 
     // Collapsible special case: render with linkedNodes header/content zones + CollapsibleTrigger/Content
@@ -1124,73 +1205,99 @@ export function craftStateToTsx(
       lines.push(`${pad}    </div>`);
       lines.push(`${pad}  </CollapsibleContent>`);
       lines.push(`${pad}</Collapsible>`);
-      return `${mocComments}\n${lines.join("\n")}`;
+      return applyCommonWrappers(`${mocComments}\n${lines.join("\n")}`);
     }
 
-    // Select special case: render with SelectTrigger/Content/Item (tooltip handled internally)
+    // Select special case: render with SelectTrigger/Content/Item
     if (resolvedName === "CraftSelect") {
       rendered = `${mocComments}\n${renderSelect(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Combobox special case: render with Popover + Command structure
     if (resolvedName === "CraftCombobox") {
       rendered = `${mocComments}\n${renderCombobox(node.props, styleAttr, pad)}`;
-      const comboboxTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
-      rendered = wrapWithTooltip(rendered, node.props, pad, comboboxTooltipTrigger);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // RadioGroup special case: render with RadioGroupItem + Label
     if (resolvedName === "CraftRadioGroup") {
       rendered = `${mocComments}\n${renderRadioGroup(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Tabs special case: render as LinkedNodes tabs
     if (resolvedName === "CraftTabs") {
-      return `${mocComments}\n${renderTabs(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderTabs(node, craftState, indent, renderNode)}`);
     }
 
     // NavigationMenu special case: render nav bar with hover dropdown slots
     if (resolvedName === "CraftNavigationMenu") {
-      return `${mocComments}\n${renderNavigationMenu(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderNavigationMenu(node, craftState, indent, renderNode)}`);
     }
 
     // Menubar special case: render from JSON menuData
     if (resolvedName === "CraftMenubar") {
-      return `${mocComments}\n${renderMenubar(node, indent)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderMenubar(node, indent)}`);
     }
 
-    // ContextMenu special case: render from JSON menuData
+    // ContextMenu special case: render from JSON menuData (applyCommonWrappers 対象外)
     if (resolvedName === "CraftContextMenu") {
       return `${mocComments}\n${renderContextMenu(node, indent)}`;
     }
 
+    // DropdownMenu special case: render from JSON menuData
+    if (resolvedName === "CraftDropdownMenu") {
+      return applyCommonWrappers(`${mocComments}\n${renderDropdownMenu(node, indent)}`);
+    }
+
+    // HoverCard special case: wrap trigger span with HoverCard if linkedMocPath is set
+    if (resolvedName === "CraftHoverCard") {
+      const linkedMocPath = node.props?.linkedMocPath as string | undefined;
+      if (linkedMocPath) {
+        const triggerText = (node.props?.triggerText as string) || "Hover me";
+        const side = (node.props?.hoverCardSide as string) || "bottom";
+        const userCls = (node.props?.className as string) || "";
+        const triggerCls = ["text-sm font-medium underline underline-offset-4 cursor-pointer", userCls].filter(Boolean).join(" ");
+        const triggerSpan = `${pad}  <span className="${triggerCls}"${styleAttr}>${escapeJsx(triggerText)}</span>`;
+        const contentComment = `{/* linked: ${escapeJsx(linkedMocPath)} */}`;
+        const hoverCardTsx = [
+          `${pad}<HoverCard>`,
+          `${pad}  <HoverCardTrigger asChild>`,
+          triggerSpan,
+          `${pad}  </HoverCardTrigger>`,
+          `${pad}  <HoverCardContent side="${side}">`,
+          `${pad}    ${contentComment}`,
+          `${pad}  </HoverCardContent>`,
+          `${pad}</HoverCard>`,
+        ].join("\n");
+        return applyCommonWrappers(`${mocComments}\n${hoverCardTsx}`);
+      }
+    }
+
     // Pagination special case: render full pagination structure
     if (resolvedName === "CraftPagination") {
-      return `${mocComments}\n${renderPagination(node, indent)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderPagination(node, indent)}`);
     }
 
     // DatePicker special case
     if (resolvedName === "CraftDatePicker") {
-      return `${mocComments}\n${renderDatePicker(node, indent)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderDatePicker(node, indent)}`);
     }
 
     // DataTable special case
     if (resolvedName === "CraftDataTable") {
-      return `${mocComments}\n${renderDataTable(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderDataTable(node, craftState, indent, renderNode)}`);
     }
 
     // Table special case: render as LinkedNodes table
     if (resolvedName === "CraftTable") {
-      return `${mocComments}\n${renderTable(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderTable(node, craftState, indent, renderNode)}`);
     }
 
     // Resizable special case: render as LinkedNodes resizable panels
     if (resolvedName === "CraftResizable") {
-      return `${mocComments}\n${renderResizable(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderResizable(node, craftState, indent, renderNode)}`);
     }
 
     // CraftContainer with linkedMocPath: render as div with linked comment (no children)
@@ -1198,51 +1305,41 @@ export function craftStateToTsx(
       const linkedMocPath = (node.props?.linkedMocPath as string) || "";
       if (linkedMocPath) {
         rendered = `${mocComments}\n${pad}<div${classNameAttr}${styleAttr}>\n${pad}  {/* linked: ${escapeJsx(linkedMocPath)} */}\n${pad}</div>`;
-        rendered = wrapWithContextMenu(rendered, node.props, pad);
-        return rendered;
+        return applyCommonWrappers(rendered);
       }
     }
 
     // ToggleGroup special case: render items as ToggleGroupItem children
     if (resolvedName === "CraftToggleGroup") {
       rendered = `${mocComments}\n${renderToggleGroup(node.props, tag, propsStr, styleAttr, pad)}`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Self-closing for img
     if (resolvedName === "CraftImage" || resolvedName === "CraftPlaceholderImage") {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return applyCommonWrappers(`${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`);
     }
 
     // Self-closing for Separator
     if (resolvedName === "CraftSeparator") {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return applyCommonWrappers(`${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`);
     }
 
     // Self-closing for Input
     if (resolvedName === "CraftInput") {
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      const inputTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
-      rendered = wrapWithTooltip(rendered, node.props, pad, inputTooltipTrigger);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Self-closing for Textarea
     if (resolvedName === "CraftTextarea") {
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      const textareaTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
-      rendered = wrapWithTooltip(rendered, node.props, pad, textareaTooltipTrigger);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Self-closing for Progress, Slider, Skeleton
     if (resolvedName === "CraftProgress" || resolvedName === "CraftSlider" || resolvedName === "CraftSkeleton") {
-      let rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      if (resolvedName === "CraftSlider") {
-        rendered = wrapWithTooltip(rendered, node.props, pad);
-      }
-      return rendered;
+      return applyCommonWrappers(`${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`);
     }
 
     // Container with children
@@ -1251,8 +1348,7 @@ export function craftStateToTsx(
         .map((id) => renderNode(id, indent + 1))
         .filter(Boolean);
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
-      rendered = wrapWithContextMenu(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // CraftToggle: icon を子要素として描画
@@ -1265,8 +1361,7 @@ export function craftStateToTsx(
         ? `\n${pad}  <${icon} className="h-4 w-4" />${escapedText ? `\n${pad}  ${escapedText}` : ""}\n${pad}`
         : escapedText;
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${inner}</${tag}>`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Text content
@@ -1275,35 +1370,26 @@ export function craftStateToTsx(
         ? `{"${escapeJsString(textContent)}"}`
         : escapeJsx(textContent);
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapedTextContent}</${tag}>`;
-      // Apply wrappers for CraftButton
+      // Apply overlay wrapper for CraftButton (must be inside tooltip)
       if (resolvedName === "CraftButton") {
         rendered = wrapWithOverlay(rendered, node.props, pad);
-        rendered = wrapWithTooltip(rendered, node.props, pad);
       }
-      // Apply tooltip wrapper for Badge/Label/Checkbox/Switch
-      if (resolvedName === "CraftBadge" || resolvedName === "CraftLabel" || resolvedName === "CraftCheckbox" || resolvedName === "CraftSwitch") {
-        rendered = wrapWithTooltip(rendered, node.props, pad);
-      }
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Empty container
     if (mapping.isContainer) {
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      rendered = wrapWithContextMenu(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Fallback self-closing
     rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr} />`;
+    // Apply overlay wrapper for CraftButton (must be inside tooltip)
     if (resolvedName === "CraftButton") {
       rendered = wrapWithOverlay(rendered, node.props, pad);
-      rendered = wrapWithTooltip(rendered, node.props, pad);
     }
-    if (resolvedName === "CraftSwitch" || resolvedName === "CraftAvatar") {
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-    }
-    return rendered;
+    return applyCommonWrappers(rendered);
   }
 
   // Collect imports from tree
@@ -1834,6 +1920,7 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
   const hoverTextClass = (node.props?.hoverTextClass as string) || "";
   const shortcutTextClass = (node.props?.shortcutTextClass as string) || "";
   const shortcutCls = shortcutTextClass || "text-muted-foreground";
+  const checkTextClass = (node.props?.checkTextClass as string) || "";
 
   // Item hover className: use custom classes if set, otherwise rely on shadcn/ui defaults
   const itemHoverCls = [
@@ -1878,7 +1965,8 @@ function renderContextMenu(node: CraftNodeData, indent: number): string {
         lines.push(`${pad}  <ContextMenuSeparator />`);
       } else if (item.type === "checkbox") {
         const checkedAttr = item.checked ? " checked" : "";
-        lines.push(`${pad}  <ContextMenuCheckboxItem${checkedAttr}${itemClassAttr}>`);
+        const checkTextAttr = checkTextClass ? ` checkTextClass="${escapeAttr(checkTextClass)}"` : "";
+        lines.push(`${pad}  <ContextMenuCheckboxItem${checkedAttr}${itemClassAttr}${checkTextAttr}>`);
         lines.push(`${pad}    ${escapeJsx(item.label || "")}`);
         if (item.shortcut) lines.push(`${pad}    <span className="ml-auto text-xs tracking-widest ${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</span>`);
         lines.push(`${pad}  </ContextMenuCheckboxItem>`);
@@ -2060,6 +2148,8 @@ function renderMenubar(node: CraftNodeData, indent: number): string {
     dropdownTextClass,
   ].filter(Boolean).join(" ");
   const shortcutCls = shortcutTextClass || "text-muted-foreground";
+  const dropdownWidth = (node.props?.dropdownWidth as string) || "";
+  const dropStyleAttr = dropdownWidth ? ` style={{ width: "${escapeAttr(dropdownWidth)}" }}` : "";
 
   const lines: string[] = [];
   lines.push(`${pad}<div className="${escapeAttr(barCls)}"${styleAttr}>`);
@@ -2069,7 +2159,10 @@ function renderMenubar(node: CraftNodeData, indent: number): string {
     lines.push(`${pad}    <button type="button" className="${escapeAttr(btnCls)}">`);
     lines.push(`${pad}      ${escapeJsx(menu.label || "")}`);
     lines.push(`${pad}    </button>`);
-    lines.push(`${pad}    <div className="${escapeAttr(dropCls)}">`);
+    const menuWidthAttr = (menu as { width?: string }).width
+      ? ` style={{ width: "${escapeAttr((menu as { width?: string }).width!)}" }}`
+      : dropStyleAttr;
+    lines.push(`${pad}    <div className="${escapeAttr(dropCls)}"${menuWidthAttr}>`);
     for (const item of (menu.items || [])) {
       if (item.type === "separator") {
         lines.push(`${pad}      <div className="my-1 h-px bg-border" />`);
@@ -2091,6 +2184,111 @@ function renderMenubar(node: CraftNodeData, indent: number): string {
   }
 
   lines.push(`${pad}</div>`);
+  return lines.join("\n");
+}
+
+function renderDropdownMenu(node: CraftNodeData, indent: number): string {
+  const pad = "  ".repeat(indent);
+  let menus: TopLevelMenuDef[] = [];
+  try {
+    const parsed = JSON.parse((node.props?.menuData as string) || "[]");
+    if (Array.isArray(parsed)) menus = parsed as TopLevelMenuDef[];
+  } catch {
+    menus = [];
+  }
+
+  const triggerText = (node.props?.triggerText as string) || "Open Menu";
+  const className = (node.props?.className as string) || "";
+  const styleAttr = buildStyleAttr(node.props);
+
+  // Trigger styling
+  const triggerBgClass = (node.props?.triggerBgClass as string) || "";
+  const triggerTextClass = (node.props?.triggerTextClass as string) || "";
+  const triggerBorderClass = (node.props?.triggerBorderClass as string) || "";
+  const triggerBorderWidth = (node.props?.triggerBorderWidth as string) || "";
+  const triggerShadowClass = (node.props?.triggerShadowClass as string) || "";
+  const triggerBwClass = triggerBorderWidth === "0" ? "border-0"
+    : triggerBorderWidth === "2" ? "border-2"
+    : triggerBorderWidth === "4" ? "border-4"
+    : triggerBorderWidth === "8" ? "border-8"
+    : triggerBorderWidth === "1" ? "border" : "";
+  const triggerCls = [
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors h-9 px-4 py-2",
+    triggerBgClass || "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+    triggerTextClass, triggerBwClass, triggerBorderClass, triggerShadowClass,
+    className,
+  ].filter(Boolean).join(" ");
+
+  // Dropdown panel styling
+  const dropdownBgClass = (node.props?.dropdownBgClass as string) || "";
+  const dropdownTextClass = (node.props?.dropdownTextClass as string) || "";
+  const dropdownBorderClass = (node.props?.dropdownBorderClass as string) || "";
+  const dropdownBorderWidth = (node.props?.dropdownBorderWidth as string) || "";
+  const dropdownShadowClass = (node.props?.dropdownShadowClass as string) || "";
+  const shortcutTextClass = (node.props?.shortcutTextClass as string) || "";
+  const checkTextClass = (node.props?.checkTextClass as string) || "";
+  const hoverBgClass = (node.props?.hoverBgClass as string) || "";
+  const hoverTextClass = (node.props?.hoverTextClass as string) || "";
+  const dropBwClass = dropdownBorderWidth === "0" ? "border-0"
+    : dropdownBorderWidth === "2" ? "border-2"
+    : dropdownBorderWidth === "4" ? "border-4"
+    : dropdownBorderWidth === "8" ? "border-8"
+    : "border";
+  const dropCls = [
+    "min-w-[8rem] rounded-md p-1",
+    dropdownBgClass || "bg-popover",
+    dropBwClass, dropdownBorderClass,
+    dropdownShadowClass || "shadow-md",
+    dropdownTextClass,
+  ].filter(Boolean).join(" ");
+  const shortcutCls = shortcutTextClass || "text-muted-foreground";
+
+  const itemHoverCls = [
+    hoverBgClass ? `hover:${hoverBgClass}` : "",
+    hoverTextClass ? `hover:${hoverTextClass}` : "",
+  ].filter(Boolean).join(" ");
+  const itemClassAttr = itemHoverCls ? ` className="${escapeAttr(itemHoverCls)}"` : "";
+  const dropdownWidth = (node.props?.dropdownWidth as string) || "";
+  const effectiveDropWidth = (menus[0] as { width?: string })?.width || dropdownWidth;
+  const dropStyleAttr = effectiveDropWidth ? ` style={{ width: "${escapeAttr(effectiveDropWidth)}" }}` : "";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<DropdownMenu${styleAttr}>`);
+  lines.push(`${pad}  <DropdownMenuTrigger className="${escapeAttr(triggerCls)}">`);
+  lines.push(`${pad}    ${escapeJsx(triggerText)}`);
+  lines.push(`${pad}    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m6 9 6 6 6-6"/></svg>`);
+  lines.push(`${pad}  </DropdownMenuTrigger>`);
+  lines.push(`${pad}  <DropdownMenuContent className="${escapeAttr(dropCls)}"${dropStyleAttr}>`);
+
+  for (let sectionIdx = 0; sectionIdx < menus.length; sectionIdx++) {
+    const menu = menus[sectionIdx];
+    if (sectionIdx > 0) {
+      lines.push(`${pad}    <DropdownMenuSeparator />`);
+    }
+    if (menu.label) {
+      lines.push(`${pad}    <DropdownMenuLabel>${escapeJsx(menu.label)}</DropdownMenuLabel>`);
+    }
+    for (const item of (menu.items || [])) {
+      if (item.type === "separator") {
+        lines.push(`${pad}    <DropdownMenuSeparator />`);
+      } else if (item.type === "checkbox") {
+        const checkedAttr = item.checked ? " checked" : "";
+        const checkTextAttr = checkTextClass ? ` checkTextClass="${escapeAttr(checkTextClass)}"` : "";
+        lines.push(`${pad}    <DropdownMenuCheckboxItem${checkedAttr}${itemClassAttr}${checkTextAttr}>`);
+        lines.push(`${pad}      <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
+        if (item.shortcut) lines.push(`${pad}      <DropdownMenuShortcut className="${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</DropdownMenuShortcut>`);
+        lines.push(`${pad}    </DropdownMenuCheckboxItem>`);
+      } else {
+        lines.push(`${pad}    <DropdownMenuItem${itemClassAttr}>`);
+        lines.push(`${pad}      <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
+        if (item.shortcut) lines.push(`${pad}      <DropdownMenuShortcut className="${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</DropdownMenuShortcut>`);
+        lines.push(`${pad}    </DropdownMenuItem>`);
+      }
+    }
+  }
+
+  lines.push(`${pad}  </DropdownMenuContent>`);
+  lines.push(`${pad}</DropdownMenu>`);
   return lines.join("\n");
 }
 
@@ -2520,6 +2718,73 @@ function renderAccordion(
   }
 
   lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
+function renderBreadcrumb(
+  props: Record<string, unknown>,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const itemList = ((props?.items as string) || "Home,Products,Current")
+    .split(",").map((s) => s.trim()).filter(Boolean);
+  const maxV = parseInt((props?.maxVisible as string) || "0", 10);
+  const shouldCollapse = maxV > 0 && itemList.length > maxV;
+
+  const visibleTail = shouldCollapse ? itemList.slice(-(maxV - 1)) : itemList.slice(1);
+  const collapsed = shouldCollapse ? itemList.slice(1, -(maxV - 1)) : [];
+
+  const lines: string[] = [];
+  lines.push(`${pad}<Breadcrumb${classNameAttr}${styleAttr}>`);
+  lines.push(`${pad}  <BreadcrumbList>`);
+
+  // First item
+  lines.push(`${pad}    <BreadcrumbItem>`);
+  if (itemList.length === 1) {
+    lines.push(`${pad}      <BreadcrumbPage>${escapeJsx(itemList[0])}</BreadcrumbPage>`);
+  } else {
+    lines.push(`${pad}      <BreadcrumbLink href="#">${escapeJsx(itemList[0])}</BreadcrumbLink>`);
+  }
+  lines.push(`${pad}    </BreadcrumbItem>`);
+
+  // Ellipsis with dropdown for collapsed items
+  if (shouldCollapse) {
+    lines.push(`${pad}    <BreadcrumbSeparator />`);
+    lines.push(`${pad}    <BreadcrumbItem>`);
+    lines.push(`${pad}      <DropdownMenu>`);
+    lines.push(`${pad}        <DropdownMenuTrigger className="flex items-center gap-1">`);
+    lines.push(`${pad}          <BreadcrumbEllipsis className="h-4 w-4" />`);
+    lines.push(`${pad}          <span className="sr-only">Toggle menu</span>`);
+    lines.push(`${pad}        </DropdownMenuTrigger>`);
+    lines.push(`${pad}        <DropdownMenuContent align="start">`);
+    for (const label of collapsed) {
+      lines.push(`${pad}          <DropdownMenuItem>${escapeJsx(label)}</DropdownMenuItem>`);
+    }
+    lines.push(`${pad}        </DropdownMenuContent>`);
+    lines.push(`${pad}      </DropdownMenu>`);
+    lines.push(`${pad}    </BreadcrumbItem>`);
+  }
+
+  // Tail items
+  for (let i = 0; i < visibleTail.length; i++) {
+    const label = visibleTail[i];
+    const globalIndex = shouldCollapse
+      ? itemList.length - visibleTail.length + i
+      : i + 1;
+    const isLast = globalIndex === itemList.length - 1;
+    lines.push(`${pad}    <BreadcrumbSeparator />`);
+    lines.push(`${pad}    <BreadcrumbItem>`);
+    if (isLast) {
+      lines.push(`${pad}      <BreadcrumbPage>${escapeJsx(label)}</BreadcrumbPage>`);
+    } else {
+      lines.push(`${pad}      <BreadcrumbLink href="#">${escapeJsx(label)}</BreadcrumbLink>`);
+    }
+    lines.push(`${pad}    </BreadcrumbItem>`);
+  }
+
+  lines.push(`${pad}  </BreadcrumbList>`);
+  lines.push(`${pad}</Breadcrumb>`);
   return lines.join("\n");
 }
 

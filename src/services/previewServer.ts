@@ -121,36 +121,71 @@ export async function startPreviewServer(
 
   async function compileLinkedMocFiles(craftState: Record<string, unknown>): Promise<void> {
     const mocDir = path.dirname(mocFilePath);
-    const linkedPaths = new Set<string>();
 
-    // Scan all nodes for linkedMocPath, contextMenuMocPath, and linkedMocPaths
-    for (const node of Object.values(craftState)) {
-      const n = node as { props?: Record<string, unknown> };
-      const linkedPath = n?.props?.linkedMocPath as string | undefined;
-      if (linkedPath) {
-        linkedPaths.add(linkedPath);
-      }
-      const contextMenuPath = n?.props?.contextMenuMocPath as string | undefined;
-      if (contextMenuPath) {
-        linkedPaths.add(contextMenuPath);
-      }
-      const linkedMocPathsStr = n?.props?.linkedMocPaths as string | undefined;
-      if (linkedMocPathsStr) {
-        for (const p of linkedMocPathsStr.split(",")) {
-          const trimmed = p.trim();
-          if (trimmed) linkedPaths.add(trimmed);
+    // Collect linked paths from a craftState node tree.
+    // Returns pairs of [relPathFromMocDir, absPath].
+    function collectLinkedPaths(cs: Record<string, unknown>, baseDir: string): [string, string][] {
+      const pairs: [string, string][] = [];
+      for (const node of Object.values(cs)) {
+        const n = node as { props?: Record<string, unknown> };
+        for (const key of ["linkedMocPath", "contextMenuMocPath"]) {
+          const p = n?.props?.[key] as string | undefined;
+          if (p) {
+            const abs = path.resolve(baseDir, p);
+            const rel = path.relative(mocDir, abs).replace(/\\/g, "/");
+            pairs.push([rel, abs]);
+          }
         }
+        const multi = n?.props?.linkedMocPaths as string | undefined;
+        if (multi) {
+          for (const p of multi.split(",").map((s) => s.trim()).filter(Boolean)) {
+            const abs = path.resolve(baseDir, p);
+            const rel = path.relative(mocDir, abs).replace(/\\/g, "/");
+            pairs.push([rel, abs]);
+          }
+        }
+      }
+      return pairs;
+    }
+
+    // BFS: discover all linked .moc files recursively (handles nested chains A→B→C).
+    // visited tracks absPath to prevent infinite loops on circular references.
+    const toProcess = new Map<string, string>(); // relPath → absPath
+    const visited = new Set<string>();
+    const queue: [string, string][] = collectLinkedPaths(craftState, mocDir);
+
+    while (queue.length > 0) {
+      const [relPath, absPath] = queue.shift()!;
+      if (visited.has(absPath)) continue;
+      visited.add(absPath);
+      toProcess.set(relPath, absPath);
+
+      try {
+        const content = new TextDecoder().decode(
+          await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+        );
+        const doc = parseMocFile(content);
+        const cs = doc.editorData?.craftState as Record<string, unknown> | undefined;
+        if (cs) {
+          for (const pair of collectLinkedPaths(cs, path.dirname(absPath))) {
+            if (!visited.has(pair[1])) queue.push(pair);
+          }
+        }
+      } catch (err) {
+        console.warn(`[Momoc] Failed to scan linked .moc: ${relPath}`, err);
       }
     }
 
+    // Pass 1: parse all linked files and register hashes.
+    // All hashes must be registered before inject so nested placeholders resolve correctly.
     linkedAbsPaths.clear();
-    for (const relPath of linkedPaths) {
+    const parsedDocs = new Map<string, { tsx: string }>();
+
+    for (const [relPath, absPath] of toProcess) {
       try {
-        const absPath = path.resolve(mocDir, relPath);
         linkedAbsPaths.add(absPath);
-        const linkedFileUri = vscode.Uri.file(absPath);
         const linkedContent = new TextDecoder().decode(
-          await vscode.workspace.fs.readFile(linkedFileUri),
+          await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
         );
         const linkedDoc = parseMocFile(linkedContent);
         // Re-generate TSX from craftState (SSOT) so linked .moc always reflects
@@ -179,7 +214,20 @@ export async function startPreviewServer(
         }
         const hash = crypto.createHash("md5").update(relPath).digest("hex").slice(0, 8);
         linkedHashes.set(relPath, hash);
-        const linkedResult = await compileTsx(linkedTsx, workspaceRoot, [
+        parsedDocs.set(relPath, { tsx: linkedTsx });
+      } catch (err) {
+        console.warn(`[Momoc] Failed to parse linked .moc: ${relPath}`, err);
+      }
+    }
+
+    // Pass 2: inject nested linked component references, then compile.
+    // injectLinkedComponents uses linkedHashes, so all hashes must be registered first (Pass 1).
+    for (const [relPath, { tsx }] of parsedDocs) {
+      const hash = linkedHashes.get(relPath);
+      if (!hash) continue;
+      try {
+        const injected = injectLinkedComponents(tsx);
+        const linkedResult = await compileTsx(injected, workspaceRoot, [
           previewExternalPlugin(),
         ]);
         if (linkedResult.code) {
@@ -466,6 +514,13 @@ export async function startPreviewServer(
       sseClients.add(res);
       req.on("close", () => {
         sseClients.delete(res);
+        if (sseClients.size === 0) {
+          setTimeout(() => {
+            if (sseClients.size === 0) {
+              dispose();
+            }
+          }, 5000);
+        }
       });
       return;
     }
@@ -807,9 +862,27 @@ export function Avatar(props: any) {
   );
 }`,
 
-  breadcrumb: `export function Breadcrumb(props: any) {
-  const { className = "", children, ...rest } = props;
-  return <nav aria-label="breadcrumb" className={className} {...rest}>{children}</nav>;
+  breadcrumb: `export function Breadcrumb({ className = "", children, style, ...rest }) {
+  return <nav aria-label="breadcrumb" className={className} style={style}>{children}</nav>;
+}
+export function BreadcrumbList({ className = "", children, ...rest }) {
+  return <ol className={"flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground sm:gap-2.5 " + className}>{children}</ol>;
+}
+export function BreadcrumbItem({ className = "", children, ...rest }) {
+  return <li className={"inline-flex items-center gap-1.5 " + className} {...rest}>{children}</li>;
+}
+export function BreadcrumbLink({ className = "", href = "#", children, onClick, ...rest }) {
+  const handleClick = onClick ?? ((e) => e.preventDefault());
+  return <a href={href} onClick={handleClick} className={"hover:text-foreground transition-colors " + className}>{children}</a>;
+}
+export function BreadcrumbPage({ className = "", children, ...rest }) {
+  return <span aria-current="page" className={"font-normal text-foreground " + className}>{children}</span>;
+}
+export function BreadcrumbSeparator({ className = "", children, ...rest }) {
+  return <li aria-hidden="true" className={"[&>svg]:size-3.5 " + className}>{children ?? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>}</li>;
+}
+export function BreadcrumbEllipsis({ className = "", ...rest }) {
+  return <span role="presentation" aria-hidden="true" className={"flex h-9 w-9 items-center justify-center " + className} {...rest}><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span className="sr-only">More</span></span>;
 }`,
 
   checkbox: `import { cn } from "@/components/ui/_cn";
@@ -1620,17 +1693,42 @@ export function PopoverContent(props: any) {
 const Ctx = createContext<any>(null);
 export function DropdownMenu(props: any) {
   const [open, setOpen] = useState(false);
-  return <Ctx.Provider value={{ open, setOpen }}><div className="relative inline-block">{props.children}</div></Ctx.Provider>;
+  const { style: _style, ...rest } = props;
+  return <Ctx.Provider value={{ open, setOpen }}><div className="relative inline-block" {...rest}>{props.children}</div></Ctx.Provider>;
 }
 export function DropdownMenuTrigger(props: any) {
   const ctx = useContext(Ctx);
-  return <span onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "inline-block" }}>{props.children}</span>;
+  const cls = props.className || "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors h-9 px-4 py-2 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground";
+  return <span className={cls} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "inline-flex" }}>{props.children}</span>;
 }
 export function DropdownMenuContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  const cls = ("absolute left-0 top-full mt-2 z-50 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md " + (props.className || "")).trim();
+  const cls = ("absolute left-0 top-full mt-2 z-50 " + (props.className || "min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md")).trim();
   return <div className={cls} style={props.style}>{props.children}</div>;
+}
+export function DropdownMenuItem(props: any) {
+  const base = "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent";
+  const children = Array.isArray(props.children) ? props.children : [props.children];
+  const label = children.filter((c: any) => typeof c === "string" || (c && c.type !== DropdownMenuShortcut));
+  const shortcut = children.filter((c: any) => c && c.type === DropdownMenuShortcut);
+  return <div className={props.className ? "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none " + props.className : base}><span className="flex-1">{label}</span>{shortcut}</div>;
+}
+export function DropdownMenuCheckboxItem(props: any) {
+  const [checked, setChecked] = useState(!!props.checked);
+  const base = "relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent";
+  const children = Array.isArray(props.children) ? props.children : [props.children];
+  const label = children.filter((c: any) => typeof c === "string" || (c && c.type !== DropdownMenuShortcut));
+  const shortcut = children.filter((c: any) => c && c.type === DropdownMenuShortcut);
+  return <div className={props.className ? "relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none " + props.className : base} onClick={() => setChecked((v: boolean) => !v)}><span className={"absolute left-2 flex h-3.5 w-3.5 items-center justify-center" + (props.checkTextClass ? " " + props.checkTextClass : "")}>{checked ? "✓" : ""}</span><span className="flex-1">{label}</span>{shortcut}</div>;
+}
+export function DropdownMenuSeparator() { return <div className="my-1 h-px bg-border" />; }
+export function DropdownMenuLabel(props: any) {
+  return <div className="px-2 py-1.5 text-xs font-semibold">{props.children}</div>;
+}
+export function DropdownMenuShortcut(props: any) {
+  const cls = props.className || "ml-auto text-xs tracking-widest text-muted-foreground";
+  return <span className={cls}>{props.children}</span>;
 }`,
 
   sonner: `export function toast(message: any, options?: any) {
@@ -1688,11 +1786,36 @@ export function ContextMenuItem(props: any) {
 export function ContextMenuCheckboxItem(props: any) {
   const [checked, setChecked] = useState(!!props.checked);
   const base = "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent";
-  return <div className={props.className ? props.className + " relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none" : base} onClick={() => setChecked((v: boolean) => !v)}><span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">{checked ? "✓" : ""}</span>{props.children}</div>;
+  return <div className={props.className ? props.className + " relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none" : base} onClick={() => setChecked((v: boolean) => !v)}><span className={"absolute left-2 flex h-3.5 w-3.5 items-center justify-center" + (props.checkTextClass ? " " + props.checkTextClass : "")}>{checked ? "✓" : ""}</span>{props.children}</div>;
 }
 export function ContextMenuSeparator() { return <div className="my-1 h-px bg-border" />; }
 export function ContextMenuLabel(props: any) {
   return <div className="px-2 py-1.5 text-xs font-semibold">{props.children}</div>;
+}`,
+
+  "hover-card": `import { createContext, useContext, useState } from "react";
+const Ctx = createContext<any>(null);
+export function HoverCard(props: any) {
+  const [show, setShow] = useState(false);
+  return <Ctx.Provider value={{ show, setShow }}><div className="relative inline-block">{props.children}</div></Ctx.Provider>;
+}
+export function HoverCardTrigger(props: any) {
+  const ctx = useContext(Ctx);
+  return <span onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)} style={{ cursor: "pointer", display: "inline-block" }}>{props.children}</span>;
+}
+export function HoverCardContent(props: any) {
+  const ctx = useContext(Ctx);
+  if (!ctx?.show) return null;
+  const side = props.side || "bottom";
+  const pos: Record<string, string> = {
+    top: "left-0 bottom-full mb-2",
+    bottom: "left-0 top-full mt-2",
+    left: "top-0 right-full mr-2",
+    right: "top-0 left-full ml-2",
+  };
+  const defaultCls = "min-w-[200px] rounded-md border bg-popover p-4 text-popover-foreground shadow-md";
+  const cls = ("absolute z-50 " + (pos[side] || pos.bottom) + " " + (props.className || defaultCls)).trim();
+  return <div className={cls} style={props.style} onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)}>{props.children}</div>;
 }`,
 
   "data-table": `import { cn } from "@/components/ui/_cn";

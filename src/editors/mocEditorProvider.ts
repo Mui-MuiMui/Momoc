@@ -198,9 +198,10 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       return webviewJson;
     }
 
-    // Derive component name from file name
-    const baseName = fileName.replace(/^.*[\\/]/, "").replace(/\.moc$/, "");
-    const componentName = baseName || "MockPage";
+    // Component name is always "MockPage" to avoid invalid JS identifiers
+    // (e.g. file names starting with digits like "123_page.moc").
+    // The preview uses mod.default so the name has no runtime significance.
+    const componentName = "MockPage";
 
     // Generate TSX from Craft.js state (pass memos for @moc-memo comments)
     const { imports, tsxSource } = craftStateToTsx(craftState as Record<string, unknown>, componentName, memos);

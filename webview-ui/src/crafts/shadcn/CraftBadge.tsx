@@ -60,8 +60,6 @@ CraftBadge.craft = {
   props: {
     text: "Badge",
     variant: "default",
-    tooltipText: "",
-    tooltipSide: "",
     width: "auto",
     height: "auto",
     className: "",

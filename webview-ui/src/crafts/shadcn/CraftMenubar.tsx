@@ -7,7 +7,7 @@ export type MenuItemDef =
   | { type: "checkbox"; label: string; checked?: boolean; shortcut?: string }
   | { type: "separator" };
 
-export type TopLevelMenuDef = { label: string; items: MenuItemDef[] };
+export type TopLevelMenuDef = { label: string; items: MenuItemDef[]; width?: string };
 export type MenuData = TopLevelMenuDef[];
 
 export const DEFAULT_MENUBAR_DATA: MenuData = [
@@ -80,6 +80,7 @@ interface CraftMenubarProps {
   dropdownBorderClass?: string;
   dropdownBorderWidth?: string;
   dropdownShadowClass?: string;
+  dropdownWidth?: string;
   shortcutTextClass?: string;
 }
 
@@ -100,6 +101,7 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
   dropdownBorderClass = "",
   dropdownBorderWidth = "",
   dropdownShadowClass = "",
+  dropdownWidth = "",
   shortcutTextClass = "",
 }) => {
   const {
@@ -171,6 +173,7 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
                 dropdownShadowClass || "shadow-md",
                 dropdownTextClass,
               )}
+              style={menu.width ? { width: menu.width } : dropdownWidth ? { width: dropdownWidth } : undefined}
               onMouseLeave={enabled ? undefined : () => setActiveIndex(null)}
             >
               {menu.items.map((item, j) => {
@@ -181,7 +184,7 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
                   return (
                     <div
                       key={j}
-                      className="flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent"
+                      className="flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent"
                     >
                       <span className="mr-2 w-4 text-center text-xs">{item.checked ? "✓" : ""}</span>
                       <span className="flex-1">{item.label}</span>
@@ -194,7 +197,7 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
                 return (
                   <div
                     key={j}
-                    className="flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent"
+                    className="flex cursor-default select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent"
                   >
                     <span className="flex-1">{item.label}</span>
                     {item.shortcut && (
@@ -230,6 +233,7 @@ CraftMenubar.craft = {
     dropdownBorderClass: "",
     dropdownBorderWidth: "",
     dropdownShadowClass: "",
+    dropdownWidth: "",
     shortcutTextClass: "",
   },
   rules: {

@@ -145,8 +145,6 @@ CraftSwitch.craft = {
     cardBgColor: "",
     descriptionColor: "",
     labelColor: "",
-    tooltipText: "",
-    tooltipSide: "",
   },
   rules: {
     canDrag: () => true,

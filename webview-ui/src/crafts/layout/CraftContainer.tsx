@@ -130,7 +130,6 @@ CraftContainer.craft = {
     gap: "4",
     gridCols: 3,
     linkedMocPath: "",
-    contextMenuMocPath: "",
     width: "auto",
     height: "auto",
     className: "",
