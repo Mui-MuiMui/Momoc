@@ -1635,13 +1635,19 @@ export function DropdownMenuContent(props: any) {
   return <div className={cls} style={props.style}>{props.children}</div>;
 }
 export function DropdownMenuItem(props: any) {
-  const base = "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent";
-  return <div className={props.className ? "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none " + props.className : base}>{props.children}</div>;
+  const base = "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent";
+  const children = Array.isArray(props.children) ? props.children : [props.children];
+  const label = children.filter((c: any) => typeof c === "string" || (c && c.type !== DropdownMenuShortcut));
+  const shortcut = children.filter((c: any) => c && c.type === DropdownMenuShortcut);
+  return <div className={props.className ? "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none " + props.className : base}><span className="flex-1">{label}</span>{shortcut}</div>;
 }
 export function DropdownMenuCheckboxItem(props: any) {
   const [checked, setChecked] = useState(!!props.checked);
-  const base = "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent";
-  return <div className={props.className ? "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none " + props.className : base} onClick={() => setChecked((v: boolean) => !v)}><span className={"absolute left-2 flex h-3.5 w-3.5 items-center justify-center" + (props.checkTextClass ? " " + props.checkTextClass : "")}>{checked ? "✓" : ""}</span>{props.children}</div>;
+  const base = "relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent";
+  const children = Array.isArray(props.children) ? props.children : [props.children];
+  const label = children.filter((c: any) => typeof c === "string" || (c && c.type !== DropdownMenuShortcut));
+  const shortcut = children.filter((c: any) => c && c.type === DropdownMenuShortcut);
+  return <div className={props.className ? "relative flex cursor-pointer select-none items-center gap-2 rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none " + props.className : base} onClick={() => setChecked((v: boolean) => !v)}><span className={"absolute left-2 flex h-3.5 w-3.5 items-center justify-center" + (props.checkTextClass ? " " + props.checkTextClass : "")}>{checked ? "✓" : ""}</span><span className="flex-1">{label}</span>{shortcut}</div>;
 }
 export function DropdownMenuSeparator() { return <div className="my-1 h-px bg-border" />; }
 export function DropdownMenuLabel(props: any) {

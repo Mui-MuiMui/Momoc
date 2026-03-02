@@ -93,6 +93,11 @@ export function MenubarMetaEditor({ value, selectedNodeId }: MenubarMetaEditorPr
     updateMenus(next);
   }
 
+  function setMenuWidth(idx: number, width: string) {
+    const next = menus.map((m, i) => (i === idx ? { ...m, width } : m));
+    updateMenus(next);
+  }
+
   function updateMenuItems(menuIdx: number, items: MenuItemDef[]) {
     const next = menus.map((m, i) => (i === menuIdx ? { ...m, items } : m));
     updateMenus(next);
@@ -191,6 +196,18 @@ export function MenubarMetaEditor({ value, selectedNodeId }: MenubarMetaEditorPr
             <button type="button" className={BTN_CLASS} onClick={() => moveMenuUp(menuIdx)} disabled={menuIdx === 0} title="上へ">↑</button>
             <button type="button" className={BTN_CLASS} onClick={() => moveMenuDown(menuIdx)} disabled={menuIdx === menus.length - 1} title="下へ">↓</button>
             <button type="button" className={BTN_DANGER_CLASS} onClick={() => removeMenu(menuIdx)} title="削除">✕</button>
+          </div>
+
+          {/* Menu width */}
+          <div className="flex items-center gap-1">
+            <label className="shrink-0 text-[11px] text-[var(--vscode-descriptionForeground,#888)]">幅</label>
+            <input
+              type="text"
+              value={(menu as TopLevelMenuDef & { width?: string }).width ?? ""}
+              onChange={(e) => setMenuWidth(menuIdx, e.target.value)}
+              className={`${INPUT_CLASS} min-w-0 flex-1`}
+              placeholder="例: 200px, 16rem"
+            />
           </div>
 
           {/* Items */}

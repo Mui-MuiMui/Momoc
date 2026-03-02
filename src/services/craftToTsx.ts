@@ -2070,7 +2070,10 @@ function renderMenubar(node: CraftNodeData, indent: number): string {
     lines.push(`${pad}    <button type="button" className="${escapeAttr(btnCls)}">`);
     lines.push(`${pad}      ${escapeJsx(menu.label || "")}`);
     lines.push(`${pad}    </button>`);
-    lines.push(`${pad}    <div className="${escapeAttr(dropCls)}"${dropStyleAttr}>`);
+    const menuWidthAttr = (menu as { width?: string }).width
+      ? ` style={{ width: "${escapeAttr((menu as { width?: string }).width!)}" }}`
+      : dropStyleAttr;
+    lines.push(`${pad}    <div className="${escapeAttr(dropCls)}"${menuWidthAttr}>`);
     for (const item of (menu.items || [])) {
       if (item.type === "separator") {
         lines.push(`${pad}      <div className="my-1 h-px bg-border" />`);
@@ -2157,7 +2160,8 @@ function renderDropdownMenu(node: CraftNodeData, indent: number): string {
   ].filter(Boolean).join(" ");
   const itemClassAttr = itemHoverCls ? ` className="${escapeAttr(itemHoverCls)}"` : "";
   const dropdownWidth = (node.props?.dropdownWidth as string) || "";
-  const dropStyleAttr = dropdownWidth ? ` style={{ width: "${escapeAttr(dropdownWidth)}" }}` : "";
+  const effectiveDropWidth = (menus[0] as { width?: string })?.width || dropdownWidth;
+  const dropStyleAttr = effectiveDropWidth ? ` style={{ width: "${escapeAttr(effectiveDropWidth)}" }}` : "";
 
   const lines: string[] = [];
   lines.push(`${pad}<DropdownMenu${styleAttr}>`);
@@ -2182,12 +2186,12 @@ function renderDropdownMenu(node: CraftNodeData, indent: number): string {
         const checkedAttr = item.checked ? " checked" : "";
         const checkTextAttr = checkTextClass ? ` checkTextClass="${escapeAttr(checkTextClass)}"` : "";
         lines.push(`${pad}    <DropdownMenuCheckboxItem${checkedAttr}${itemClassAttr}${checkTextAttr}>`);
-        lines.push(`${pad}      ${escapeJsx(item.label || "")}`);
+        lines.push(`${pad}      <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
         if (item.shortcut) lines.push(`${pad}      <DropdownMenuShortcut className="${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</DropdownMenuShortcut>`);
         lines.push(`${pad}    </DropdownMenuCheckboxItem>`);
       } else {
         lines.push(`${pad}    <DropdownMenuItem${itemClassAttr}>`);
-        lines.push(`${pad}      ${escapeJsx(item.label || "")}`);
+        lines.push(`${pad}      <span className="flex-1">${escapeJsx(item.label || "")}</span>`);
         if (item.shortcut) lines.push(`${pad}      <DropdownMenuShortcut className="${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</DropdownMenuShortcut>`);
         lines.push(`${pad}    </DropdownMenuItem>`);
       }

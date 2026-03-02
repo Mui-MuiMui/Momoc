@@ -153,7 +153,7 @@ export const CraftDropdownMenu: UserComponent<CraftDropdownMenuProps> = ({
             dropdownShadowClass || "shadow-md",
             dropdownTextClass,
           )}
-          style={dropdownWidth ? { width: dropdownWidth } : undefined}
+          style={(menus[0]?.width || dropdownWidth) ? { width: menus[0]?.width || dropdownWidth } : undefined}
           onMouseLeave={enabled ? undefined : () => setOpen(false)}
         >
           {menus.flatMap((menu, sectionIdx) => {

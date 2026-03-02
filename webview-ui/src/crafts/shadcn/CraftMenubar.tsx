@@ -7,7 +7,7 @@ export type MenuItemDef =
   | { type: "checkbox"; label: string; checked?: boolean; shortcut?: string }
   | { type: "separator" };
 
-export type TopLevelMenuDef = { label: string; items: MenuItemDef[] };
+export type TopLevelMenuDef = { label: string; items: MenuItemDef[]; width?: string };
 export type MenuData = TopLevelMenuDef[];
 
 export const DEFAULT_MENUBAR_DATA: MenuData = [
@@ -173,7 +173,7 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
                 dropdownShadowClass || "shadow-md",
                 dropdownTextClass,
               )}
-              style={dropdownWidth ? { width: dropdownWidth } : undefined}
+              style={menu.width ? { width: menu.width } : dropdownWidth ? { width: dropdownWidth } : undefined}
               onMouseLeave={enabled ? undefined : () => setActiveIndex(null)}
             >
               {menu.items.map((item, j) => {
