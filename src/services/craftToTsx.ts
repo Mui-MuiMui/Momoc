@@ -944,6 +944,14 @@ export function craftStateToTsx(
     const mapping = COMPONENT_MAP[resolvedName];
     const pad = "  ".repeat(indent);
 
+    // Common interaction wrappers applied to all components
+    const tooltipTrigger = (node.props?.tooltipTrigger as string) || undefined;
+    const applyCommonWrappers = (s: string): string => {
+      let r = wrapWithContextMenu(s, node.props, pad);
+      r = wrapWithTooltip(r, node.props, pad, tooltipTrigger);
+      return r;
+    };
+
     if (!mapping) {
       // Unknown component - render as comment
       return `${pad}{/* Unknown: ${resolvedName} */}`;
@@ -1031,9 +1039,7 @@ export function craftStateToTsx(
       } else {
         rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
       }
-      rendered = wrapWithContextMenu(rendered, node.props, pad);
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Alert special case: render with icon, title, description
@@ -1052,12 +1058,12 @@ export function craftStateToTsx(
         alertBody.push(`${pad}  <div className="text-sm [&_p]:leading-relaxed whitespace-pre-line">${escapedDesc}</div>`);
       }
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${alertBody.join("\n")}\n${pad}</${tag}>`;
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Accordion special case: render with AccordionItem/Trigger/Content
     if (resolvedName === "CraftAccordion") {
-      return `${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderAccordion(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`);
     }
 
     // Collapsible special case: render with linkedNodes header/content zones + CollapsibleTrigger/Content
@@ -1124,43 +1130,40 @@ export function craftStateToTsx(
       lines.push(`${pad}    </div>`);
       lines.push(`${pad}  </CollapsibleContent>`);
       lines.push(`${pad}</Collapsible>`);
-      return `${mocComments}\n${lines.join("\n")}`;
+      return applyCommonWrappers(`${mocComments}\n${lines.join("\n")}`);
     }
 
     // Select special case: render with SelectTrigger/Content/Item (tooltip handled internally)
     if (resolvedName === "CraftSelect") {
       rendered = `${mocComments}\n${renderSelect(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Combobox special case: render with Popover + Command structure
     if (resolvedName === "CraftCombobox") {
       rendered = `${mocComments}\n${renderCombobox(node.props, styleAttr, pad)}`;
-      const comboboxTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
-      rendered = wrapWithTooltip(rendered, node.props, pad, comboboxTooltipTrigger);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // RadioGroup special case: render with RadioGroupItem + Label
     if (resolvedName === "CraftRadioGroup") {
       rendered = `${mocComments}\n${renderRadioGroup(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Tabs special case: render as LinkedNodes tabs
     if (resolvedName === "CraftTabs") {
-      return `${mocComments}\n${renderTabs(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderTabs(node, craftState, indent, renderNode)}`);
     }
 
     // NavigationMenu special case: render nav bar with hover dropdown slots
     if (resolvedName === "CraftNavigationMenu") {
-      return `${mocComments}\n${renderNavigationMenu(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderNavigationMenu(node, craftState, indent, renderNode)}`);
     }
 
     // Menubar special case: render from JSON menuData
     if (resolvedName === "CraftMenubar") {
-      return `${mocComments}\n${renderMenubar(node, indent)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderMenubar(node, indent)}`);
     }
 
     // ContextMenu special case: render from JSON menuData
@@ -1170,27 +1173,27 @@ export function craftStateToTsx(
 
     // Pagination special case: render full pagination structure
     if (resolvedName === "CraftPagination") {
-      return `${mocComments}\n${renderPagination(node, indent)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderPagination(node, indent)}`);
     }
 
     // DatePicker special case
     if (resolvedName === "CraftDatePicker") {
-      return `${mocComments}\n${renderDatePicker(node, indent)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderDatePicker(node, indent)}`);
     }
 
     // DataTable special case
     if (resolvedName === "CraftDataTable") {
-      return `${mocComments}\n${renderDataTable(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderDataTable(node, craftState, indent, renderNode)}`);
     }
 
     // Table special case: render as LinkedNodes table
     if (resolvedName === "CraftTable") {
-      return `${mocComments}\n${renderTable(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderTable(node, craftState, indent, renderNode)}`);
     }
 
     // Resizable special case: render as LinkedNodes resizable panels
     if (resolvedName === "CraftResizable") {
-      return `${mocComments}\n${renderResizable(node, craftState, indent, renderNode)}`;
+      return applyCommonWrappers(`${mocComments}\n${renderResizable(node, craftState, indent, renderNode)}`);
     }
 
     // CraftContainer with linkedMocPath: render as div with linked comment (no children)
@@ -1198,51 +1201,41 @@ export function craftStateToTsx(
       const linkedMocPath = (node.props?.linkedMocPath as string) || "";
       if (linkedMocPath) {
         rendered = `${mocComments}\n${pad}<div${classNameAttr}${styleAttr}>\n${pad}  {/* linked: ${escapeJsx(linkedMocPath)} */}\n${pad}</div>`;
-        rendered = wrapWithContextMenu(rendered, node.props, pad);
-        return rendered;
+        return applyCommonWrappers(rendered);
       }
     }
 
     // ToggleGroup special case: render items as ToggleGroupItem children
     if (resolvedName === "CraftToggleGroup") {
       rendered = `${mocComments}\n${renderToggleGroup(node.props, tag, propsStr, styleAttr, pad)}`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Self-closing for img
     if (resolvedName === "CraftImage" || resolvedName === "CraftPlaceholderImage") {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return applyCommonWrappers(`${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`);
     }
 
     // Self-closing for Separator
     if (resolvedName === "CraftSeparator") {
-      return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
+      return applyCommonWrappers(`${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`);
     }
 
     // Self-closing for Input
     if (resolvedName === "CraftInput") {
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      const inputTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
-      rendered = wrapWithTooltip(rendered, node.props, pad, inputTooltipTrigger);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Self-closing for Textarea
     if (resolvedName === "CraftTextarea") {
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      const textareaTooltipTrigger = node.props?.tooltipTrigger as string | undefined;
-      rendered = wrapWithTooltip(rendered, node.props, pad, textareaTooltipTrigger);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Self-closing for Progress, Slider, Skeleton
     if (resolvedName === "CraftProgress" || resolvedName === "CraftSlider" || resolvedName === "CraftSkeleton") {
-      let rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      if (resolvedName === "CraftSlider") {
-        rendered = wrapWithTooltip(rendered, node.props, pad);
-      }
-      return rendered;
+      return applyCommonWrappers(`${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`);
     }
 
     // Container with children
@@ -1251,8 +1244,7 @@ export function craftStateToTsx(
         .map((id) => renderNode(id, indent + 1))
         .filter(Boolean);
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${renderedChildren.join("\n")}\n${pad}</${tag}>`;
-      rendered = wrapWithContextMenu(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // CraftToggle: icon を子要素として描画
@@ -1265,8 +1257,7 @@ export function craftStateToTsx(
         ? `\n${pad}  <${icon} className="h-4 w-4" />${escapedText ? `\n${pad}  ${escapedText}` : ""}\n${pad}`
         : escapedText;
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${inner}</${tag}>`;
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Text content
@@ -1275,35 +1266,26 @@ export function craftStateToTsx(
         ? `{"${escapeJsString(textContent)}"}`
         : escapeJsx(textContent);
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapedTextContent}</${tag}>`;
-      // Apply wrappers for CraftButton
+      // Apply overlay wrapper for CraftButton (must be inside tooltip)
       if (resolvedName === "CraftButton") {
         rendered = wrapWithOverlay(rendered, node.props, pad);
-        rendered = wrapWithTooltip(rendered, node.props, pad);
       }
-      // Apply tooltip wrapper for Badge/Label/Checkbox/Switch
-      if (resolvedName === "CraftBadge" || resolvedName === "CraftLabel" || resolvedName === "CraftCheckbox" || resolvedName === "CraftSwitch") {
-        rendered = wrapWithTooltip(rendered, node.props, pad);
-      }
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Empty container
     if (mapping.isContainer) {
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`;
-      rendered = wrapWithContextMenu(rendered, node.props, pad);
-      return rendered;
+      return applyCommonWrappers(rendered);
     }
 
     // Fallback self-closing
     rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr} />`;
+    // Apply overlay wrapper for CraftButton (must be inside tooltip)
     if (resolvedName === "CraftButton") {
       rendered = wrapWithOverlay(rendered, node.props, pad);
-      rendered = wrapWithTooltip(rendered, node.props, pad);
     }
-    if (resolvedName === "CraftSwitch" || resolvedName === "CraftAvatar") {
-      rendered = wrapWithTooltip(rendered, node.props, pad);
-    }
-    return rendered;
+    return applyCommonWrappers(rendered);
   }
 
   // Collect imports from tree
