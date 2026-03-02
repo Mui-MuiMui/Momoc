@@ -1631,6 +1631,23 @@ export function DropdownMenuContent(props: any) {
   if (!ctx?.open) return null;
   const cls = ("absolute left-0 top-full mt-2 z-50 min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md " + (props.className || "")).trim();
   return <div className={cls} style={props.style}>{props.children}</div>;
+}
+export function DropdownMenuItem(props: any) {
+  const base = "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent";
+  return <div className={props.className ? props.className + " relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none" : base}>{props.children}</div>;
+}
+export function DropdownMenuCheckboxItem(props: any) {
+  const [checked, setChecked] = useState(!!props.checked);
+  const base = "relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent";
+  return <div className={props.className ? props.className + " relative flex cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none" : base} onClick={() => setChecked((v: boolean) => !v)}><span className={"absolute left-2 flex h-3.5 w-3.5 items-center justify-center" + (props.checkTextClass ? " " + props.checkTextClass : "")}>{checked ? "✓" : ""}</span>{props.children}</div>;
+}
+export function DropdownMenuSeparator() { return <div className="my-1 h-px bg-border" />; }
+export function DropdownMenuLabel(props: any) {
+  return <div className="px-2 py-1.5 text-xs font-semibold">{props.children}</div>;
+}
+export function DropdownMenuShortcut(props: any) {
+  const cls = ("ml-auto text-xs tracking-widest " + (props.className || "text-muted-foreground")).trim();
+  return <span className={cls}>{props.children}</span>;
 }`,
 
   sonner: `export function toast(message: any, options?: any) {

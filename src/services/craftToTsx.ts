@@ -351,11 +351,8 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     isContainer: false,
   },
   CraftDropdownMenu: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["className"],
-    textProp: "triggerText",
+    tag: "div",
+    propsMap: [],
     isContainer: false,
   },
   CraftContextMenu: {
@@ -424,7 +421,7 @@ const OVERLAY_IMPORTS: Record<string, { from: string; names: string[] }> = {
   sheet: { from: "@/components/ui/sheet", names: ["Sheet", "SheetTrigger", "SheetContent"] },
   drawer: { from: "@/components/ui/drawer", names: ["Drawer", "DrawerTrigger", "DrawerContent"] },
   popover: { from: "@/components/ui/popover", names: ["Popover", "PopoverTrigger", "PopoverContent"] },
-  "dropdown-menu": { from: "@/components/ui/dropdown-menu", names: ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent"] },
+  "dropdown-menu": { from: "@/components/ui/dropdown-menu", names: ["DropdownMenu", "DropdownMenuTrigger", "DropdownMenuContent", "DropdownMenuItem", "DropdownMenuCheckboxItem", "DropdownMenuSeparator", "DropdownMenuLabel", "DropdownMenuShortcut"] },
 };
 
 const TOOLTIP_IMPORT = { from: "@/components/ui/tooltip", names: ["TooltipProvider", "Tooltip", "TooltipTrigger", "TooltipContent"] };
@@ -457,6 +454,11 @@ const DEFAULT_MENUBAR_DATA_STR = JSON.stringify([
   { label: "Edit", items: [{ type: "item", label: "Undo", shortcut: "Ctrl+Z" }, { type: "item", label: "Redo", shortcut: "Ctrl+Y" }, { type: "separator" }, { type: "item", label: "Cut", shortcut: "Ctrl+X" }, { type: "item", label: "Copy", shortcut: "Ctrl+C" }, { type: "item", label: "Paste", shortcut: "Ctrl+V" }] },
   { label: "View", items: [{ type: "checkbox", label: "Word Wrap", checked: false }, { type: "separator" }, { type: "item", label: "Zoom In", shortcut: "Ctrl++" }, { type: "item", label: "Zoom Out", shortcut: "Ctrl+-" }] },
   { label: "Help", items: [{ type: "item", label: "Documentation" }, { type: "item", label: "About" }] },
+]);
+
+/** Default DropdownMenu data (matches DEFAULT_DROPDOWN_DATA in CraftDropdownMenu.tsx) */
+const DEFAULT_DROPDOWN_DATA_STR = JSON.stringify([
+  { label: "", items: [{ type: "item", label: "Profile" }, { type: "item", label: "Settings" }, { type: "separator" }, { type: "checkbox", label: "Notifications", checked: false }, { type: "separator" }, { type: "item", label: "Log out" }] },
 ]);
 
 /** Default prop values to omit from generated TSX */
@@ -512,7 +514,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftAlertDialog: { triggerText: "Open Alert", linkedMocPath: "" },
   CraftSheet: { triggerText: "Open Sheet", side: "right", linkedMocPath: "" },
   CraftDrawer: { triggerText: "Open Drawer", linkedMocPath: "" },
-  CraftDropdownMenu: { triggerText: "Open Menu", linkedMocPath: "" },
+  CraftDropdownMenu: { triggerText: "Open Menu", menuData: DEFAULT_DROPDOWN_DATA_STR },
   CraftContextMenu: { menuData: DEFAULT_CONTEXTMENU_DATA_STR },
   CraftPopover: { triggerText: "Open Popover", linkedMocPath: "" },
   CraftHoverCard: { triggerText: "Hover me", linkedMocPath: "" },
@@ -664,6 +666,14 @@ export function craftStateToTsx(
     if (resolvedName === "CraftContextMenu") {
       for (const name of ["ContextMenuContent", "ContextMenuItem", "ContextMenuCheckboxItem", "ContextMenuSeparator", "ContextMenuLabel"]) {
         addImport(CONTEXT_MENU_IMPORT.from, name);
+      }
+      return;
+    }
+
+    // CraftDropdownMenu: full dropdown-menu structure
+    if (resolvedName === "CraftDropdownMenu") {
+      for (const name of OVERLAY_IMPORTS["dropdown-menu"].names) {
+        addImport(OVERLAY_IMPORTS["dropdown-menu"].from, name);
       }
       return;
     }
@@ -1169,6 +1179,11 @@ export function craftStateToTsx(
     // ContextMenu special case: render from JSON menuData (applyCommonWrappers 対象外)
     if (resolvedName === "CraftContextMenu") {
       return `${mocComments}\n${renderContextMenu(node, indent)}`;
+    }
+
+    // DropdownMenu special case: render from JSON menuData
+    if (resolvedName === "CraftDropdownMenu") {
+      return applyCommonWrappers(`${mocComments}\n${renderDropdownMenu(node, indent)}`);
     }
 
     // Pagination special case: render full pagination structure
@@ -2075,6 +2090,107 @@ function renderMenubar(node: CraftNodeData, indent: number): string {
   }
 
   lines.push(`${pad}</div>`);
+  return lines.join("\n");
+}
+
+function renderDropdownMenu(node: CraftNodeData, indent: number): string {
+  const pad = "  ".repeat(indent);
+  let menus: TopLevelMenuDef[] = [];
+  try {
+    const parsed = JSON.parse((node.props?.menuData as string) || "[]");
+    if (Array.isArray(parsed)) menus = parsed as TopLevelMenuDef[];
+  } catch {
+    menus = [];
+  }
+
+  const triggerText = (node.props?.triggerText as string) || "Open Menu";
+  const className = (node.props?.className as string) || "";
+  const styleAttr = buildStyleAttr(node.props);
+
+  // Trigger styling
+  const triggerBgClass = (node.props?.triggerBgClass as string) || "";
+  const triggerTextClass = (node.props?.triggerTextClass as string) || "";
+  const triggerBorderClass = (node.props?.triggerBorderClass as string) || "";
+  const triggerBorderWidth = (node.props?.triggerBorderWidth as string) || "";
+  const triggerShadowClass = (node.props?.triggerShadowClass as string) || "";
+  const triggerBwClass = triggerBorderWidth === "0" ? "border-0"
+    : triggerBorderWidth === "2" ? "border-2"
+    : triggerBorderWidth === "4" ? "border-4"
+    : triggerBorderWidth === "8" ? "border-8"
+    : triggerBorderWidth === "1" ? "border" : "";
+  const triggerCls = [
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors h-9 px-4 py-2",
+    triggerBgClass || "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+    triggerTextClass, triggerBwClass, triggerBorderClass, triggerShadowClass,
+    className,
+  ].filter(Boolean).join(" ");
+
+  // Dropdown panel styling
+  const dropdownBgClass = (node.props?.dropdownBgClass as string) || "";
+  const dropdownTextClass = (node.props?.dropdownTextClass as string) || "";
+  const dropdownBorderClass = (node.props?.dropdownBorderClass as string) || "";
+  const dropdownBorderWidth = (node.props?.dropdownBorderWidth as string) || "";
+  const dropdownShadowClass = (node.props?.dropdownShadowClass as string) || "";
+  const shortcutTextClass = (node.props?.shortcutTextClass as string) || "";
+  const checkTextClass = (node.props?.checkTextClass as string) || "";
+  const hoverBgClass = (node.props?.hoverBgClass as string) || "";
+  const hoverTextClass = (node.props?.hoverTextClass as string) || "";
+  const dropBwClass = dropdownBorderWidth === "0" ? "border-0"
+    : dropdownBorderWidth === "2" ? "border-2"
+    : dropdownBorderWidth === "4" ? "border-4"
+    : dropdownBorderWidth === "8" ? "border-8"
+    : "border";
+  const dropCls = [
+    "min-w-[8rem] rounded-md p-1",
+    dropdownBgClass || "bg-popover",
+    dropBwClass, dropdownBorderClass,
+    dropdownShadowClass || "shadow-md",
+    dropdownTextClass,
+  ].filter(Boolean).join(" ");
+  const shortcutCls = shortcutTextClass || "text-muted-foreground";
+
+  const itemHoverCls = [
+    hoverBgClass ? `hover:${hoverBgClass}` : "",
+    hoverTextClass ? `hover:${hoverTextClass}` : "",
+  ].filter(Boolean).join(" ");
+  const itemClassAttr = itemHoverCls ? ` className="${escapeAttr(itemHoverCls)}"` : "";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<DropdownMenu${styleAttr}>`);
+  lines.push(`${pad}  <DropdownMenuTrigger className="${escapeAttr(triggerCls)}">`);
+  lines.push(`${pad}    ${escapeJsx(triggerText)}`);
+  lines.push(`${pad}  </DropdownMenuTrigger>`);
+  lines.push(`${pad}  <DropdownMenuContent className="${escapeAttr(dropCls)}">`);
+
+  for (let sectionIdx = 0; sectionIdx < menus.length; sectionIdx++) {
+    const menu = menus[sectionIdx];
+    if (sectionIdx > 0) {
+      lines.push(`${pad}    <DropdownMenuSeparator />`);
+    }
+    if (menu.label) {
+      lines.push(`${pad}    <DropdownMenuLabel>${escapeJsx(menu.label)}</DropdownMenuLabel>`);
+    }
+    for (const item of (menu.items || [])) {
+      if (item.type === "separator") {
+        lines.push(`${pad}    <DropdownMenuSeparator />`);
+      } else if (item.type === "checkbox") {
+        const checkedAttr = item.checked ? " checked" : "";
+        const checkTextAttr = checkTextClass ? ` checkTextClass="${escapeAttr(checkTextClass)}"` : "";
+        lines.push(`${pad}    <DropdownMenuCheckboxItem${checkedAttr}${itemClassAttr}${checkTextAttr}>`);
+        lines.push(`${pad}      ${escapeJsx(item.label || "")}`);
+        if (item.shortcut) lines.push(`${pad}      <DropdownMenuShortcut className="${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</DropdownMenuShortcut>`);
+        lines.push(`${pad}    </DropdownMenuCheckboxItem>`);
+      } else {
+        lines.push(`${pad}    <DropdownMenuItem${itemClassAttr}>`);
+        lines.push(`${pad}      ${escapeJsx(item.label || "")}`);
+        if (item.shortcut) lines.push(`${pad}      <DropdownMenuShortcut className="${escapeAttr(shortcutCls)}">${escapeJsx(item.shortcut)}</DropdownMenuShortcut>`);
+        lines.push(`${pad}    </DropdownMenuItem>`);
+      }
+    }
+  }
+
+  lines.push(`${pad}  </DropdownMenuContent>`);
+  lines.push(`${pad}</DropdownMenu>`);
   return lines.join("\n");
 }
 
