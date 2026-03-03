@@ -965,7 +965,8 @@ export function PaginationNext(props: any) {
 }`,
 
   "date-picker": `import { cn } from "@/components/ui/_cn";
-import { useState } from "react";
+import { createPortal } from "react-dom";
+import { useLayoutEffect, useRef, useState } from "react";
 const DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 function formatDate(date, fmt) {
   const yyyy = String(date.getFullYear());
@@ -1038,8 +1039,15 @@ export function DatePicker(props) {
     if (isToday(d)) return cn("inline-flex items-center justify-center rounded-md text-sm h-8 w-8", todayCls);
     return cn("inline-flex items-center justify-center rounded-md text-sm h-8 w-8", hoverBgClass ? (hoveredDay === d ? hoverBgClass : "") : "hover:bg-accent hover:text-accent-foreground");
   };
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [calPos, setCalPos] = useState<{top:number;left:number} | null>(null);
+  useLayoutEffect(() => {
+    if (!open || !wrapperRef.current) return;
+    const r = wrapperRef.current.getBoundingClientRect();
+    setCalPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX });
+  }, [open]);
   return (
-    <div className={cn("relative", className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }} {...rest}>
+    <div ref={wrapperRef} className={cn(className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }} {...rest}>
       <div className={cn("flex w-full rounded-md border border-input overflow-hidden", height !== "auto" ? "h-full" : "h-9", disabled && "opacity-50 cursor-not-allowed")}>
         <input type="text" value={inputValue} readOnly={!editable} placeholder={placeholder} disabled={disabled}
           onChange={(e) => editable && setInputValue(e.target.value)}
@@ -1051,10 +1059,9 @@ export function DatePicker(props) {
           </svg>
         </button>
       </div>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className={cn("absolute left-0 top-full z-50 mt-1 min-w-[280px] rounded-md border bg-popover p-3", calendarBorderClass, calendarShadowClass || "shadow-md")}>
+      {open && calPos && createPortal(<>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+          <div className={cn("fixed z-[9999] min-w-[280px] rounded-md border bg-popover p-3", calendarBorderClass, calendarShadowClass || "shadow-md")} style={{ top: calPos.top, left: calPos.left }}>
             <div className="flex items-center justify-between mb-2">
               <button type="button" onClick={prevMonth} className="inline-flex items-center justify-center rounded-md text-sm font-medium h-7 w-7 hover:bg-accent hover:text-accent-foreground">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m15 18-6-6 6-6"/></svg>
@@ -1092,8 +1099,7 @@ export function DatePicker(props) {
               </div>
             )}
           </div>
-        </>
-      )}
+        </>, document.body)}
     </div>
   );
 }`,
@@ -1333,30 +1339,37 @@ export function ToggleGroupItem(props: any) {
 
   // Phase 2: Complex components
   select: `import { cn } from "@/components/ui/_cn";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 const SelectCtx = createContext<any>(null);
 export function Select(props: any) {
   const { children, ...rest } = props;
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
-  const [triggerWidth, setTriggerWidth] = useState<number | null>(null);
-  return <SelectCtx.Provider value={{ value, setValue, open, setOpen, triggerWidth, setTriggerWidth }}><div className="relative inline-grid" {...rest}>{children}</div></SelectCtx.Provider>;
+  const triggerRef = useRef<HTMLElement | null>(null);
+  return <SelectCtx.Provider value={{ value, setValue, open, setOpen, triggerRef }}><div className="inline-grid" {...rest}>{children}</div></SelectCtx.Provider>;
 }
 export function SelectTrigger(props: any) {
   const { className = "", children, ...rest } = props;
   const ctx = useContext(SelectCtx);
   const ref = useRef<HTMLButtonElement>(null);
-  useEffect(() => { if (ref.current) ctx?.setTriggerWidth(ref.current.offsetWidth); }, []);
+  useEffect(() => { if (ref.current) ctx.triggerRef.current = ref.current; }, []);
   const cls = cn("flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1", className);
   return <button ref={ref} type="button" className={cls} onClick={() => ctx?.setOpen((o: boolean) => !o)} {...rest}>{children}<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 opacity-50"><path d="m6 9 6 6 6-6"/></svg></button>;
 }
 export function SelectContent(props: any) {
   const { className = "", children, style, ...rest } = props;
   const ctx = useContext(SelectCtx);
-  if (!ctx?.open) return null;
-  const effectiveWidth = style?.width ?? (ctx?.triggerWidth ? \`\${ctx.triggerWidth}px\` : undefined);
-  const cls = cn("absolute top-full left-0 z-50 mt-1 max-h-60 min-w-[8rem] overflow-auto rounded-md border border-gray-300 bg-popover p-1 text-popover-foreground shadow-lg", className);
-  return <div className={cls} style={{ width: effectiveWidth, ...style }} {...rest}>{children}</div>;
+  const [pos, setPos] = useState<{top:number;left:number;width:number} | null>(null);
+  useLayoutEffect(() => {
+    if (!ctx?.open || !ctx.triggerRef.current) return;
+    const r = ctx.triggerRef.current.getBoundingClientRect();
+    setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
+  }, [ctx?.open]);
+  if (!ctx?.open || !pos) return null;
+  const effectiveWidth = style?.width ?? \`\${pos.width}px\`;
+  const cls = cn("fixed z-[9999] max-h-60 min-w-[8rem] overflow-auto rounded-md border border-gray-300 bg-popover p-1 text-popover-foreground shadow-lg", className);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...style }} {...rest}>{children}</div></>, document.body);
 }
 export function SelectItem(props: any) {
   const { value, className = "", children, ...rest } = props;
@@ -1548,17 +1561,20 @@ export function Carousel(props: any) {
 
   // --- Overlay wrapper components (context-based for proper state sharing) ---
 
-  tooltip: `import { createContext, useContext, useState, useRef, useEffect } from "react";
+  tooltip: `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 const Ctx = createContext<any>(null);
 export function TooltipProvider(props: any) { return <>{props.children}</>; }
 export function Tooltip(props: any) {
   const [show, setShow] = useState(false);
-  return <Ctx.Provider value={{ show, setShow }}><div className="relative w-fit h-fit">{props.children}</div></Ctx.Provider>;
+  const triggerRef = useRef<HTMLElement | null>(null);
+  return <Ctx.Provider value={{ show, setShow, triggerRef }}><div className="w-fit h-fit">{props.children}</div></Ctx.Provider>;
 }
 export function TooltipTrigger(props: any) {
   const ctx = useContext(Ctx);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (ref.current) ctx.triggerRef.current = ref.current;
     const el = ref.current;
     if (!el || props.trigger !== "focus") return;
     const show = () => ctx?.setShow(true);
@@ -1570,20 +1586,27 @@ export function TooltipTrigger(props: any) {
   if (props.trigger === "focus") {
     return <div ref={ref}>{props.children}</div>;
   }
-  return <div onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)}>{props.children}</div>;
+  return <div ref={ref} onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)}>{props.children}</div>;
 }
 export function TooltipContent(props: any) {
   const ctx = useContext(Ctx);
-  if (!ctx?.show) return null;
+  const [pos, setPos] = useState<{top:number;left:number} | null>(null);
   const side = props.side || "top";
-  const pos: Record<string, string> = {
-    top: "left-1/2 -translate-x-1/2 bottom-full mb-2",
-    bottom: "left-1/2 -translate-x-1/2 top-full mt-2",
-    left: "top-1/2 -translate-y-1/2 right-full mr-2",
-    right: "top-1/2 -translate-y-1/2 left-full ml-2",
+  useLayoutEffect(() => {
+    if (!ctx?.show || !ctx.triggerRef.current) return;
+    const r = ctx.triggerRef.current.getBoundingClientRect();
+    const gap = 8;
+    if (side === "top") setPos({ top: r.top + window.scrollY - gap, left: r.left + window.scrollX + r.width / 2 });
+    else if (side === "bottom") setPos({ top: r.bottom + window.scrollY + gap, left: r.left + window.scrollX + r.width / 2 });
+    else if (side === "left") setPos({ top: r.top + window.scrollY + r.height / 2, left: r.left + window.scrollX - gap });
+    else setPos({ top: r.top + window.scrollY + r.height / 2, left: r.right + window.scrollX + gap });
+  }, [ctx?.show, side]);
+  if (!ctx?.show || !pos) return null;
+  const transformMap: Record<string, string> = {
+    top: "translate(-50%, -100%)", bottom: "translate(-50%, 0)", left: "translate(-100%, -50%)", right: "translate(0, -50%)"
   };
-  const cls = \`absolute \${pos[side] || pos.top} z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-pre-wrap w-max \${props.className || ""}\`.trim();
-  return <div className={cls}>{props.children}</div>;
+  const cls = \`fixed z-[9999] rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-pre-wrap w-max \${props.className || ""}\`.trim();
+  return createPortal(<div className={cls} style={{ top: pos.top, left: pos.left, transform: transformMap[side] }}>{props.children}</div>, document.body);
 }`,
 
   dialog: `import { createContext, useContext, useState } from "react";
@@ -1671,7 +1694,8 @@ export function DrawerContent(props: any) {
 }`,
 
   popover: `import { cn } from "@/components/ui/_cn";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ComboboxCtx } from "@/components/ui/_combobox";
 const Ctx = createContext<any>(null);
 export function Popover(props: any) {
@@ -1679,43 +1703,57 @@ export function Popover(props: any) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
-  const [triggerWidth, setTriggerWidth] = useState<number | null>(null);
-  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerWidth, setTriggerWidth }}><div className="relative inline-grid" style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
+  const triggerRef = useRef<HTMLElement | null>(null);
+  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className="inline-grid" style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
   const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => { if (ref.current) { const child = ref.current.firstElementChild as HTMLElement | null; ctx?.setTriggerWidth(child ? child.offsetWidth : ref.current.offsetWidth); } }, []);
-  const handleClick = () => { ctx?.setOpen(!ctx?.open); };
-  return <span ref={ref} onClick={handleClick} style={{ cursor: "pointer", display: "inline-block", ...props.style }}>{props.children}</span>;
+  useEffect(() => { if (ref.current) { const child = ref.current.firstElementChild as HTMLElement | null; ctx.triggerRef.current = child ?? ref.current; } }, []);
+  return <span ref={ref} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "inline-block", ...props.style }}>{props.children}</span>;
 }
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
   const comboCtx = useContext(ComboboxCtx);
-  if (!ctx?.open) return null;
-  const effectiveWidth = props.style?.width ?? (ctx?.triggerWidth ? \`\${ctx.triggerWidth}px\` : undefined);
-  const cls = cn("absolute left-0 top-full mt-1 z-50 rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
-  const handleClose = () => { ctx.setOpen(false); };
-  return <><div className="fixed inset-0 z-40" onClick={handleClose} /><div className={cls} style={{ width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>;
+  const [pos, setPos] = useState<{top:number;left:number;width:number} | null>(null);
+  useLayoutEffect(() => {
+    if (!ctx?.open || !ctx.triggerRef.current) return;
+    const r = ctx.triggerRef.current.getBoundingClientRect();
+    setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
+  }, [ctx?.open]);
+  if (!ctx?.open || !pos) return null;
+  const effectiveWidth = props.style?.width ?? \`\${pos.width}px\`;
+  const cls = cn("fixed z-[9999] rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
 }`,
 
-  "dropdown-menu": `import { createContext, useContext, useState } from "react";
+  "dropdown-menu": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 const Ctx = createContext<any>(null);
 export function DropdownMenu(props: any) {
   const [open, setOpen] = useState(false);
   const { style: _style, ...rest } = props;
-  return <Ctx.Provider value={{ open, setOpen }}><div className="relative inline-block" {...rest}>{props.children}</div></Ctx.Provider>;
+  const triggerRef = useRef<HTMLElement | null>(null);
+  return <Ctx.Provider value={{ open, setOpen, triggerRef }}><div className="inline-block" {...rest}>{props.children}</div></Ctx.Provider>;
 }
 export function DropdownMenuTrigger(props: any) {
   const ctx = useContext(Ctx);
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => { if (ref.current) ctx.triggerRef.current = ref.current; }, []);
   const cls = props.className || "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors h-9 px-4 py-2 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground";
-  return <span className={cls} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "inline-flex" }}>{props.children}</span>;
+  return <span ref={ref} className={cls} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "inline-flex" }}>{props.children}</span>;
 }
 export function DropdownMenuContent(props: any) {
   const ctx = useContext(Ctx);
-  if (!ctx?.open) return null;
-  const cls = ("absolute left-0 top-full mt-2 z-50 " + (props.className || "min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md")).trim();
-  return <div className={cls} style={props.style}>{props.children}</div>;
+  const [pos, setPos] = useState<{top:number;left:number} | null>(null);
+  useLayoutEffect(() => {
+    if (!ctx?.open || !ctx.triggerRef.current) return;
+    const r = ctx.triggerRef.current.getBoundingClientRect();
+    setPos({ top: r.bottom + window.scrollY + 8, left: r.left + window.scrollX });
+  }, [ctx?.open]);
+  if (!ctx?.open || !pos) return null;
+  const cls = ("fixed z-[9999] " + (props.className || "min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md")).trim();
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div className={cls} style={{ top: pos.top, left: pos.left, ...props.style }}>{props.children}</div></>, document.body);
 }
 export function DropdownMenuItem(props: any) {
   const base = "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent";
@@ -1803,29 +1841,38 @@ export function ContextMenuLabel(props: any) {
   return <div className="px-2 py-1.5 text-xs font-semibold">{props.children}</div>;
 }`,
 
-  "hover-card": `import { createContext, useContext, useState } from "react";
+  "hover-card": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 const Ctx = createContext<any>(null);
 export function HoverCard(props: any) {
   const [show, setShow] = useState(false);
-  return <Ctx.Provider value={{ show, setShow }}><div className="relative inline-block">{props.children}</div></Ctx.Provider>;
+  const triggerRef = useRef<HTMLElement | null>(null);
+  return <Ctx.Provider value={{ show, setShow, triggerRef }}><div className="inline-block">{props.children}</div></Ctx.Provider>;
 }
 export function HoverCardTrigger(props: any) {
   const ctx = useContext(Ctx);
-  return <span onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)} style={{ cursor: "pointer", display: "inline-block" }}>{props.children}</span>;
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => { if (ref.current) ctx.triggerRef.current = ref.current; }, []);
+  return <span ref={ref} onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)} style={{ cursor: "pointer", display: "inline-block" }}>{props.children}</span>;
 }
 export function HoverCardContent(props: any) {
   const ctx = useContext(Ctx);
-  if (!ctx?.show) return null;
+  const [pos, setPos] = useState<{top:number;left:number} | null>(null);
   const side = props.side || "bottom";
-  const pos: Record<string, string> = {
-    top: "left-0 bottom-full mb-2",
-    bottom: "left-0 top-full mt-2",
-    left: "top-0 right-full mr-2",
-    right: "top-0 left-full ml-2",
-  };
+  useLayoutEffect(() => {
+    if (!ctx?.show || !ctx.triggerRef.current) return;
+    const r = ctx.triggerRef.current.getBoundingClientRect();
+    const gap = 8;
+    if (side === "bottom") setPos({ top: r.bottom + window.scrollY + gap, left: r.left + window.scrollX });
+    else if (side === "top") setPos({ top: r.top + window.scrollY - gap, left: r.left + window.scrollX });
+    else if (side === "right") setPos({ top: r.top + window.scrollY, left: r.right + window.scrollX + gap });
+    else setPos({ top: r.top + window.scrollY, left: r.left + window.scrollX - gap });
+  }, [ctx?.show, side]);
+  if (!ctx?.show || !pos) return null;
   const defaultCls = "min-w-[200px] rounded-md border bg-popover p-4 text-popover-foreground shadow-md";
-  const cls = ("absolute z-50 " + (pos[side] || pos.bottom) + " " + (props.className || defaultCls)).trim();
-  return <div className={cls} style={props.style} onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)}>{props.children}</div>;
+  const transform = side === "top" ? "translateY(-100%)" : side === "left" ? "translateX(-100%)" : undefined;
+  const cls = ("fixed z-[9999] " + (props.className || defaultCls)).trim();
+  return createPortal(<div className={cls} style={{ top: pos.top, left: pos.left, transform, ...props.style }} onMouseEnter={() => ctx?.setShow(true)} onMouseLeave={() => ctx?.setShow(false)}>{props.children}</div>, document.body);
 }`,
 
   "data-table": `import { cn } from "@/components/ui/_cn";
