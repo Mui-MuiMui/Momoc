@@ -250,26 +250,31 @@ export function TableMetaEditor({ value, selectedNodeId }: TableMetaEditorProps)
                   {logR}
                 </td>
                 {colMap.map((physC, logC) => {
-                  const isHidden = hiddenCells.has(`${logR}_${logC}`);
+                  if (hiddenCells.has(`${logR}_${logC}`)) return null;
                   const cellKey = `${logR}_${logC}`;
                   const isSelected = selectedCells.has(cellKey);
                   const slotProps = getSlotProps(physR, physC);
                   const isHeader = !!(slotProps.isHeader);
+                  const colspan = (slotProps.colspan as number) || 1;
+                  const rowspan = (slotProps.rowspan as number) || 1;
+                  const isMerged = colspan > 1 || rowspan > 1;
                   return (
                     <td
                       key={physC}
-                      style={{ width: 28, minWidth: 28 }}
-                      className={`h-[18px] cursor-pointer border border-[var(--vscode-input-border,#555)] text-center transition-colors ${
-                        isHidden
-                          ? "bg-[var(--vscode-editor-background,#1e1e1e)] opacity-30"
-                          : isSelected
+                      colSpan={colspan > 1 ? colspan : undefined}
+                      rowSpan={rowspan > 1 ? rowspan : undefined}
+                      style={{ width: 28 * colspan, minWidth: 28 * colspan }}
+                      className={`cursor-pointer border border-[var(--vscode-input-border,#555)] text-center transition-colors ${
+                        isSelected
                           ? "ring-2 ring-inset ring-[var(--vscode-focusBorder,#007fd4)]"
+                          : isMerged
+                          ? "bg-[var(--vscode-button-background,#0e639c)] opacity-50"
                           : isHeader
                           ? "bg-[var(--vscode-toolbar-hoverBackground,#333)]"
                           : "hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
                       }`}
-                      onClick={() => !isHidden && toggleCell(logR, logC)}
-                      title={isHidden ? "hidden (merged)" : `cell_${physR}_${physC}`}
+                      onClick={() => toggleCell(logR, logC)}
+                      title={isMerged ? `cell_${physR}_${physC} (${colspan}x${rowspan})` : `cell_${physR}_${physC}`}
                     />
                   );
                 })}
