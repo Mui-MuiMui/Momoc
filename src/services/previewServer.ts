@@ -695,7 +695,7 @@ export function Button(props: any) {
     const childArray = Array.isArray(children) ? children : [children];
     const placeholder = String(childArray.find((c: any) => typeof c === "string") || "Select...");
     const icons = childArray.filter((c: any) => c !== null && c !== undefined && typeof c !== "string");
-    return <div className={cn("relative inline-flex items-center z-[51]", className)} style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
+    return <div className="relative inline-flex items-center z-[51]" style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
       <input ref={inputRef} type="text" className={cn("flex h-9 w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring", className)} value={comboCtx.search || ""} placeholder={placeholder} onChange={(e: any) => { comboCtx.setSearch(e.target.value); comboCtx.setOpen(true); }} onFocus={() => comboCtx.setOpen(true)} />
       <span className="absolute right-2 pointer-events-none opacity-50">{icons}</span>
     </div>;
@@ -1671,11 +1671,11 @@ import { createContext, useContext, useState } from "react";
 import { ComboboxCtx } from "@/components/ui/_combobox";
 const Ctx = createContext<any>(null);
 export function Popover(props: any) {
-  const { className = "", style, children } = props;
+  const { style, children } = props;
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
-  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen }}><div className={cn("relative inline-grid", className)} style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
+  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen }}><div className="relative inline-grid" style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
