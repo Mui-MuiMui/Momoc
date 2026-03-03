@@ -750,8 +750,8 @@ export function Separator(props: any) {
   table: `import { cn } from "@/components/ui/_cn";
 export function Table(props: any) {
   const { className = "", children, style, ...rest } = props;
-  const cls = cn("w-full caption-bottom text-sm", className);
-  return <div className="relative w-full overflow-auto" style={style}><table className={cls} {...rest}>{children}</table></div>;
+  const cls = cn("caption-bottom text-sm", className);
+  return <div className="relative overflow-auto" style={style}><table className={cls} {...rest}>{children}</table></div>;
 }
 export function TableHeader(props: any) {
   const { className = "", children, ...rest } = props;

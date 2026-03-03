@@ -1582,6 +1582,23 @@ function renderTable(
     else break;
   }
 
+  const stickyHeader = !!(node.props?.stickyHeader);
+  const pinnedLeftNum = parseInt((node.props?.pinnedLeft as string) || "0") || 0;
+
+  // Compute cumulative left offset for pinned columns
+  function calcPinnedLeftOffset(upToLogC: number): number {
+    let left = 0;
+    for (let i = 0; i < upToLogC; i++) {
+      const physC = colMap[i];
+      const w = colWidths[String(physC)] || "auto";
+      if (w !== "auto") {
+        const num = parseFloat(w);
+        if (!isNaN(num)) left += num;
+      }
+    }
+    return left;
+  }
+
   const lines: string[] = [];
   lines.push(`${pad}<Table${classNameAttr}${styleAttr}>`);
 
@@ -1619,7 +1636,8 @@ function renderTable(
       const alignCls = cellAlign === "right" ? "flex flex-col items-end"
         : cellAlign === "center" ? "flex flex-col items-center"
         : "";
-      const cellCls = [bgClass, borderClass, tableBorderClass].filter(Boolean).join(" ");
+      const isPinned = logC < pinnedLeftNum;
+      const cellCls = [bgClass, borderClass, tableBorderClass, isPinned ? "bg-background" : ""].filter(Boolean).join(" ");
       const classAttr = cellCls ? ` className="${escapeAttr(cellCls)}"` : "";
       const stylePartsCell: string[] = [];
       const rawEffectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth
@@ -1629,6 +1647,11 @@ function renderTable(
       if (effectiveWidth) stylePartsCell.push(`width: "${effectiveWidth}"`);
       const normalizedCellHeight = normalizeCssSize(cellHeight || undefined);
       if (normalizedCellHeight && normalizedCellHeight !== "auto") stylePartsCell.push(`height: "${normalizedCellHeight}"`);
+      if (isPinned) {
+        stylePartsCell.push(`position: "sticky"`);
+        stylePartsCell.push(`left: ${calcPinnedLeftOffset(logC)}`);
+        stylePartsCell.push(`zIndex: 1`);
+      }
       const cellStyleAttr = stylePartsCell.length > 0 ? ` style={{ ${stylePartsCell.join(", ")} }}` : "";
       const slotChildren = slotNode
         ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, rowIndent + 3)).filter(Boolean)
@@ -1651,7 +1674,8 @@ function renderTable(
   }
 
   if (headerRowCount > 0) {
-    lines.push(`${pad}  <TableHeader>`);
+    const stickyAttr = stickyHeader ? ` className="sticky top-0 z-[2] bg-muted/50"` : "";
+    lines.push(`${pad}  <TableHeader${stickyAttr}>`);
     for (let logR = 0; logR < headerRowCount; logR++) {
       renderRow(logR, indent + 2);
     }
