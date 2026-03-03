@@ -1607,18 +1607,6 @@ function renderTable(
     return left;
   }
 
-  const extraStyles: Record<string, string> = { borderSpacing: "0" };
-  if (totalColWidth > 0) extraStyles.minWidth = `${totalColWidth}px`;
-  const styleAttrWithMin = buildStyleAttr(node.props, extraStyles);
-
-  // Combine user className with outer border class (top+left)
-  const outerBorderAttr = tableOuterBorderClass
-    ? ` className="${escapeAttr([tableOuterBorderClass, className].filter(Boolean).join(" "))}"`
-    : classNameAttr;
-
-  const lines: string[] = [];
-  lines.push(`${pad}<Table${outerBorderAttr}${styleAttrWithMin}>`);
-
   const tableBorderWidth = (node.props?.borderWidth as string) || "1";
   const tableBorderColor = (node.props?.borderColor as string) || "";
   const borderColorCls = tableBorderColor || "border-border";
@@ -1633,6 +1621,18 @@ function renderTable(
   const tableOuterBorderClass = tableBorderWidth === "0"
     ? ""
     : `border-t${bwSuffix} border-l${bwSuffix} ${borderColorCls}`;
+
+  const extraStyles: Record<string, string> = { borderSpacing: "0" };
+  if (totalColWidth > 0) extraStyles.minWidth = `${totalColWidth}px`;
+  const styleAttrWithMin = buildStyleAttr(node.props, extraStyles);
+
+  // Combine user className with outer border class (top+left)
+  const outerBorderAttr = tableOuterBorderClass
+    ? ` className="${escapeAttr([tableOuterBorderClass, className].filter(Boolean).join(" "))}"`
+    : classNameAttr;
+
+  const lines: string[] = [];
+  lines.push(`${pad}<Table${outerBorderAttr}${styleAttrWithMin}>`);
 
   function renderRow(logR: number, rowIndent: number): void {
     const rowPad = "  ".repeat(rowIndent);
