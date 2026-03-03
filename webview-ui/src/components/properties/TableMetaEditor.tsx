@@ -207,14 +207,15 @@ export function TableMetaEditor({ value, selectedNodeId }: TableMetaEditorProps)
 
       {/* Visual grid */}
       <div className="overflow-auto">
-        <table className="border-collapse text-[10px]">
+        <table className="border-collapse text-[10px]" style={{ tableLayout: "fixed" }}>
           <thead>
             <tr>
-              <th className="w-4" />
+              <th style={{ width: 16, minWidth: 16 }} />
               {colMap.map((physC, logC) => (
                 <th
                   key={physC}
-                  className={`h-5 w-8 cursor-pointer border border-[var(--vscode-input-border,#555)] text-center ${
+                  style={{ width: 28, minWidth: 28 }}
+                  className={`h-5 cursor-pointer border border-[var(--vscode-input-border,#555)] text-center ${
                     selectedCol === logC
                       ? "bg-[var(--vscode-button-background,#0e639c)] text-white"
                       : "hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
@@ -231,7 +232,8 @@ export function TableMetaEditor({ value, selectedNodeId }: TableMetaEditorProps)
             {rowMap.map((physR, logR) => (
               <tr key={physR}>
                 <td
-                  className={`h-[18px] w-4 cursor-pointer border border-[var(--vscode-input-border,#555)] text-center ${
+                  style={{ width: 16, minWidth: 16 }}
+                  className={`h-[18px] cursor-pointer border border-[var(--vscode-input-border,#555)] text-center ${
                     selectedRow === logR
                       ? "bg-[var(--vscode-button-background,#0e639c)] text-white"
                       : "hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
@@ -250,7 +252,8 @@ export function TableMetaEditor({ value, selectedNodeId }: TableMetaEditorProps)
                   return (
                     <td
                       key={physC}
-                      className={`h-[18px] w-8 cursor-pointer border border-[var(--vscode-input-border,#555)] text-center transition-colors ${
+                      style={{ width: 28, minWidth: 28 }}
+                      className={`h-[18px] cursor-pointer border border-[var(--vscode-input-border,#555)] text-center transition-colors ${
                         isHidden
                           ? "bg-[var(--vscode-editor-background,#1e1e1e)] opacity-30"
                           : isSelected
@@ -381,24 +384,22 @@ export function TableMetaEditor({ value, selectedNodeId }: TableMetaEditorProps)
         </div>
       </div>
 
-      {/* Column widths — horizontal scroll for many columns */}
+      {/* Column widths */}
       <div className="flex flex-col gap-1">
         <span className="text-[10px] uppercase tracking-wide text-[var(--vscode-descriptionForeground,#888)]">列幅</span>
-        <div className="overflow-x-auto">
-          <div className="flex flex-row gap-1" style={{ minWidth: "max-content" }}>
-            {colMap.map((physC, logC) => (
-              <div key={physC} className="flex flex-col gap-0.5" style={{ minWidth: "56px" }}>
-                <span className="text-center text-[10px] text-[var(--vscode-descriptionForeground,#888)]">{logC}</span>
-                <input
-                  type="text"
-                  value={colWidths[String(physC)] || "auto"}
-                  onChange={(e) => updateMeta(setColWidth(meta, physC, e.target.value))}
-                  className={`${INPUT_CLASS} w-full`}
-                  placeholder="auto"
-                />
-              </div>
-            ))}
-          </div>
+        <div className="flex flex-col gap-1">
+          {colMap.map((physC, logC) => (
+            <div key={physC} className="flex items-center gap-1">
+              <span className="w-8 text-[10px] text-[var(--vscode-foreground,#ccc)]">Col {logC}</span>
+              <input
+                type="text"
+                value={colWidths[String(physC)] || "auto"}
+                onChange={(e) => updateMeta(setColWidth(meta, physC, e.target.value))}
+                className={`${INPUT_CLASS} flex-1`}
+                placeholder="auto"
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>
