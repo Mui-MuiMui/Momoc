@@ -1658,10 +1658,11 @@ function renderTable(
       const colSpanAttr = colspan > 1 ? ` colSpan={${colspan}}` : "";
       const rowSpanAttr = rowspan > 1 ? ` rowSpan={${rowspan}}` : "";
       // alignCls and slotClassName go on an inner div, NOT on the td (display:flex on td breaks rowspan/colspan)
-      const alignCls = cellAlign === "right" ? "flex flex-col items-end"
-        : cellAlign === "center" ? "flex flex-col items-center"
-        : "";
-      const innerDivCls = [alignCls, slotClassName].filter(Boolean).join(" ");
+      // The inner div is always flex flex-col so that items-* and justify-* from slotClassName work correctly
+      const alignItemsCls = cellAlign === "right" ? "items-end"
+        : cellAlign === "center" ? "items-center"
+        : "items-start";
+      const innerDivCls = ["h-full flex flex-col p-1", alignItemsCls, slotClassName].filter(Boolean).join(" ");
       const isPinned = logC < pinnedLeftNum;
       // bg-background is a fallback for pinned cells only when no bgClass is set (prevents transparent sticky cells)
       const pinnedBg = isPinned && !bgClass ? "bg-background" : "";
@@ -1686,13 +1687,9 @@ function renderTable(
         : [];
       if (slotChildren.length > 0) {
         lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr}${cellStyleAttr}>`);
-        if (innerDivCls) {
-          lines.push(`${rowPad}    <div className="${escapeAttr(innerDivCls)}">`);
-          for (const child of slotChildren) lines.push(child);
-          lines.push(`${rowPad}    </div>`);
-        } else {
-          for (const child of slotChildren) lines.push(child);
-        }
+        lines.push(`${rowPad}    <div className="${escapeAttr(innerDivCls)}">`);
+        for (const child of slotChildren) lines.push(child);
+        lines.push(`${rowPad}    </div>`);
         lines.push(`${rowPad}  </${cellTag}>`);
       } else {
         lines.push(`${rowPad}  <${cellTag}${colSpanAttr}${rowSpanAttr}${classAttr}${cellStyleAttr} />`);
