@@ -71,6 +71,8 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   ResizablePanelSlot: {},
   Table: {
     borderWidth: ["0", "1", "2", "4"],
+    stickyHeader: ["", "1", "2", "3", "4"],
+    pinnedLeft: ["", "0", "1", "2", "3", "4"],
   },
   TableCellSlot: {
     align: ["left", "center", "right"],

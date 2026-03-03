@@ -1582,7 +1582,7 @@ function renderTable(
     else break;
   }
 
-  const stickyHeader = !!(node.props?.stickyHeader);
+  const stickyHeaderNum = parseInt((node.props?.stickyHeader as string) || "0") || 0;
   const pinnedLeftNum = parseInt((node.props?.pinnedLeft as string) || "0") || 0;
 
   // Compute total column width for minWidth (enables scroll when Table width < total col widths)
@@ -1662,7 +1662,7 @@ function renderTable(
       const alignCls = cellAlign === "right" ? "flex flex-col items-end"
         : cellAlign === "center" ? "flex flex-col items-center"
         : "";
-      const innerDivCls = ["h-full p-1", alignCls, slotClassName].filter(Boolean).join(" ");
+      const innerDivCls = ["min-h-full p-1", alignCls, slotClassName].filter(Boolean).join(" ");
       const isPinned = logC < pinnedLeftNum;
       // bg-background is a fallback for pinned cells only when no bgClass is set (prevents transparent sticky cells)
       const pinnedBg = isPinned && !bgClass ? "bg-background" : "";
@@ -1712,7 +1712,7 @@ function renderTable(
   if (headerRowCount > 0) {
     lines.push(`${pad}  <TableHeader>`);
     for (let logR = 0; logR < headerRowCount; logR++) {
-      renderRow(logR, indent + 2, stickyHeader);
+      renderRow(logR, indent + 2, logR < stickyHeaderNum);
     }
     lines.push(`${pad}  </TableHeader>`);
   }
@@ -1721,7 +1721,7 @@ function renderTable(
   if (bodyRowCount > 0) {
     lines.push(`${pad}  <TableBody>`);
     for (let logR = headerRowCount; logR < rowMap.length; logR++) {
-      renderRow(logR, indent + 2);
+      renderRow(logR, indent + 2, logR < stickyHeaderNum);
     }
     lines.push(`${pad}  </TableBody>`);
   }

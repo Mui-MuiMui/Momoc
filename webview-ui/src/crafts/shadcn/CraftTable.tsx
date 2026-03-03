@@ -81,7 +81,7 @@ export const TableCellSlot: UserComponent<TableCellSlotProps> = ({
       ref={(ref) => {
         if (ref) connect(ref);
       }}
-      className={cn("min-h-[20px] h-full p-1", alignCls, bgClass, borderClass, className)}
+      className={cn("min-h-full p-1", alignCls, bgClass, borderClass, className)}
       style={Object.keys(cellStyle).length > 0 ? cellStyle : undefined}
     >
       {children}
@@ -117,7 +117,7 @@ interface CraftTableProps {
   className?: string;
   borderColor?: string;
   borderWidth?: string;
-  stickyHeader?: boolean;
+  stickyHeader?: string;
   pinnedLeft?: string;
 }
 
@@ -144,7 +144,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   className = "",
   borderColor = "",
   borderWidth = "1",
-  stickyHeader = false,
+  stickyHeader = "",
   pinnedLeft = "",
 }) => {
   const {
@@ -160,6 +160,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   const { rowMap, colMap, colWidths } = meta;
 
   const pinnedLeftNum = parseInt(pinnedLeft || "0") || 0;
+  const stickyHeaderNum = parseInt(stickyHeader || "0") || 0;
 
   // Compute hidden cells due to colspan/rowspan
   const hiddenCells = new Set<string>();
@@ -321,12 +322,15 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
         </colgroup>
         {headerRowCount > 0 && (
           <thead className="bg-muted/50">
-            {headerRows.map((_, logR) => renderRow(logR, stickyHeader))}
+            {headerRows.map((_, logR) => renderRow(logR, logR < stickyHeaderNum))}
           </thead>
         )}
         {bodyRows.length > 0 && (
           <tbody>
-            {bodyRows.map((_, idx) => renderRow(headerRowCount + idx))}
+            {bodyRows.map((_, idx) => {
+              const logR = headerRowCount + idx;
+              return renderRow(logR, logR < stickyHeaderNum);
+            })}
           </tbody>
         )}
       </table>
@@ -343,7 +347,7 @@ CraftTable.craft = {
     className: "",
     borderColor: "",
     borderWidth: "1",
-    stickyHeader: false,
+    stickyHeader: "",
     pinnedLeft: "",
   },
   rules: {
