@@ -1648,7 +1648,9 @@ function renderTable(
         : cellAlign === "center" ? "flex flex-col items-center"
         : "";
       const isPinned = logC < pinnedLeftNum;
-      const cellCls = [bgClass, borderClass, tableBorderClass, isPinned ? "bg-background" : ""].filter(Boolean).join(" ");
+      // bg-background is a fallback for pinned cells only when no bgClass is set (prevents transparent sticky cells)
+      const pinnedBg = isPinned && !bgClass ? "bg-background" : "";
+      const cellCls = [bgClass, borderClass, tableBorderClass, pinnedBg].filter(Boolean).join(" ");
       const classAttr = cellCls ? ` className="${escapeAttr(cellCls)}"` : "";
       const stylePartsCell: string[] = [];
       const rawEffectiveWidth = (cellWidth && cellWidth !== "auto") ? cellWidth

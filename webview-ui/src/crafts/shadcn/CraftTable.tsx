@@ -246,13 +246,6 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
           const normalizedCellHeight = normalizeCssSize(cellHeight);
           if (normalizedCellHeight && normalizedCellHeight !== "auto") cellStyle.height = normalizedCellHeight;
 
-          // Pinned column sticky positioning
-          if (logC < pinnedLeftNum) {
-            cellStyle.position = "sticky";
-            cellStyle.left = calcPinnedLeft(colMap, colWidths, logC);
-            cellStyle.zIndex = 1;
-          }
-
           // td/th needs height:1px so that inner div with height:100% stretches to the cell's actual height
           if (rowspan > 1) cellStyle.height = "1px";
 
@@ -263,7 +256,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
               colSpan={colspan > 1 ? colspan : undefined}
               rowSpan={rowspan > 1 ? rowspan : undefined}
               style={Object.keys(cellStyle).length > 0 ? cellStyle : undefined}
-              className={cn(cellBorderClass, "p-0 align-top", logC < pinnedLeftNum ? "bg-background" : "")}
+              className={cn(cellBorderClass, "p-0 align-top")}
             >
               <Element
                 id={cellKey}
@@ -282,7 +275,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
 
   return (
     <div
-      className={cn("overflow-hidden", className)}
+      className={cn("overflow-auto", className)}
       style={Object.keys(wrapperStyle).length > 0 ? wrapperStyle : undefined}
     >
       {/* Drag handle strip — outside cell canvas, so clicks reach CraftTable's connect */}
