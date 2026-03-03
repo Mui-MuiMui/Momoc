@@ -462,7 +462,13 @@ export function PropEditor() {
       !LAYOUT_ALL_KEYS.has(key) &&
       !INTERACTION_KEYS.has(key) &&
       !excludedProps.has(key),
-  ).map(([key, defaultVal]) => [key, key in selectedProps ? selectedProps[key] : defaultVal]);
+  ).map(([key, defaultVal]) => {
+    const selectedVal = selectedProps[key];
+    // selectedProps の値の型が craftDefaultProps のデフォルト値と一致する場合のみ使用
+    // 型不一致（旧boolean等）は無効値として破棄しデフォルト値を使う
+    const val = typeof selectedVal === typeof defaultVal ? selectedVal : defaultVal;
+    return [key, val];
+  });
 
   const grouped = new Map<PropGroup, [string, unknown][]>([
     ["common", [...commonEntries, ...interactionEntries]],
