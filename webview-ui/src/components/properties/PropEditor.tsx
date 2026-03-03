@@ -324,6 +324,8 @@ const COMPONENT_EXCLUDED_PROPS: Record<string, Set<string>> = {
   AspectRatio: new Set(["keepAspectRatio"]),
   // Avatar: width/height はドラッグリサイズ用に内部で保持するが PropEditor には非表示
   Avatar: new Set(["width", "height"]),
+  // Table: stickyHeader/pinnedLeft は TableMetaEditor 内で編集するため PropEditor からは非表示
+  Table: new Set(["stickyHeader", "pinnedLeft"]),
 };
 
 export function PropEditor() {

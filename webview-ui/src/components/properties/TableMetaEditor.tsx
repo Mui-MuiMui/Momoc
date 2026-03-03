@@ -69,6 +69,12 @@ interface TableMetaEditorProps {
 
 export function TableMetaEditor({ value, selectedNodeId }: TableMetaEditorProps) {
   const { actions, nodes } = useEditor((state) => ({ nodes: state.nodes }));
+
+  function updateProp(key: string, value: string) {
+    actions.setProp(selectedNodeId, (props: Record<string, unknown>) => {
+      props[key] = value;
+    });
+  }
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [selectedRow, setSelectedRow] = useState<number | null>(null);
   const [selectedCol, setSelectedCol] = useState<number | null>(null);
@@ -381,6 +387,31 @@ export function TableMetaEditor({ value, selectedNodeId }: TableMetaEditorProps)
           >
             Unmerge
           </button>
+        </div>
+      </div>
+
+      {/* Scroll lock settings */}
+      <div className="flex flex-col gap-1">
+        <span className="text-[10px] uppercase tracking-wide text-[var(--vscode-descriptionForeground,#888)]">スクロール固定</span>
+        <div className="flex items-center gap-1">
+          <span className="w-24 text-[10px] text-[var(--vscode-foreground,#ccc)]">ヘッダー固定行数</span>
+          <input
+            type="text"
+            value={String(tableNode?.data?.props?.stickyHeader ?? "")}
+            onChange={(e) => updateProp("stickyHeader", e.target.value)}
+            className={`${INPUT_CLASS} flex-1`}
+            placeholder="例: 1"
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-24 text-[10px] text-[var(--vscode-foreground,#ccc)]">左固定列数</span>
+          <input
+            type="text"
+            value={String(tableNode?.data?.props?.pinnedLeft ?? "")}
+            onChange={(e) => updateProp("pinnedLeft", e.target.value)}
+            className={`${INPUT_CLASS} flex-1`}
+            placeholder="例: 1"
+          />
         </div>
       </div>
 
