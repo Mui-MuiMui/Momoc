@@ -1607,19 +1607,32 @@ function renderTable(
     return left;
   }
 
-  const extraStyles = totalColWidth > 0 ? { minWidth: `${totalColWidth}px` } : undefined;
+  const extraStyles: Record<string, string> = { borderSpacing: "0" };
+  if (totalColWidth > 0) extraStyles.minWidth = `${totalColWidth}px`;
   const styleAttrWithMin = buildStyleAttr(node.props, extraStyles);
 
+  // Combine user className with outer border class (top+left)
+  const outerBorderAttr = tableOuterBorderClass
+    ? ` className="${escapeAttr([tableOuterBorderClass, className].filter(Boolean).join(" "))}"`
+    : classNameAttr;
+
   const lines: string[] = [];
-  lines.push(`${pad}<Table${classNameAttr}${styleAttrWithMin}>`);
+  lines.push(`${pad}<Table${outerBorderAttr}${styleAttrWithMin}>`);
 
   const tableBorderWidth = (node.props?.borderWidth as string) || "1";
   const tableBorderColor = (node.props?.borderColor as string) || "";
-  const tableBwClass = tableBorderWidth === "0" ? "border-0"
-    : tableBorderWidth === "2" ? "border-2"
-    : tableBorderWidth === "4" ? "border-4"
-    : "border";
-  const tableBorderClass = [tableBwClass, tableBorderColor || "border-border"].filter(Boolean).join(" ");
+  const borderColorCls = tableBorderColor || "border-border";
+  const bwSuffix = tableBorderWidth === "0" ? "-0"
+    : tableBorderWidth === "2" ? "-2"
+    : tableBorderWidth === "4" ? "-4"
+    : "";
+  // border-separate pattern: cell gets right+bottom, table gets top+left outer border
+  const tableBorderClass = tableBorderWidth === "0"
+    ? "border-r-0 border-b-0"
+    : `border-r${bwSuffix} border-b${bwSuffix} ${borderColorCls}`;
+  const tableOuterBorderClass = tableBorderWidth === "0"
+    ? ""
+    : `border-t${bwSuffix} border-l${bwSuffix} ${borderColorCls}`;
 
   function renderRow(logR: number, rowIndent: number): void {
     const rowPad = "  ".repeat(rowIndent);

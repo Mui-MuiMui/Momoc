@@ -215,11 +215,21 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
     return isNaN(num) ? sum : sum + num;
   }, 0);
 
-  const bwClass = borderWidth === "0" ? "border-0"
-    : borderWidth === "2" ? "border-2"
-    : borderWidth === "4" ? "border-4"
-    : "border";
-  const cellBorderClass = cn(bwClass, borderColor || "border-border");
+  // border-separate + border-spacing:0 is used for sticky column compatibility.
+  // Each cell gets right+bottom border; the table itself gets top+left border.
+  const borderColorCls = borderColor || "border-border";
+  const bwSuffix = borderWidth === "0" ? "-0"
+    : borderWidth === "2" ? "-2"
+    : borderWidth === "4" ? "-4"
+    : "";
+  // Cell border: right + bottom only (prevents double borders with border-separate)
+  const cellBorderClass = borderWidth === "0"
+    ? "border-r-0 border-b-0"
+    : cn(`border-r${bwSuffix}`, `border-b${bwSuffix}`, borderColorCls);
+  // Table outer border: top + left only
+  const tableOuterBorderClass = borderWidth === "0"
+    ? ""
+    : cn(`border-t${bwSuffix}`, `border-l${bwSuffix}`, borderColorCls);
 
   function renderRow(logR: number) {
     const physR = rowMap[logR];
@@ -288,8 +298,8 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
         <span className="text-[9px] text-muted-foreground">⠿ Table</span>
       </div>
       <table
-        className="caption-bottom border-collapse text-sm"
-        style={{ tableLayout: "fixed", minWidth: totalColWidth > 0 ? totalColWidth : undefined }}
+        className={cn("caption-bottom text-sm border-separate", tableOuterBorderClass)}
+        style={{ tableLayout: "fixed", borderSpacing: 0, minWidth: totalColWidth > 0 ? totalColWidth : undefined }}
       >
         <colgroup>
           {colMap.map((physC) => {

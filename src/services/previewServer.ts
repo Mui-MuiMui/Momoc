@@ -753,8 +753,9 @@ export function Table(props: any) {
   const { width, height, minWidth, ...tableStyle } = style || {};
   const wrapperStyle = Object.fromEntries(Object.entries({ width, height }).filter(([, v]) => v != null));
   const innerStyle = Object.fromEntries(Object.entries({ minWidth, ...tableStyle }).filter(([, v]) => v != null));
-  const cls = cn("caption-bottom text-sm border-collapse", className);
-  return <div className="relative overflow-auto" style={Object.keys(wrapperStyle).length ? wrapperStyle : undefined}><table className={cls} style={Object.keys(innerStyle).length ? innerStyle : undefined} {...rest}>{children}</table></div>;
+  const cls = cn("caption-bottom text-sm border-separate", className);
+  const mergedInnerStyle = { borderSpacing: 0, ...innerStyle };
+  return <div className="relative overflow-auto" style={Object.keys(wrapperStyle).length ? wrapperStyle : undefined}><table className={cls} style={mergedInnerStyle} {...rest}>{children}</table></div>;
 }
 export function TableHeader(props: any) {
   const { className = "", children, ...rest } = props;
