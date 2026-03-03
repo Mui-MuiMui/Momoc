@@ -1216,7 +1216,7 @@ export function craftStateToTsx(
 
     // Combobox special case: render with Popover + Command structure
     if (resolvedName === "CraftCombobox") {
-      rendered = `${mocComments}\n${renderCombobox(node.props, styleAttr, pad)}`;
+      rendered = `${mocComments}\n${renderCombobox(node.props, classNameAttr, styleAttr, pad)}`;
       return applyCommonWrappers(rendered);
     }
 
@@ -2646,6 +2646,7 @@ function renderSelect(
 
 function renderCombobox(
   props: Record<string, unknown>,
+  classNameAttr: string,
   styleAttr: string,
   pad: string,
 ): string {
@@ -2653,10 +2654,13 @@ function renderCombobox(
   const placeholder = (props?.placeholder as string) || "Select an option...";
   const linkedMocPath = (props?.linkedMocPath as string) || "";
 
+  const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
+  const buttonClassName = ["w-full justify-between", userClass].filter(Boolean).join(" ");
+
   const lines: string[] = [];
   lines.push(`${pad}<Popover>`);
   lines.push(`${pad}  <PopoverTrigger asChild>`);
-  lines.push(`${pad}    <Button variant="outline" role="combobox" className="w-full justify-between"${styleAttr}>`);
+  lines.push(`${pad}    <Button variant="outline" role="combobox" className="${buttonClassName}"${styleAttr}>`);
   lines.push(`${pad}      ${escapeJsx(placeholder)}`);
   lines.push(`${pad}      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />`);
   lines.push(`${pad}    </Button>`);
