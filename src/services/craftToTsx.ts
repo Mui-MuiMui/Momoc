@@ -613,6 +613,16 @@ export function craftStateToTsx(
       addImport("@/components/ui/select", "SelectValue");
     }
 
+    // Collect command sub-component imports
+    if (resolvedName === "CraftCommand") {
+      addImport("@/components/ui/command", "Command");
+      addImport("@/components/ui/command", "CommandEmpty");
+      addImport("@/components/ui/command", "CommandGroup");
+      addImport("@/components/ui/command", "CommandInput");
+      addImport("@/components/ui/command", "CommandItem");
+      addImport("@/components/ui/command", "CommandList");
+    }
+
     // Collect combobox sub-component imports
     if (resolvedName === "CraftCombobox") {
       addImport("@/components/ui/popover", "PopoverContent");
@@ -1210,6 +1220,12 @@ export function craftStateToTsx(
     // Select special case: render with SelectTrigger/Content/Item
     if (resolvedName === "CraftSelect") {
       rendered = `${mocComments}\n${renderSelect(node.props, tag, propsStr, classNameAttr, styleAttr, pad)}`;
+      return applyCommonWrappers(rendered);
+    }
+
+    // Command special case
+    if (resolvedName === "CraftCommand") {
+      rendered = `${mocComments}\n${renderCommand(node.props, classNameAttr, styleAttr, pad)}`;
       return applyCommonWrappers(rendered);
     }
 
@@ -2698,6 +2714,35 @@ function renderSelect(
   }
   lines.push(`${pad}  </SelectContent>`);
   lines.push(`${pad}</${tag}>`);
+  return lines.join("\n");
+}
+
+function renderCommand(
+  props: Record<string, unknown>,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const items = ((props?.items as string) || "Calendar,Search,Settings").split(",").map((s) => s.trim());
+  const placeholder = (props?.placeholder as string) || "Type a command or search...";
+  const linkedMocPath = (props?.linkedMocPath as string) || "";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<Command${classNameAttr}${styleAttr}>`);
+  lines.push(`${pad}  <CommandInput placeholder="${escapeAttr(placeholder)}" />`);
+  lines.push(`${pad}  <CommandList>`);
+  lines.push(`${pad}    <CommandEmpty>No results found.</CommandEmpty>`);
+  lines.push(`${pad}    <CommandGroup>`);
+  if (linkedMocPath) {
+    lines.push(`${pad}      {/* linked: ${escapeJsx(linkedMocPath)} */}`);
+  } else {
+    for (const item of items) {
+      lines.push(`${pad}      <CommandItem value="${escapeAttr(item)}">${escapeJsx(item)}</CommandItem>`);
+    }
+  }
+  lines.push(`${pad}    </CommandGroup>`);
+  lines.push(`${pad}  </CommandList>`);
+  lines.push(`${pad}</Command>`);
   return lines.join("\n");
 }
 
