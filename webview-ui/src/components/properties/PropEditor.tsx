@@ -123,6 +123,7 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   Command: {
     itemShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+    separatorShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
   },
 };
 
@@ -154,6 +155,8 @@ const BUTTON_GROUP_PROPS: Record<string, Record<string, string[]>> = {
   },
   Command: {
     itemBorderWidth: ["", "0", "1", "2", "4", "8"],
+    inputBorderWidth: ["", "0", "1", "2", "4", "8"],
+    separatorBorderWidth: ["", "0", "1", "2", "4", "8"],
   },
 };
 
@@ -170,10 +173,10 @@ const MOC_PATH_PROPS = new Set(["linkedMocPath", "contextMenuMocPath", "hoverCar
 const COLOR_PALETTE_PROPS = new Set(["cardBorderColor", "cardBgColor", "descriptionColor", "labelColor"]);
 
 /** Props that use the Tailwind bg class palette picker UI (stores "bg-red-500" style class names). */
-const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "triggerBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass", "selectedBgClass", "headerBgClass", "hoverRowClass", "selectedRowClass", "itemBgClass"]);
+const TAILWIND_BG_PALETTE_PROPS = new Set(["checkedClassName", "uncheckedClassName", "fillClassName", "trackClassName", "bgClass", "tabListBgClass", "tabActiveBgClass", "contentBgClass", "separatorColor", "todayBgClass", "buttonBgClass", "triggerBgClass", "hoverBgClass", "dropdownBgClass", "panelBgClass", "activeBgClass", "selectedBgClass", "headerBgClass", "hoverRowClass", "selectedRowClass", "itemBgClass", "separatorClass"]);
 
 /** Props that use the Tailwind border class palette picker UI (stores "border-red-500" style class names). */
-const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "triggerBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass", "calendarBorderClass", "todayBorderClass", "selectedBorderClass", "headerBorderClass", "tableBorderClass", "cardBorderClass", "itemBorderClass"]);
+const TAILWIND_BORDER_PALETTE_PROPS = new Set(["borderColor", "outerBorderColor", "dividerBorderColor", "triggerBorderColor", "contentBorderColor", "buttonBorderClass", "triggerBorderClass", "dropdownBorderClass", "panelBorderClass", "activeBorderClass", "calendarBorderClass", "todayBorderClass", "selectedBorderClass", "headerBorderClass", "tableBorderClass", "cardBorderClass", "itemBorderClass", "inputBorderClass", "separatorBorderClass"]);
 
 /** Props that use the Tailwind text class palette picker UI (stores "text-red-500" style class names). */
 const TAILWIND_TEXT_PALETTE_PROPS = new Set(["todayTextClass", "hoverTextClass", "buttonTextClass", "triggerTextClass", "dropdownTextClass", "shortcutTextClass", "checkTextClass", "panelTextClass", "activeTextClass", "selectedTextClass", "headerTextClass", "headerHoverTextClass", "sortIconClass", "filterIconClass", "itemTextClass", "iconClass", "groupHeadingClass"]);

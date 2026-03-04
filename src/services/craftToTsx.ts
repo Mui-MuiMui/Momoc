@@ -2749,14 +2749,15 @@ function renderCommandItems(
   iconCls: string,
   shortcutCls: string,
   groupHeadingCls: string,
+  separatorCls: string,
 ): string[] {
   const lines: string[] = [];
   for (const def of defs) {
     if (def.type === "separator") {
-      lines.push(`${pad}<CommandSeparator />`);
+      lines.push(`${pad}<CommandSeparator className="${escapeAttr(separatorCls)}" />`);
     } else if (def.type === "group") {
       lines.push(`${pad}<CommandGroup heading="${escapeAttr(def.label)}">`);
-      lines.push(...renderCommandItems(def.items, pad + "  ", itemCls, iconCls, shortcutCls, groupHeadingCls));
+      lines.push(...renderCommandItems(def.items, pad + "  ", itemCls, iconCls, shortcutCls, groupHeadingCls, separatorCls));
       lines.push(`${pad}</CommandGroup>`);
     } else {
       // type === "item"
@@ -2813,6 +2814,32 @@ function renderCommand(
   const shortcutCls = ["ml-auto text-xs tracking-widest", shortcutTextClass || "text-muted-foreground"].filter(Boolean).join(" ");
   const groupHeadingCls = groupHeadingClass || "text-muted-foreground";
 
+  // Input border styling
+  const inputBorderClass = (props?.inputBorderClass as string) || "";
+  const inputBorderWidth = (props?.inputBorderWidth as string) || "";
+  const inputBwClass =
+    inputBorderWidth === "0" ? "border-0"
+    : inputBorderWidth === "2" ? "border-2"
+    : inputBorderWidth === "4" ? "border-4"
+    : inputBorderWidth === "8" ? "border-8"
+    : inputBorderWidth === "1" ? "border"
+    : "";
+  const inputCls = ["flex items-center border-b px-3", inputBorderClass, inputBwClass].filter(Boolean).join(" ");
+
+  // Separator styling
+  const separatorClass = (props?.separatorClass as string) || "";
+  const separatorShadowClass = (props?.separatorShadowClass as string) || "";
+  const separatorBorderClass = (props?.separatorBorderClass as string) || "";
+  const separatorBorderWidth = (props?.separatorBorderWidth as string) || "";
+  const sepBwClass =
+    separatorBorderWidth === "0" ? "border-0"
+    : separatorBorderWidth === "2" ? "border-2"
+    : separatorBorderWidth === "4" ? "border-4"
+    : separatorBorderWidth === "8" ? "border-8"
+    : separatorBorderWidth === "1" ? "border"
+    : "";
+  const separatorCls = ["-mx-1 h-px", separatorClass || "bg-border", separatorShadowClass, sepBwClass, separatorBorderClass].filter(Boolean).join(" ");
+
   let defs: CommandItemDefLocal[] = [];
   try {
     const parsed = JSON.parse((props?.commandData as string) || "[]");
@@ -2823,10 +2850,10 @@ function renderCommand(
 
   const lines: string[] = [];
   lines.push(`${pad}<Command${classNameAttr}${styleAttr}>`);
-  lines.push(`${pad}  <CommandInput placeholder="${escapeAttr(placeholder)}" />`);
+  lines.push(`${pad}  <CommandInput placeholder="${escapeAttr(placeholder)}" className="${escapeAttr(inputCls)}" />`);
   lines.push(`${pad}  <CommandList>`);
   lines.push(`${pad}    <CommandEmpty>No results found.</CommandEmpty>`);
-  lines.push(...renderCommandItems(defs, pad + "    ", itemCls, iconCls, shortcutCls, groupHeadingCls));
+  lines.push(...renderCommandItems(defs, pad + "    ", itemCls, iconCls, shortcutCls, groupHeadingCls, separatorCls));
   lines.push(`${pad}  </CommandList>`);
   lines.push(`${pad}</Command>`);
   return lines.join("\n");

@@ -210,14 +210,17 @@ export function CommandMetaEditor({ value, selectedNodeId }: CommandMetaEditorPr
                           placeholder="ラベル"
                         />
                         {/* Icon */}
-                        <div className="flex items-center gap-1">
-                          <label className="shrink-0 text-[11px] text-[var(--vscode-descriptionForeground,#888)]">アイコン</label>
-                          <div className="min-w-0 flex-1">
-                            <IconCombobox
-                              value={it.icon ?? ""}
-                              onChange={(v) => setItemIcon(idx, itemIdx, v)}
-                            />
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] text-[var(--vscode-descriptionForeground,#888)]">icon</label>
+                            {it.icon && (
+                              <button type="button" className={BTN_CLASS} onClick={() => setItemIcon(idx, itemIdx, "")} title="クリア">✕</button>
+                            )}
                           </div>
+                          <IconCombobox
+                            value={it.icon ?? ""}
+                            onChange={(v) => setItemIcon(idx, itemIdx, v)}
+                          />
                         </div>
                         {/* Shortcut */}
                         <input

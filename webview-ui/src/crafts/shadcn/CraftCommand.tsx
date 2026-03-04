@@ -57,6 +57,14 @@ interface CraftCommandProps {
   iconClass?: string;
   shortcutTextClass?: string;
   groupHeadingClass?: string;
+  // Input border styling
+  inputBorderClass?: string;
+  inputBorderWidth?: string;
+  // Separator styling
+  separatorClass?: string;
+  separatorShadowClass?: string;
+  separatorBorderClass?: string;
+  separatorBorderWidth?: string;
 }
 
 export const CraftCommand: UserComponent<CraftCommandProps> = ({
@@ -75,6 +83,12 @@ export const CraftCommand: UserComponent<CraftCommandProps> = ({
   iconClass = "",
   shortcutTextClass = "",
   groupHeadingClass = "",
+  inputBorderClass = "",
+  inputBorderWidth = "",
+  separatorClass = "",
+  separatorShadowClass = "",
+  separatorBorderClass = "",
+  separatorBorderWidth = "",
 }) => {
   const {
     connectors: { connect, drag },
@@ -90,6 +104,22 @@ export const CraftCommand: UserComponent<CraftCommandProps> = ({
     : itemBorderWidth === "1" ? "border"
     : "";
 
+  const inputBwClass =
+    inputBorderWidth === "0" ? "border-0"
+    : inputBorderWidth === "2" ? "border-2"
+    : inputBorderWidth === "4" ? "border-4"
+    : inputBorderWidth === "8" ? "border-8"
+    : inputBorderWidth === "1" ? "border"
+    : "";
+
+  const sepBwClass =
+    separatorBorderWidth === "0" ? "border-0"
+    : separatorBorderWidth === "2" ? "border-2"
+    : separatorBorderWidth === "4" ? "border-4"
+    : separatorBorderWidth === "8" ? "border-8"
+    : separatorBorderWidth === "1" ? "border"
+    : "";
+
   const itemCls = cn(
     "relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none",
     itemBgClass,
@@ -101,10 +131,18 @@ export const CraftCommand: UserComponent<CraftCommandProps> = ({
     hoverTextClass ? `hover:${hoverTextClass}` : "hover:text-accent-foreground",
   );
 
+  const sepCls = cn(
+    "-mx-1 my-1 h-px",
+    separatorClass || "bg-border",
+    separatorShadowClass,
+    sepBwClass,
+    separatorBorderClass,
+  );
+
   function renderItems(defs: CommandItemDef[], depth = 0): React.ReactNode {
     return defs.map((def, i) => {
       if (def.type === "separator") {
-        return <div key={i} className="-mx-1 my-1 h-px bg-border" />;
+        return <div key={i} className={sepCls} />;
       }
       if (def.type === "group") {
         return (
@@ -143,7 +181,7 @@ export const CraftCommand: UserComponent<CraftCommandProps> = ({
       className={cn("flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground", className)}
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
-      <div className="flex items-center border-b px-3">
+      <div className={cn("flex items-center border-b px-3", inputBorderClass, inputBwClass)}>
         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
         <input
           type="text"
@@ -176,6 +214,12 @@ CraftCommand.craft = {
     iconClass: "",
     shortcutTextClass: "",
     groupHeadingClass: "",
+    inputBorderClass: "",
+    inputBorderWidth: "",
+    separatorClass: "",
+    separatorShadowClass: "",
+    separatorBorderClass: "",
+    separatorBorderWidth: "",
   },
   rules: {
     canDrag: () => true,
