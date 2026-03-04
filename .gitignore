@@ -5,3 +5,4 @@ dist/
 .vscode-test/
 PLAN.md
 moc_test/
+*.tsbuildinfo
