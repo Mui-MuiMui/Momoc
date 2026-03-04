@@ -2764,6 +2764,8 @@ function renderCommandItems(
       lines.push(`${pad}<CommandItem value="${escapeAttr(def.label)}" className="${escapeAttr(itemCls)}">`);
       if (def.icon) {
         lines.push(`${pad}  <${escapeAttr(def.icon)} className="${escapeAttr(iconCls)}" />`);
+      } else {
+        lines.push(`${pad}  <span className="h-4 w-4 shrink-0" />`);
       }
       lines.push(`${pad}  <span className="flex-1">${escapeJsx(def.label)}</span>`);
       if (def.shortcut) {
