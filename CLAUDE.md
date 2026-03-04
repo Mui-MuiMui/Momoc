@@ -73,3 +73,5 @@
   - [clean-code](.agents\skills\clean-code)
 - **ダイアグラムに関するスキル**
   - [drawio-diagram](.agents\skills\drawio-diagram)
+- **リリースコメント作成に関するスキル**
+  - [release-notes](.agents\skills\release-notes)
