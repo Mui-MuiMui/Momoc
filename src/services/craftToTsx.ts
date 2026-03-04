@@ -1650,18 +1650,13 @@ function renderTable(
       const borderClass = (slotNode?.props?.borderClass as string) || "";
       const cellWidth = (slotNode?.props?.width as string) || "";
       const cellHeight = (slotNode?.props?.height as string) || "";
-      const cellAlign = (slotNode?.props?.align as string) || "left";
       const slotClassName = (slotNode?.props?.className as string) || "";
       const colWidth = colWidths[String(physC)] || "";
       const cellTag = isHeader ? "TableHead" : "TableCell";
       const colSpanAttr = colspan > 1 ? ` colSpan={${colspan}}` : "";
       const rowSpanAttr = rowspan > 1 ? ` rowSpan={${rowspan}}` : "";
-      // alignCls and slotClassName go on an inner div, NOT on the td (display:flex on td breaks rowspan/colspan)
-      // align prop uses flex-col for horizontal alignment; slotClassName carries TailwindEditor classes as-is
-      const alignCls = cellAlign === "right" ? "flex flex-col items-end"
-        : cellAlign === "center" ? "flex flex-col items-center"
-        : "flex flex-col items-start";
-      const innerDivCls = ["min-h-full p-1", alignCls, slotClassName].filter(Boolean).join(" ");
+      // inner div uses flex (flex-row) so items-* controls vertical alignment and justify-* controls horizontal
+      const innerDivCls = ["flex min-h-full p-1", slotClassName].filter(Boolean).join(" ");
       const isPinned = logC < pinnedLeftNum;
       // bg-background is a fallback for pinned cells only when no bgClass is set (prevents transparent sticky cells)
       const pinnedBg = isPinned && !bgClass ? "bg-background" : "";

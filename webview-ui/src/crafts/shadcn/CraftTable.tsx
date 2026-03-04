@@ -41,7 +41,6 @@ interface TableCellSlotProps {
   borderClass?: string;
   colspan?: number;
   rowspan?: number;
-  align?: "left" | "center" | "right";
   width?: string;
   height?: string;
   className?: string;
@@ -55,7 +54,6 @@ export const TableCellSlot: UserComponent<TableCellSlotProps> = ({
   borderClass = "",
   colspan = 1,
   rowspan = 1,
-  align = "left",
   width = "auto",
   height = "auto",
   className = "",
@@ -64,11 +62,6 @@ export const TableCellSlot: UserComponent<TableCellSlotProps> = ({
   const {
     connectors: { connect },
   } = useNode();
-
-  // align prop (PropEditor) controls horizontal alignment via flex-col
-  const alignCls = align === "right" ? "flex flex-col items-end"
-    : align === "center" ? "flex flex-col items-center"
-    : "flex flex-col items-start";
 
   const cellStyle: React.CSSProperties = {};
   const normalizedWidth = normalizeCssSize(width);
@@ -81,7 +74,7 @@ export const TableCellSlot: UserComponent<TableCellSlotProps> = ({
       ref={(ref) => {
         if (ref) connect(ref);
       }}
-      className={cn("p-1", alignCls, bgClass, borderClass, className)}
+      className={cn("flex p-1", bgClass, borderClass, className)}
       style={cellStyle}
     >
       {children}
@@ -97,7 +90,6 @@ TableCellSlot.craft = {
     borderClass: "",
     colspan: 1,
     rowspan: 1,
-    align: "left",
     width: "auto",
     height: "auto",
     className: "",

@@ -72,9 +72,6 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Table: {
     borderWidth: ["0", "1", "2", "4"],
   },
-  TableCellSlot: {
-    align: ["left", "center", "right"],
-  },
   Switch: {
     variant: ["default", "card"],
     size: ["default", "sm"],
