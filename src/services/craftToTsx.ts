@@ -2719,7 +2719,9 @@ function renderCombobox(
   const height = normalizeCssSize((props?.height as string) || "auto") || "auto";
 
   // width は <Popover> ラッパー (inline-grid な div) に渡す。height は <button> に渡す。
-  const popoverStyleAttr = width !== "auto" ? ` style={{ width: "${escapeAttr(width)}" }}` : "";
+  // auto の場合は編集画面の w-full 挙動に合わせて 100% を渡す。
+  const popoverWidth = width !== "auto" ? width : "100%";
+  const popoverStyleAttr = ` style={{ width: "${escapeAttr(popoverWidth)}" }}`;
   const buttonStyleAttr = height !== "auto" ? ` style={{ height: "${escapeAttr(height)}" }}` : "";
   // w-full は PopoverTrigger(span[inline-block]) 自体に幅を持たせるため不要。width は Popover に委ねる。
   const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
