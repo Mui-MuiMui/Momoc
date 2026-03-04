@@ -617,7 +617,6 @@ export function craftStateToTsx(
     if (resolvedName === "CraftCombobox") {
       addImport("@/components/ui/popover", "PopoverContent");
       addImport("@/components/ui/popover", "PopoverTrigger");
-      addImport("@/components/ui/button", "Button");
       addImport("@/components/ui/command", "Command");
       addImport("@/components/ui/command", "CommandEmpty");
       addImport("@/components/ui/command", "CommandGroup");
@@ -2716,17 +2715,25 @@ function renderCombobox(
   const linkedMocPath = (props?.linkedMocPath as string) || "";
   const contentWidth = (props?.contentWidth as string) || "";
   const contentStyleAttr = contentWidth ? ` style={{ width: "${escapeAttr(contentWidth)}" }}` : "";
+  const width = (props?.width as string) || "auto";
 
   const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
-  const buttonClassName = ["w-full justify-between", userClass].filter(Boolean).join(" ");
+  const wClass = width === "100%" ? "w-full" : "";
+  const buttonClassName = [
+    "inline-flex items-center justify-between whitespace-nowrap rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+    wClass,
+    userClass,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const lines: string[] = [];
   lines.push(`${pad}<Popover>`);
   lines.push(`${pad}  <PopoverTrigger asChild>`);
-  lines.push(`${pad}    <Button variant="outline" role="combobox" className="${buttonClassName}"${styleAttr}>`);
+  lines.push(`${pad}    <button type="button" role="combobox" className="${buttonClassName}"${styleAttr}>`);
   lines.push(`${pad}      ${escapeJsx(placeholder)}`);
   lines.push(`${pad}      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />`);
-  lines.push(`${pad}    </Button>`);
+  lines.push(`${pad}    </button>`);
   lines.push(`${pad}  </PopoverTrigger>`);
   lines.push(`${pad}  <PopoverContent className="p-0"${contentStyleAttr}>`);
   lines.push(`${pad}    <Command>`);
