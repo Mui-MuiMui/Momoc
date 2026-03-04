@@ -516,6 +516,6 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Terminal",
     defaultProps: {},
-    enabled: false,
+    enabled: true,
   },
 ];
