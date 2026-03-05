@@ -24,7 +24,8 @@
     "gui-builder",
     "react",
     "tailwind",
-    "shadcn"
+    "shadcn",
+    "ai-friendly"
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
