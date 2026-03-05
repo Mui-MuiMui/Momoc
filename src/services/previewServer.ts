@@ -1421,10 +1421,9 @@ export function Command({ children, className = "", ...rest }: any) {
 }
 export function CommandInput({ className = "", placeholder = "", ...rest }: any) {
   const comboCtx = useContext(ComboboxCtx);
+  if (comboCtx) return null;
   const ctx = useContext(Ctx);
-  const search = comboCtx?.search ?? ctx?.search ?? "";
-  const setSearch = comboCtx?.setSearch ?? ctx?.setSearch ?? (() => {});
-  return <div className={cn("flex items-center border-b px-3", className)}><Search className="mr-2 h-4 w-4 shrink-0 opacity-50" /><input type="text" className="flex h-10 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground" placeholder={placeholder} value={search} onChange={(e: any) => setSearch(e.target.value)} /></div>;
+  return <div className={cn("flex items-center border-b px-3", className)}><Search className="mr-2 h-4 w-4 shrink-0 opacity-50" /><input type="text" className="flex h-10 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground" placeholder={placeholder} value={ctx?.search || ""} onChange={(e: any) => ctx?.setSearch(e.target.value)} /></div>;
 }
 export function CommandList({ children, className = "", ...rest }: any) {
   return <div className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)} {...rest}>{children}</div>;

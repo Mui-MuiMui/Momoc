@@ -645,8 +645,10 @@ export function craftStateToTsx(
 
     // Collect combobox sub-component imports
     if (resolvedName === "CraftCombobox") {
+      addImport("@/components/ui/popover", "Popover");
       addImport("@/components/ui/popover", "PopoverContent");
       addImport("@/components/ui/popover", "PopoverTrigger");
+      addImport("@/components/ui/button", "Button");
       addImport("@/components/ui/command", "Command");
       addImport("@/components/ui/command", "CommandEmpty");
       addImport("@/components/ui/command", "CommandGroup");
@@ -2883,20 +2885,15 @@ function renderCombobox(
   const buttonStyleAttr = height !== "auto" ? ` style={{ height: "${escapeAttr(height)}" }}` : "";
   // w-full は PopoverTrigger(span[inline-block]) 自体に幅を持たせるため不要。width は Popover に委ねる。
   const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
-  const buttonClassName = [
-    "inline-flex w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-    userClass,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const buttonClassName = ["w-full justify-between", userClass].filter(Boolean).join(" ");
 
   const lines: string[] = [];
   lines.push(`${pad}<Popover${popoverStyleAttr}>`);
   lines.push(`${pad}  <PopoverTrigger asChild>`);
-  lines.push(`${pad}    <button type="button" role="combobox" className="${buttonClassName}"${buttonStyleAttr}>`);
+  lines.push(`${pad}    <Button variant="outline" role="combobox" className="${buttonClassName}"${buttonStyleAttr}>`);
   lines.push(`${pad}      ${escapeJsx(placeholder)}`);
   lines.push(`${pad}      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />`);
-  lines.push(`${pad}    </button>`);
+  lines.push(`${pad}    </Button>`);
   lines.push(`${pad}  </PopoverTrigger>`);
   lines.push(`${pad}  <PopoverContent className="p-0"${contentStyleAttr}>`);
   lines.push(`${pad}    <Command>`);
