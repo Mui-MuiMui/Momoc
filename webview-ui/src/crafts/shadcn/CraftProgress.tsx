@@ -6,6 +6,7 @@ interface CraftProgressProps {
   width?: string;
   height?: string;
   className?: string;
+  indicatorClass?: string;
 }
 
 export const CraftProgress: UserComponent<CraftProgressProps> = ({
@@ -13,6 +14,7 @@ export const CraftProgress: UserComponent<CraftProgressProps> = ({
   width = "auto",
   height = "auto",
   className = "",
+  indicatorClass = "",
 }) => {
   const {
     connectors: { connect, drag },
@@ -34,7 +36,7 @@ export const CraftProgress: UserComponent<CraftProgressProps> = ({
       style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
     >
       <div
-        className="h-full w-full flex-1 bg-primary transition-all"
+        className={cn("h-full w-full flex-1 transition-all", indicatorClass || "bg-primary")}
         style={{ transform: `translateX(-${100 - value}%)` }}
       />
     </div>
@@ -48,6 +50,7 @@ CraftProgress.craft = {
     width: "auto",
     height: "auto",
     className: "",
+    indicatorClass: "",
   },
   rules: {
     canDrag: () => true,

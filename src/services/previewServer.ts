@@ -1129,9 +1129,9 @@ export function DatePicker(props) {
 
   progress: `import { cn } from "@/components/ui/_cn";
 export function Progress(props: any) {
-  const { className = "", value = 0, ...rest } = props;
+  const { className = "", value = 0, indicatorClass = "", ...rest } = props;
   const cls = cn("relative h-2 w-full overflow-hidden rounded-full bg-primary/20", className);
-  return <div role="progressbar" className={cls} {...rest}><div className="h-full w-full flex-1 bg-primary transition-all" style={{ transform: \`translateX(-\${100 - (value || 0)}%)\` }} /></div>;
+  return <div role="progressbar" className={cls} {...rest}><div className={cn("h-full w-full flex-1 transition-all", indicatorClass || "bg-primary")} style={{ transform: \`translateX(-\${100 - (value || 0)}%)\` }} /></div>;
 }`,
 
   "radio-group": `import { cn } from "@/components/ui/_cn";

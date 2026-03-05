@@ -210,7 +210,7 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     tag: "Progress",
     importFrom: "@/components/ui/progress",
     importName: "Progress",
-    propsMap: ["value", "className"],
+    propsMap: ["value", "className", "indicatorClass"],
     isContainer: false,
   },
   CraftRadioGroup: {
@@ -481,7 +481,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftCheckbox: { label: "Accept terms", checked: false, disabled: false, tooltipText: "", tooltipSide: "" },
   CraftCollapsible: { open: false, triggerStyle: "chevron", linkedMocPath: "" },
   CraftPagination: { totalPages: 5, currentPage: 1 },
-  CraftProgress: { value: 50 },
+  CraftProgress: { value: 50, indicatorClass: "" },
   CraftRadioGroup: { items: "Option A,Option B,Option C", value: "Option A", orientation: "vertical", variant: "default", descriptions: "", cardBorderColor: "", cardBgColor: "", descriptionColor: "", tooltipText: "", tooltipSide: "" },
   CraftScrollArea: {},
   CraftSlider: { value: 50, min: 0, max: 100, step: 1, fillClassName: "", trackClassName: "", tooltipText: "", tooltipSide: "" },
