@@ -881,7 +881,7 @@ export function craftStateToTsx(
       rendered,
       `${pad}    </TooltipTrigger>`,
       `${pad}    <TooltipContent${sideAttr}>`,
-      `${pad}      <p className="whitespace-pre-wrap">${(tooltipText.includes("\n") || tooltipText.includes("<kbd>")) ? `{"${escapeJsString(tooltipText)}"}` : escapeJsx(tooltipText)}</p>`,
+      `${pad}      <p className="whitespace-pre-wrap">${tooltipText.includes("<kbd>") ? kbdTextToJsx(tooltipText) : tooltipText.includes("\n") ? `{"${escapeJsString(tooltipText)}"}` : escapeJsx(tooltipText)}</p>`,
       `${pad}    </TooltipContent>`,
       `${pad}  </Tooltip>`,
       `${pad}</TooltipProvider>`,
@@ -1395,9 +1395,11 @@ export function craftStateToTsx(
 
     // Text content
     if (textContent) {
-      const escapedTextContent = (textContent.includes("\n") || textContent.includes("<kbd>"))
-        ? `{"${escapeJsString(textContent)}"}`
-        : escapeJsx(textContent);
+      const escapedTextContent = textContent.includes("<kbd>")
+        ? kbdTextToJsx(textContent)
+        : textContent.includes("\n")
+          ? `{"${escapeJsString(textContent)}"}`
+          : escapeJsx(textContent);
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapedTextContent}</${tag}>`;
       // Apply overlay wrapper for CraftButton (must be inside tooltip)
       if (resolvedName === "CraftButton") {
@@ -3016,6 +3018,24 @@ function renderBreadcrumb(
 
 function escapeJsx(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/{/g, "&#123;").replace(/}/g, "&#125;");
+}
+
+const KBD_CLASS = "pointer-events-none inline-flex h-5 items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground select-none";
+
+/**
+ * <kbd>...</kbd> を含む文字列を JSX フラグメント文字列に変換する。
+ * 例: "Save <kbd>Ctrl</kbd>" → '<>Save <kbd className="...">Ctrl</kbd></>'
+ */
+function kbdTextToJsx(text: string): string {
+  const parts = text.split(/(<kbd>.*?<\/kbd>)/g);
+  const jsxParts = parts.map((part) => {
+    const match = part.match(/^<kbd>(.*?)<\/kbd>$/);
+    if (match) {
+      return `<kbd className="${KBD_CLASS}">${escapeJsx(match[1])}</kbd>`;
+    }
+    return escapeJsx(part);
+  });
+  return `<>${jsxParts.join("")}</>`;
 }
 
 function escapeAttr(text: string): string {
