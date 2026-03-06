@@ -2709,13 +2709,20 @@ function renderSelect(
   const contentWidth = (props?.contentWidth as string) || "";
   const contentStyleAttr = contentWidth ? ` style={{ width: "${escapeAttr(contentWidth)}" }}` : "";
 
+  // width は <Select> wrapper に渡す（inline-grid を block に切り替えるため）
+  // height は <SelectTrigger> に渡す（button自体の高さ調整のため）
+  const w = normalizeCssSize(props?.width as string | undefined);
+  const h = normalizeCssSize(props?.height as string | undefined);
+  const wrapperStyleAttr = w && w !== "auto" ? ` style={{ width: "${escapeAttr(w)}" }}` : "";
+  const triggerStyleAttr = h && h !== "auto" ? ` style={{ height: "${escapeAttr(h)}" }}` : "";
+
   const lines: string[] = [];
-  lines.push(`${pad}<${tag}>`);
+  lines.push(`${pad}<${tag}${wrapperStyleAttr}>`);
   if (tooltipText) {
     lines.push(`${pad}  <TooltipProvider>`);
     lines.push(`${pad}    <Tooltip>`);
     lines.push(`${pad}      <TooltipTrigger asChild>`);
-    lines.push(`${pad}        <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}        <SelectTrigger${classNameAttr}${triggerStyleAttr}>`);
     lines.push(`${pad}          <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}        </SelectTrigger>`);
     lines.push(`${pad}      </TooltipTrigger>`);
@@ -2725,7 +2732,7 @@ function renderSelect(
     lines.push(`${pad}    </Tooltip>`);
     lines.push(`${pad}  </TooltipProvider>`);
   } else {
-    lines.push(`${pad}  <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}  <SelectTrigger${classNameAttr}${triggerStyleAttr}>`);
     lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}  </SelectTrigger>`);
   }
@@ -2877,10 +2884,8 @@ function renderCombobox(
   const width = normalizeCssSize((props?.width as string) || "auto") || "auto";
   const height = normalizeCssSize((props?.height as string) || "auto") || "auto";
 
-  // width は <Popover> ラッパー (inline-grid な div) に渡す。height は <button> に渡す。
-  // auto の場合は編集画面の w-full 挙動に合わせて 100% を渡す。
-  const popoverWidth = width !== "auto" ? width : "100%";
-  const popoverStyleAttr = ` style={{ width: "${escapeAttr(popoverWidth)}" }}`;
+  // width は <Popover> ラッパーに渡す。指定がある時のみ付与。height は <button> に渡す。
+  const popoverStyleAttr = width !== "auto" ? ` style={{ width: "${escapeAttr(width)}" }}` : "";
   const buttonStyleAttr = height !== "auto" ? ` style={{ height: "${escapeAttr(height)}" }}` : "";
   // w-full は PopoverTrigger(span[inline-block]) 自体に幅を持たせるため不要。width は Popover に委ねる。
   const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
