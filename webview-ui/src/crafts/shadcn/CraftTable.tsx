@@ -290,24 +290,26 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   // auto時: table に width: "100%" を付けない（各列のcol幅に追従させる）
   // wrapper指定時: wrapper の幅に table が追従するよう width: "100%" を維持
   const tableWidth = hasWidth ? "100%" : undefined;
+  // wrapper は fit-content でテーブルの実幅に追従。width指定時は明示幅を使用。
+  const wrapperDisplayStyle: React.CSSProperties = hasWidth
+    ? wrapperStyle
+    : { width: "fit-content" };
   return (
     <div
-      className={cn(hasWidth ? "block" : "inline-block", "overflow-auto", className)}
-      style={hasWidth ? wrapperStyle : undefined}
+      ref={(ref) => {
+        if (ref) connect(drag(ref));
+      }}
+      className={cn("overflow-auto", className)}
+      style={wrapperDisplayStyle}
     >
+      {/* Drag handle strip — wrapper幅に追従 */}
+      <div className="flex h-4 cursor-move select-none items-center bg-muted/20 px-1 opacity-0 transition-opacity hover:opacity-100">
+        <span className="text-[9px] text-muted-foreground">⠿ Table</span>
+      </div>
       <table
         className={cn("caption-bottom text-sm border-separate", tableOuterBorderClass)}
         style={{ tableLayout: "fixed", borderSpacing: 0, width: tableWidth, minWidth: totalColWidth > 0 ? `${totalColWidth}px` : undefined }}
       >
-        {/* Drag handle as caption — テーブル幅に自動追従 */}
-        <caption
-          ref={(ref) => {
-            if (ref) connect(drag(ref));
-          }}
-          className="flex h-4 cursor-move select-none items-center bg-muted/20 px-1 opacity-0 transition-opacity hover:opacity-100 caption-top"
-        >
-          <span className="text-[9px] text-muted-foreground">⠿ Table</span>
-        </caption>
         <colgroup>
           {colMap.map((physC) => {
             const w = colWidths[String(physC)];
