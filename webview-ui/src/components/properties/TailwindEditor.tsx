@@ -324,11 +324,13 @@ export function TailwindEditor() {
                 onClick={() => {
                   const filtered = classes.filter((c) => !contentVAlignGroup.includes(c));
                   if (activeSet.has(o.cls)) {
-                    const noFlex = filtered.filter((c) => c !== "flex");
+                    const noFlex = filtered.filter((c) => c !== "flex" && c !== "flex-row");
                     updateClassName(noFlex.join(" "));
                   } else {
-                    const withFlex = filtered.includes("flex") ? filtered : ["flex", ...filtered];
-                    updateClassName([...withFlex, o.cls].join(" "));
+                    const withoutFlexCol = filtered.filter((c) => c !== "flex-col");
+                    const withFlex = withoutFlexCol.includes("flex") ? withoutFlexCol : ["flex", ...withoutFlexCol];
+                    const withFlexRow = withFlex.includes("flex-row") ? withFlex : [...withFlex, "flex-row"];
+                    updateClassName([...withFlexRow, o.cls].join(" "));
                   }
                 }}
               />
