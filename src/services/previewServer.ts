@@ -759,7 +759,7 @@ export function Table(props: any) {
   const wrapperStyle = Object.fromEntries(Object.entries({ width, height }).filter(([, v]) => v != null));
   const innerStyle = Object.fromEntries(Object.entries({ minWidth, ...tableStyle }).filter(([, v]) => v != null));
   const cls = cn("caption-bottom text-sm border-separate", className);
-  const mergedInnerStyle = { borderSpacing: 0, width: "100%", ...innerStyle };
+  const mergedInnerStyle = { borderSpacing: 0, ...(wrapperStyle.width ? { width: "100%" } : {}), ...innerStyle };
   const tableRef = useRef<HTMLTableElement>(null);
   useEffect(() => {
     if (!tableRef.current) return;
@@ -777,7 +777,8 @@ export function Table(props: any) {
       top += tr.getBoundingClientRect().height;
     }
   });
-  return <div className="relative overflow-auto" style={Object.keys(wrapperStyle).length ? wrapperStyle : undefined}><table ref={tableRef} className={cls} style={mergedInnerStyle} {...rest}>{children}</table></div>;
+  const hasWrapperWidth = !!wrapperStyle.width;
+  return <div className={hasWrapperWidth ? "block relative overflow-auto" : "inline-block relative overflow-auto"} style={Object.keys(wrapperStyle).length ? wrapperStyle : undefined}><table ref={tableRef} className={cls} style={mergedInnerStyle} {...rest}>{children}</table></div>;
 }
 export function TableHeader(props: any) {
   const { className = "", children, ...rest } = props;

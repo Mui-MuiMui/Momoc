@@ -292,7 +292,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   const tableWidth = hasWidth ? "100%" : undefined;
   return (
     <div
-      className={cn("overflow-auto", className)}
+      className={cn(hasWidth ? "block" : "inline-block", "overflow-auto", className)}
       style={hasWidth ? wrapperStyle : undefined}
     >
       {/* Drag handle strip — outside cell canvas, so clicks reach CraftTable's connect */}
