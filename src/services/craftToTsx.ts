@@ -305,14 +305,6 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     importFrom: "@/components/ui/button-group",
     importName: "ButtonGroup",
     propsMap: ["orientation", "className"],
-    isContainer: true,
-  },
-  CraftButtonGroupItem: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["variant", "size", "disabled", "className"],
-    textProp: "text",
     isContainer: false,
   },
   CraftForm: {
@@ -511,8 +503,6 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
   CraftButtonGroup: { orientation: "horizontal" },
-  CraftButtonGroupItem: { variant: "outline", size: "default", disabled: false, text: "Button",
-    overlayType: "none", linkedMocPath: "", sheetSide: "right", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", tooltipSide: "", toastText: "", toastPosition: "bottom-right" },
   CraftForm: {},
   // Phase 4 (legacy standalone)
   CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
@@ -663,8 +653,8 @@ export function craftStateToTsx(
       addImport("lucide-react", "ChevronsUpDown");
     }
 
-    // Collect overlay-related imports for CraftButton / CraftButtonGroupItem
-    if (resolvedName === "CraftButton" || resolvedName === "CraftButtonGroupItem") {
+    // Collect overlay-related imports for CraftButton
+    if (resolvedName === "CraftButton") {
       const overlayType = node.props?.overlayType as string | undefined;
       if (overlayType && overlayType !== "none") {
         const overlayImport = OVERLAY_IMPORTS[overlayType];
@@ -678,6 +668,22 @@ export function craftStateToTsx(
       if (toastText) {
         addImport("sonner", "toast");
       }
+    }
+
+    // Collect imports for CraftButtonGroup buttonData
+    if (resolvedName === "CraftButtonGroup") {
+      addImport("@/components/ui/button", "Button");
+      try {
+        const btns = JSON.parse((node.props?.buttonData as string) || "[]") as Array<Record<string, unknown>>;
+        for (const btn of btns) {
+          const ot = btn.overlayType as string | undefined;
+          if (ot && ot !== "none") {
+            const oi = OVERLAY_IMPORTS[ot];
+            if (oi) for (const n of oi.names) addImport(oi.from, n);
+          }
+          if (btn.toastText) addImport("sonner", "toast");
+        }
+      } catch { /* ignore */ }
     }
 
     // Collect tooltip imports for any component with tooltipText
@@ -1356,6 +1362,11 @@ export function craftStateToTsx(
       return applyCommonWrappers(rendered);
     }
 
+    // ButtonGroup special case: render buttons from buttonData JSON
+    if (resolvedName === "CraftButtonGroup") {
+      return applyCommonWrappers(`${mocComments}\n${renderButtonGroup(node.props, propsStr, styleAttr, pad)}`);
+    }
+
     // Self-closing for img
     if (resolvedName === "CraftImage" || resolvedName === "CraftPlaceholderImage") {
       return applyCommonWrappers(`${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr} />`);
@@ -1413,8 +1424,8 @@ export function craftStateToTsx(
           ? `{"${escapeJsString(textContent)}"}`
           : escapeJsx(textContent);
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapedTextContent}</${tag}>`;
-      // Apply overlay wrapper for CraftButton / CraftButtonGroupItem (must be inside tooltip)
-      if (resolvedName === "CraftButton" || resolvedName === "CraftButtonGroupItem") {
+      // Apply overlay wrapper for CraftButton (must be inside tooltip)
+      if (resolvedName === "CraftButton") {
         rendered = wrapWithOverlay(rendered, node.props, pad);
       }
       return applyCommonWrappers(rendered);
@@ -1428,8 +1439,8 @@ export function craftStateToTsx(
 
     // Fallback self-closing
     rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr} />`;
-    // Apply overlay wrapper for CraftButton / CraftButtonGroupItem (must be inside tooltip)
-    if (resolvedName === "CraftButton" || resolvedName === "CraftButtonGroupItem") {
+    // Apply overlay wrapper for CraftButton (must be inside tooltip)
+    if (resolvedName === "CraftButton") {
       rendered = wrapWithOverlay(rendered, node.props, pad);
     }
     return applyCommonWrappers(rendered);
@@ -2719,6 +2730,56 @@ function renderToggleGroup(
   }
 
   lines.push(`${pad}</ToggleGroup>`);
+  return lines.join("\n");
+}
+
+function renderButtonGroup(
+  props: Record<string, unknown>,
+  propsStr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  interface ButtonDef {
+    text: string;
+    variant?: string;
+    size?: string;
+    disabled?: boolean;
+    overlayType?: string;
+    linkedMocPath?: string;
+    sheetSide?: string;
+    overlayWidth?: string;
+    overlayHeight?: string;
+    overlayClassName?: string;
+    toastText?: string;
+    toastPosition?: string;
+  }
+
+  let btns: ButtonDef[] = [];
+  try {
+    btns = JSON.parse((props?.buttonData as string) || "[]") as ButtonDef[];
+  } catch { /* ignore */ }
+
+  const lines: string[] = [];
+  lines.push(`${pad}<ButtonGroup${propsStr}${styleAttr}>`);
+
+  for (const btn of btns) {
+    const variantAttr = btn.variant && btn.variant !== "default" ? ` variant="${escapeAttr(btn.variant)}"` : "";
+    const sizeAttr = btn.size && btn.size !== "default" ? ` size="${escapeAttr(btn.size)}"` : "";
+    const disabledAttr = btn.disabled ? " disabled" : "";
+    const toastOnClick = btn.toastText && (!btn.overlayType || btn.overlayType === "none")
+      ? ` onClick={() => toast("${escapeAttr(btn.toastText)}")}`
+      : "";
+    const btnRendered = `${pad}  <Button${variantAttr}${sizeAttr}${disabledAttr}${toastOnClick}>${escapeJsx(btn.text)}</Button>`;
+
+    if (btn.overlayType && btn.overlayType !== "none") {
+      const wrapped = wrapWithOverlay(btnRendered, btn as Record<string, unknown>, `${pad}  `);
+      lines.push(wrapped);
+    } else {
+      lines.push(btnRendered);
+    }
+  }
+
+  lines.push(`${pad}</ButtonGroup>`);
   return lines.join("\n");
 }
 

@@ -493,8 +493,7 @@ export async function startPreviewServer(
     // Serve fallback shadcn/ui components: /ui/<name>.js
     if (url.startsWith("/ui/")) {
       const componentName = url.slice(4).replace(/\.js.*$/, "");
-      const aliasMap: Record<string, string> = { "button-group-item": "button" };
-      const effectiveName = aliasMap[componentName] ?? componentName;
+      const effectiveName = componentName;
       const js = fallbackJs.get(effectiveName);
       if (js) {
         res.writeHead(200, {

@@ -6,6 +6,7 @@ import { TableMetaEditor } from "./TableMetaEditor";
 import { TabMetaEditor } from "./TabMetaEditor";
 import { ResizableMetaEditor } from "./ResizableMetaEditor";
 import { MenubarMetaEditor } from "./MenubarMetaEditor";
+import { ButtonGroupMetaEditor } from "./ButtonGroupMetaEditor";
 import { CommandMetaEditor } from "./CommandMetaEditor";
 import { ColumnDefsEditor } from "./ColumnDefsEditor";
 import { useEditorStore } from "../../stores/editorStore";
@@ -337,6 +338,8 @@ const COMPONENT_EXCLUDED_PROPS: Record<string, Set<string>> = {
   Avatar: new Set(["width", "height"]),
   // Table: stickyHeader/pinnedLeft は TableMetaEditor 内で編集するため PropEditor からは非表示
   Table: new Set(["stickyHeader", "pinnedLeft"]),
+  // ButtonGroup: buttonData は ButtonGroupMetaEditor 専用UIで表示
+  ButtonGroup: new Set(["buttonData"]),
 };
 
 // --- サイズ入力 UI ---
@@ -469,6 +472,7 @@ export function PropEditor() {
       const msg = event.data;
       if (msg?.type === "browse:mocFile:result" && selectedNodeId) {
         const { relativePath, targetProp } = msg.payload as { relativePath: string; targetProp?: string };
+        if (targetProp === "buttonGroupLinkedMocPath") return;
         if (targetProp === "linkedMocPaths" && pendingBrowseIndexRef.current >= 0) {
           const idx = pendingBrowseIndexRef.current;
           pendingBrowseIndexRef.current = -1;
@@ -654,6 +658,17 @@ export function PropEditor() {
     if (key === "panelMeta" && selectedNodeId) {
       return (
         <ResizableMetaEditor
+          key={key}
+          value={String(value ?? "")}
+          selectedNodeId={selectedNodeId}
+        />
+      );
+    }
+
+    // Custom UI for buttonData (button group structure editor)
+    if (key === "buttonData" && selectedNodeId) {
+      return (
+        <ButtonGroupMetaEditor
           key={key}
           value={String(value ?? "")}
           selectedNodeId={selectedNodeId}

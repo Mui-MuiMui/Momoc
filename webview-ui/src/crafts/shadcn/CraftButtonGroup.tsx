@@ -38,26 +38,57 @@ const OVERLAY_LABELS: Record<string, string> = {
   "dropdown-menu": "Menu",
 };
 
-// --- CraftButtonGroup (container) ---
+export interface ButtonDef {
+  text: string;
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
+  size?: "default" | "sm" | "lg" | "icon";
+  disabled?: boolean;
+  overlayType?: "none" | "dialog" | "alert-dialog" | "sheet" | "drawer" | "popover" | "dropdown-menu";
+  linkedMocPath?: string;
+  sheetSide?: "top" | "right" | "bottom" | "left";
+  overlayWidth?: string;
+  overlayHeight?: string;
+  overlayClassName?: string;
+  toastText?: string;
+  toastPosition?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+}
+
+export const DEFAULT_BUTTON_DATA: ButtonDef[] = [
+  { text: "Button 1", variant: "outline", overlayType: "none" },
+  { text: "Button 2", variant: "outline", overlayType: "none" },
+  { text: "Button 3", variant: "outline", overlayType: "none" },
+];
+
+function parseButtonData(raw: string): ButtonDef[] {
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as ButtonDef[];
+    return DEFAULT_BUTTON_DATA;
+  } catch {
+    return DEFAULT_BUTTON_DATA;
+  }
+}
 
 interface CraftButtonGroupProps {
   orientation?: "horizontal" | "vertical";
+  buttonData?: string;
   width?: string;
   height?: string;
   className?: string;
-  children?: React.ReactNode;
 }
 
 export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
   orientation = "horizontal",
+  buttonData = JSON.stringify(DEFAULT_BUTTON_DATA),
   width = "auto",
   height = "auto",
   className = "",
-  children,
 }) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const buttons = parseButtonData(buttonData);
 
   const groupCls =
     orientation === "vertical"
@@ -73,11 +104,30 @@ export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
       className={cn(groupCls, className)}
       style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
-      {children ?? (
-        <div className="min-h-[36px] min-w-[160px] flex items-center justify-center text-xs text-muted-foreground border border-dashed rounded-md px-3">
-          Drop Button Group Items here
-        </div>
-      )}
+      {buttons.map((btn, i) => {
+        const overlayLabel = btn.overlayType && btn.overlayType !== "none" ? OVERLAY_LABELS[btn.overlayType] : null;
+        return (
+          <div key={i} className="relative inline-flex">
+            <button
+              className={buttonVariants({ variant: btn.variant ?? "outline", size: btn.size ?? "default" })}
+              disabled={btn.disabled}
+              type="button"
+            >
+              {renderKbd(btn.text)}
+              {btn.linkedMocPath && (
+                <span className="ml-1 opacity-60" title={btn.linkedMocPath}>
+                  &#128279;
+                </span>
+              )}
+            </button>
+            {overlayLabel && (
+              <span className="absolute -right-1 -top-2 rounded bg-blue-600 px-1 py-0.5 text-[9px] leading-none text-white shadow">
+                {overlayLabel}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -85,6 +135,7 @@ export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
 CraftButtonGroup.craft = {
   displayName: "ButtonGroup",
   props: {
+    buttonData: JSON.stringify(DEFAULT_BUTTON_DATA),
     orientation: "horizontal",
     width: "auto",
     height: "auto",
@@ -92,99 +143,6 @@ CraftButtonGroup.craft = {
   },
   rules: {
     canDrag: () => true,
-    canMoveIn: (nodes) => nodes.every((n) => n.data.displayName === "ButtonGroupItem"),
-  },
-};
-
-// --- CraftButtonGroupItem (button item) ---
-
-interface CraftButtonGroupItemProps {
-  text?: string;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  size?: "default" | "sm" | "lg" | "icon";
-  disabled?: boolean;
-  overlayType?: "none" | "dialog" | "alert-dialog" | "sheet" | "drawer" | "popover" | "dropdown-menu";
-  linkedMocPath?: string;
-  sheetSide?: "top" | "right" | "bottom" | "left";
-  overlayWidth?: string;
-  overlayHeight?: string;
-  overlayClassName?: string;
-  tooltipText?: string;
-  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
-  toastText?: string;
-  toastPosition?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
-  className?: string;
-}
-
-export const CraftButtonGroupItem: UserComponent<CraftButtonGroupItemProps> = ({
-  text = "Button",
-  variant = "outline",
-  size = "default",
-  disabled = false,
-  overlayType = "none",
-  linkedMocPath = "",
-  className = "",
-}) => {
-  const {
-    connectors: { connect, drag },
-  } = useNode();
-
-  const overlayLabel = overlayType !== "none" ? OVERLAY_LABELS[overlayType] : null;
-
-  const classes = className ? className.split(" ").filter(Boolean) : [];
-  const marginClasses = classes.filter((c) => /^-?m[trblxy]?-/.test(c));
-  const nonMarginClasses = classes.filter((c) => !/^-?m[trblxy]?-/.test(c));
-
-  return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(drag(ref));
-      }}
-      className={cn("relative inline-flex", marginClasses.join(" "))}
-    >
-      <button
-        className={cn(buttonVariants({ variant, size }), nonMarginClasses.join(" "))}
-        disabled={disabled}
-        type="button"
-      >
-        {renderKbd(text)}
-        {linkedMocPath && (
-          <span className="ml-1 opacity-60" title={linkedMocPath}>
-            &#128279;
-          </span>
-        )}
-      </button>
-      {overlayLabel && (
-        <span className="absolute -right-1 -top-2 rounded bg-blue-600 px-1 py-0.5 text-[9px] leading-none text-white shadow">
-          {overlayLabel}
-        </span>
-      )}
-    </div>
-  );
-};
-
-CraftButtonGroupItem.craft = {
-  displayName: "ButtonGroupItem",
-  props: {
-    text: "Button",
-    variant: "outline",
-    size: "default",
-    disabled: false,
-    overlayType: "none",
-    linkedMocPath: "",
-    sheetSide: "right",
-    overlayWidth: "",
-    overlayHeight: "",
-    overlayClassName: "",
-    tooltipText: "",
-    tooltipSide: "",
-    toastText: "",
-    toastPosition: "bottom-right",
-    className: "",
-  },
-  rules: {
-    canDrag: () => false,
-    canMoveOut: () => false,
     canMoveIn: () => false,
   },
 };
