@@ -360,21 +360,11 @@ function SizeInput({
   value: string;
   onChange: (v: string) => void;
 }) {
-  // isAuto は value prop から直接導出（stateにしない）
-  const isAuto = !value || value === "auto";
   const parsed = parseSizeValue(value);
+  const [isAuto, setIsAuto] = useState(parsed.isAuto);
   const [num, setNum] = useState(parsed.num);
   const [unit, setUnit] = useState<SizeUnit>(parsed.unit);
-
-  // ノード切り替え等で value が外部から変わった時のみ num/unit を同期
-  const prevValueRef = useRef(value);
-  useEffect(() => {
-    if (prevValueRef.current === value) return;
-    prevValueRef.current = value;
-    const p = parseSizeValue(value);
-    setNum(p.num);
-    setUnit(p.unit);
-  }, [value]);
+  // key={nodeId+propKey} で再マウントされるため useEffect による同期は不要
 
   return (
     <div className="flex flex-col gap-1">
@@ -382,11 +372,12 @@ function SizeInput({
       <button
         type="button"
         onClick={() => {
-          if (isAuto) {
-            // auto OFF: 現在の num/unit で確定、なければ空文字
-            onChange(num ? `${num}${unit}` : "");
-          } else {
+          const next = !isAuto;
+          setIsAuto(next);
+          if (next) {
             onChange("auto");
+          } else {
+            onChange(num ? `${num}${unit}` : "");
           }
         }}
         className={`w-fit rounded px-2 py-0.5 text-[10px] transition-colors ${
@@ -589,7 +580,7 @@ export function PropEditor() {
     if (key === "width" || key === "height") {
       return (
         <SizeInput
-          key={key}
+          key={`${selectedNodeId}-${key}`}
           propKey={key}
           value={String(value ?? "auto")}
           onChange={(v) => handlePropChange(key, v)}
