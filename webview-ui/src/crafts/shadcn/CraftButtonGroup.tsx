@@ -75,6 +75,13 @@ interface CraftButtonGroupProps {
   width?: string;
   height?: string;
   className?: string;
+  tooltipText?: string;
+  tooltipSide?: "" | "top" | "right" | "bottom" | "left";
+  tooltipTrigger?: "hover" | "focus";
+  hoverCardMocPath?: string;
+  hoverCardSide?: "top" | "right" | "bottom" | "left";
+  hoverCardTrigger?: "hover" | "focus";
+  contextMenuMocPath?: string;
 }
 
 export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
@@ -144,6 +151,13 @@ CraftButtonGroup.craft = {
     width: "auto",
     height: "auto",
     className: "",
+    tooltipText: "",
+    tooltipSide: "",
+    tooltipTrigger: "hover",
+    hoverCardMocPath: "",
+    hoverCardSide: "bottom",
+    hoverCardTrigger: "hover",
+    contextMenuMocPath: "",
   },
   rules: {
     canDrag: () => true,
