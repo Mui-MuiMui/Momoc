@@ -144,6 +144,20 @@ export async function startPreviewServer(
             pairs.push([rel, abs]);
           }
         }
+        // buttonData JSON: scan each button's linkedMocPath
+        const buttonDataStr = n?.props?.buttonData as string | undefined;
+        if (buttonDataStr) {
+          try {
+            const btns = JSON.parse(buttonDataStr) as Array<{ linkedMocPath?: string }>;
+            for (const btn of btns) {
+              if (btn.linkedMocPath) {
+                const abs = path.resolve(baseDir, btn.linkedMocPath);
+                const rel = path.relative(mocDir, abs).replace(/\\/g, "/");
+                pairs.push([rel, abs]);
+              }
+            }
+          } catch { /* ignore */ }
+        }
       }
       return pairs;
     }
