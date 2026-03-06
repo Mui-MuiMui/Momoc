@@ -2710,12 +2710,13 @@ function renderSelect(
   const contentStyleAttr = contentWidth ? ` style={{ width: "${escapeAttr(contentWidth)}" }}` : "";
 
   const lines: string[] = [];
-  lines.push(`${pad}<${tag}>`);
+  // styleAttr(width/height) は Select wrapper に付ける。SelectTrigger は w-full で wrapper に追従する
+  lines.push(`${pad}<${tag}${styleAttr}>`);
   if (tooltipText) {
     lines.push(`${pad}  <TooltipProvider>`);
     lines.push(`${pad}    <Tooltip>`);
     lines.push(`${pad}      <TooltipTrigger asChild>`);
-    lines.push(`${pad}        <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}        <SelectTrigger${classNameAttr}>`);
     lines.push(`${pad}          <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}        </SelectTrigger>`);
     lines.push(`${pad}      </TooltipTrigger>`);
@@ -2725,7 +2726,7 @@ function renderSelect(
     lines.push(`${pad}    </Tooltip>`);
     lines.push(`${pad}  </TooltipProvider>`);
   } else {
-    lines.push(`${pad}  <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}  <SelectTrigger${classNameAttr}>`);
     lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}  </SelectTrigger>`);
   }
