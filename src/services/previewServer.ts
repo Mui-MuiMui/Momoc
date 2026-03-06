@@ -1367,11 +1367,12 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { createPortal } from "react-dom";
 const SelectCtx = createContext<any>(null);
 export function Select(props: any) {
-  const { children, ...rest } = props;
+  const { children, style, ...rest } = props;
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
-  return <SelectCtx.Provider value={{ value, setValue, open, setOpen, triggerRef }}><div className="inline-grid" {...rest}>{children}</div></SelectCtx.Provider>;
+  const wrapperCls = style?.width ? "block" : "inline-grid";
+  return <SelectCtx.Provider value={{ value, setValue, open, setOpen, triggerRef }}><div className={wrapperCls} style={style} {...rest}>{children}</div></SelectCtx.Provider>;
 }
 export function SelectTrigger(props: any) {
   const { className = "", children, ...rest } = props;
@@ -1736,7 +1737,7 @@ export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => { if (ref.current) { const child = ref.current.firstElementChild as HTMLElement | null; ctx.triggerRef.current = child ?? ref.current; } }, []);
-  return <span ref={ref} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "block", width: "100%", ...props.style }}>{props.children}</span>;
+  return <span ref={ref} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "block", ...props.style }}>{props.children}</span>;
 }
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
