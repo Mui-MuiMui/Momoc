@@ -1068,12 +1068,24 @@ export function DatePicker(props) {
     return cn("inline-flex items-center justify-center rounded-md text-sm h-8 w-8", hoverBgClass ? (hoveredDay === d ? hoverBgClass : "") : "hover:bg-accent hover:text-accent-foreground");
   };
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [calPos, setCalPos] = useState<{top:number;left:number} | null>(null);
+  const calRef = useRef<HTMLDivElement>(null);
+  const [calPos, setCalPos] = useState<{top:number;left:number;triggerTop:number} | null>(null);
   useLayoutEffect(() => {
     if (!open || !wrapperRef.current) return;
     const r = wrapperRef.current.getBoundingClientRect();
-    setCalPos({ top: r.bottom + 4, left: r.left });
+    setCalPos({ top: r.bottom + 4, left: r.left, triggerTop: r.top });
   }, [open]);
+  useLayoutEffect(() => {
+    if (!calPos || !calRef.current) return;
+    const el = calRef.current;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    let { top, left } = calPos;
+    if (top + h > window.innerHeight) top = calPos.triggerTop - h - 4;
+    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
+    if (top < 0) top = 4;
+    el.style.top = top + "px";
+    el.style.left = left + "px";
+  }, [calPos]);
   return (
     <div ref={wrapperRef} className={cn(className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }} {...rest}>
       <div className={cn("flex w-full rounded-md border border-input overflow-hidden", height !== "auto" ? "h-full" : "h-9", disabled && "opacity-50 cursor-not-allowed")}>
@@ -1089,7 +1101,7 @@ export function DatePicker(props) {
       </div>
       {open && calPos && createPortal(<>
           <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
-          <div className={cn("fixed z-[9999] min-w-[280px] rounded-md border bg-popover p-3", calendarBorderClass, calendarShadowClass || "shadow-md")} style={{ top: calPos.top, left: calPos.left }}>
+          <div ref={calRef} className={cn("fixed z-[9999] min-w-[280px] rounded-md border bg-popover p-3", calendarBorderClass, calendarShadowClass || "shadow-md")} style={{ top: calPos.top, left: calPos.left }}>
             <div className="flex items-center justify-between mb-2">
               <button type="button" onClick={prevMonth} className="inline-flex items-center justify-center rounded-md text-sm font-medium h-7 w-7 hover:bg-accent hover:text-accent-foreground">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m15 18-6-6 6-6"/></svg>
@@ -1387,16 +1399,28 @@ export function SelectTrigger(props: any) {
 export function SelectContent(props: any) {
   const { className = "", children, style, ...rest } = props;
   const ctx = useContext(SelectCtx);
-  const [pos, setPos] = useState<{top:number;left:number;width:number} | null>(null);
+  const [pos, setPos] = useState<{top:number;left:number;width:number;triggerTop:number} | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width, triggerTop: r.top });
   }, [ctx?.open]);
+  useLayoutEffect(() => {
+    if (!pos || !contentRef.current) return;
+    const el = contentRef.current;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    let { top, left } = pos;
+    if (top + h > window.innerHeight) top = pos.triggerTop - h - 4;
+    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
+    if (top < 0) top = 4;
+    el.style.top = top + "px";
+    el.style.left = left + "px";
+  }, [pos]);
   if (!ctx?.open || !pos) return null;
   const effectiveWidth = style?.width ?? \`\${pos.width}px\`;
   const cls = cn("fixed z-[9999] max-h-60 min-w-[8rem] overflow-auto rounded-md border border-gray-300 bg-popover p-1 text-popover-foreground shadow-lg", className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...style }} {...rest}>{children}</div></>, document.body);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...style }} {...rest}>{children}</div></>, document.body);
 }
 export function SelectItem(props: any) {
   const { value, className = "", children, ...rest } = props;
@@ -1744,16 +1768,28 @@ export function PopoverTrigger(props: any) {
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
   const comboCtx = useContext(ComboboxCtx);
-  const [pos, setPos] = useState<{top:number;left:number;width:number} | null>(null);
+  const [pos, setPos] = useState<{top:number;left:number;width:number;triggerTop:number} | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width, triggerTop: r.top });
   }, [ctx?.open]);
+  useLayoutEffect(() => {
+    if (!pos || !contentRef.current) return;
+    const el = contentRef.current;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    let { top, left } = pos;
+    if (top + h > window.innerHeight) top = pos.triggerTop - h - 4;
+    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
+    if (top < 0) top = 4;
+    el.style.top = top + "px";
+    el.style.left = left + "px";
+  }, [pos]);
   if (!ctx?.open || !pos) return null;
   const effectiveWidth = props.style?.width ?? \`\${pos.width}px\`;
   const cls = cn("fixed z-[9999] rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
 }`,
 
   "dropdown-menu": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
