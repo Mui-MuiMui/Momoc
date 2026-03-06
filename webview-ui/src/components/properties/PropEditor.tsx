@@ -576,8 +576,9 @@ export function PropEditor() {
       !LAYOUT_ALL_KEYS.has(key) &&
       !INTERACTION_KEYS.has(key) &&
       !excludedProps.has(key) &&
-      // Typography: items は ul/ol のみ表示
-      !(componentName === "Typography" && key === "items" && selectedProps.variant !== "ul" && selectedProps.variant !== "ol"),
+      // Typography: items は ul/ol のみ表示、text は ul/ol では非表示
+      !(componentName === "Typography" && key === "items" && selectedProps.variant !== "ul" && selectedProps.variant !== "ol") &&
+      !(componentName === "Typography" && key === "text" && (selectedProps.variant === "ul" || selectedProps.variant === "ol")),
   ).map(([key, defaultVal]) => {
     const selectedVal = selectedProps[key];
     // selectedProps の値の型が craftDefaultProps のデフォルト値と一致する場合のみ使用
