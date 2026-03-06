@@ -26,7 +26,7 @@ export const CraftDiv: UserComponent<CraftDivProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("min-h-[40px] min-w-[40px] p-2", contextMenuMocPath && "ring-1 ring-dashed ring-muted-foreground/30", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {children}
     </div>

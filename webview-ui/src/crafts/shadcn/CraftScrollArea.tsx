@@ -24,7 +24,7 @@ export const CraftScrollArea: UserComponent<CraftScrollAreaProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("relative overflow-auto rounded-md border", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div className="p-4">
         {children}

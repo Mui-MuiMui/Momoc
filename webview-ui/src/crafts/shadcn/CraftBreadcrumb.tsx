@@ -64,7 +64,7 @@ export const CraftBreadcrumb: UserComponent<CraftBreadcrumbProps> = ({
       }}
       aria-label="breadcrumb"
       className={cn(className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <ol className="flex flex-wrap items-center gap-1.5 break-words text-sm text-muted-foreground sm:gap-2.5">
         {/* First item */}

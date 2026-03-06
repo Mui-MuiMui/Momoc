@@ -33,7 +33,7 @@ export const CraftProgress: UserComponent<CraftProgressProps> = ({
         "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
         className,
       )}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div
         className={cn("h-full w-full flex-1 transition-all", indicatorClass || "bg-primary")}

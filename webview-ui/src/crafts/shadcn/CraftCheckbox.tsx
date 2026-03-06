@@ -33,7 +33,7 @@ export const CraftCheckbox: UserComponent<CraftCheckboxProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("flex items-center space-x-2", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <button
         type="button"

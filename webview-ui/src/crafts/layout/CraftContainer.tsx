@@ -104,7 +104,7 @@ export const CraftContainer: UserComponent<CraftContainerProps> = ({
         (linkedMocPath || contextMenuMocPath) && "ring-1 ring-dashed ring-muted-foreground/30",
         className,
       )}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {linkedMocPath && (
         <div className="absolute top-1 right-1 opacity-40 pointer-events-none flex items-center gap-0.5">

@@ -37,7 +37,7 @@ export const CraftCard: UserComponent<CraftCardProps> = ({
         contextMenuMocPath && "ring-1 ring-dashed ring-muted-foreground/30",
         className,
       )}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {(title || description) && (
         <div className="flex flex-col space-y-1.5 p-6">

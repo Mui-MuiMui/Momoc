@@ -49,7 +49,7 @@ export const CraftBadge: UserComponent<CraftBadgeProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn(badgeVariants({ variant }), className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined, whiteSpace: "pre-line" }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined, whiteSpace: "pre-line" }}
     >
       {renderKbd(text)}
     </span>

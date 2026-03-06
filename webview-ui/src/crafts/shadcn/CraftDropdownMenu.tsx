@@ -123,8 +123,8 @@ export const CraftDropdownMenu: UserComponent<CraftDropdownMenuProps> = ({
       }}
       className={cn("relative inline-block", className)}
       style={{
-        width: width !== "auto" ? width : undefined,
-        height: height !== "auto" ? height : undefined,
+        width: width && width !== "auto" ? width : undefined,
+        height: height && height !== "auto" ? height : undefined,
       }}
     >
       <button

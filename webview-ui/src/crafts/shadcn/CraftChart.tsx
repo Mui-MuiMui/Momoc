@@ -28,7 +28,7 @@ export const CraftChart: UserComponent<CraftChartProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("rounded-lg border p-4", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div className="text-sm font-medium mb-2">Chart ({chartType})</div>
       {chartType === "bar" && (

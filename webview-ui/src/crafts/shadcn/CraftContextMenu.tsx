@@ -103,7 +103,7 @@ export const CraftContextMenu: UserComponent<CraftContextMenuProps> = ({
         panelTextClass,
         className,
       )}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div className="px-2 py-1 text-xs text-muted-foreground font-medium border-b border-border mb-1">
         右クリックメニュー

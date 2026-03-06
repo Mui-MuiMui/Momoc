@@ -120,7 +120,7 @@ export const CraftSwitch: UserComponent<CraftSwitchProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {inner}
     </div>

@@ -115,8 +115,8 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
       }}
       className={cn(isVertical ? "flex flex-row" : "flex flex-col", outerBorderColor, outerShadow, className)}
       style={{
-        width: width !== "auto" ? width : undefined,
-        height: height !== "auto" ? height : undefined,
+        width: width && width !== "auto" ? width : undefined,
+        height: height && height !== "auto" ? height : undefined,
       }}
     >
       {/* Tab list */}
