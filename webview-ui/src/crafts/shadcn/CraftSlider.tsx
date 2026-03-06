@@ -40,7 +40,7 @@ export const CraftSlider: UserComponent<CraftSliderProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("relative flex w-full touch-none select-none items-center", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div className={cn("relative h-1.5 w-full grow overflow-hidden rounded-full bg-primary/20", trackClassName)}>
         <div className={cn("absolute h-full bg-primary", fillClassName)} style={{ width: `${percentage}%` }} />

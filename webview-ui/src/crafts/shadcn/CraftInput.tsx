@@ -34,7 +34,8 @@ export const CraftInput: UserComponent<CraftInputProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      style={{ width: width !== "auto" ? width : undefined }}
+      className={!width || width === "auto" ? "w-full" : undefined}
+      style={{ width: width && width !== "auto" ? width : undefined }}
     >
       <input
         type={type}

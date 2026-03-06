@@ -75,8 +75,8 @@ export const CraftNavigationMenu: UserComponent<CraftNavigationMenuProps> = ({
       }}
       className={cn("relative flex items-center", className)}
       style={{
-        width: width !== "auto" ? width : undefined,
-        height: height !== "auto" ? height : undefined,
+        width: width && width !== "auto" ? width : undefined,
+        height: height && height !== "auto" ? height : undefined,
       }}
     >
       <ul className="flex list-none items-center gap-1">

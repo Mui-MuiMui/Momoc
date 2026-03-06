@@ -87,7 +87,7 @@ export const CraftToggleGroup: UserComponent<CraftToggleGroupProps> = ({
         disabled ? "opacity-50 pointer-events-none" : "",
         className,
       )}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {itemList.map((item, i) => {
         const desc = descList[i] || "";

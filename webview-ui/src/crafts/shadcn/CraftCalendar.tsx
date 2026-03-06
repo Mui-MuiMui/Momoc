@@ -37,7 +37,7 @@ export const CraftCalendar: UserComponent<CraftCalendarProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("p-3 rounded-md border", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div className="flex items-center justify-between mb-2">
         <button type="button" className="inline-flex items-center justify-center rounded-md text-sm font-medium h-7 w-7 hover:bg-accent hover:text-accent-foreground">

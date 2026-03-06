@@ -27,7 +27,7 @@ export const CraftTooltip: UserComponent<CraftTooltipProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("inline-flex flex-col items-center gap-1", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <button
         type="button"

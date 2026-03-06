@@ -37,7 +37,7 @@ export const CraftHoverCard: UserComponent<CraftHoverCardProps> = ({
         "text-sm font-medium underline underline-offset-4 cursor-pointer",
         className,
       )}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {triggerText}
       {linkedMocPath && (

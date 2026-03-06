@@ -51,7 +51,7 @@ export const CraftAlert: UserComponent<CraftAlertProps> = ({
       }}
       role="alert"
       className={cn(alertVariants({ variant }), className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {IconComponent && <IconComponent className="h-4 w-4" />}
       {title && <h5 className="mb-1 font-medium leading-none tracking-tight" style={{ whiteSpace: "pre-line" }}>{renderKbd(title)}</h5>}

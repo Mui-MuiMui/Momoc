@@ -93,7 +93,7 @@ export const CraftCollapsible: UserComponent<CraftCollapsibleProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("w-full rounded-md border", outerBorderColor, outerShadow, className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {/* Header zone - always visible, drop zone for any components */}
       <div className="flex items-center justify-between space-x-4 px-4 py-2">

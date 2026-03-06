@@ -6,6 +6,7 @@ import { TableMetaEditor } from "./TableMetaEditor";
 import { TabMetaEditor } from "./TabMetaEditor";
 import { ResizableMetaEditor } from "./ResizableMetaEditor";
 import { MenubarMetaEditor } from "./MenubarMetaEditor";
+import { ButtonGroupMetaEditor } from "./ButtonGroupMetaEditor";
 import { CommandMetaEditor } from "./CommandMetaEditor";
 import { ColumnDefsEditor } from "./ColumnDefsEditor";
 import { useEditorStore } from "../../stores/editorStore";
@@ -124,6 +125,9 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Command: {
     itemShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
     separatorShadowClass: ["", "shadow-sm", "shadow", "shadow-md", "shadow-lg", "shadow-xl", "shadow-inner", "shadow-none"],
+  },
+  Typography: {
+    variant: ["h1", "h2", "h3", "h4", "p", "blockquote", "ul", "ol", "code", "lead", "large", "small", "muted"],
   },
 };
 
@@ -313,9 +317,9 @@ const LAYOUT_ALL_KEYS = new Set([...COMMON_KEYS, ...FLOW_KEYS, ...ABSOLUTE_KEYS]
 /** フロー配置のデフォルト値 (selectedProps に無い場合に使用) */
 const FLOW_DEFAULTS: Record<string, unknown> = {
   display: "flex",
-  flexDirection: "column",
+  flexDirection: "row",
   justifyContent: "start",
-  alignItems: "stretch",
+  alignItems: "start",
   gap: "4",
   gridCols: 3,
 };
@@ -338,6 +342,102 @@ const COMPONENT_EXCLUDED_PROPS: Record<string, Set<string>> = {
   // Table: stickyHeader/pinnedLeft は TableMetaEditor 内で編集するため PropEditor からは非表示
   Table: new Set(["stickyHeader", "pinnedLeft"]),
 };
+
+// --- サイズ入力 UI ---
+
+const SIZE_UNITS = ["px", "%", "rem", "em", "vw", "vh"] as const;
+type SizeUnit = (typeof SIZE_UNITS)[number];
+
+function parseSizeValue(val: string): { isAuto: boolean; num: string; unit: SizeUnit } {
+  if (!val || val === "auto") return { isAuto: true, num: "", unit: "px" };
+  const m = val.match(/^(\d*\.?\d+)(px|%|rem|em|vw|vh)$/);
+  if (m) return { isAuto: false, num: m[1], unit: m[2] as SizeUnit };
+  return { isAuto: true, num: "", unit: "px" };
+}
+
+function SizeInput({
+  propKey,
+  value,
+  onChange,
+}: {
+  propKey: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const parsed = parseSizeValue(value);
+  const [isAuto, setIsAuto] = useState(parsed.isAuto);
+  const [num, setNum] = useState(parsed.num);
+  const [unit, setUnit] = useState<SizeUnit>(parsed.unit);
+  // key={nodeId+propKey} で再マウントされるため useEffect による同期は不要
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">{propKey}</label>
+      <div className="flex gap-1">
+        <button
+          type="button"
+          onClick={() => {
+            const next = !isAuto;
+            setIsAuto(next);
+            if (next) {
+              onChange("auto");
+            } else {
+              onChange(num ? `${num}${unit}` : "");
+            }
+          }}
+          className={`rounded px-2 py-0.5 text-[10px] transition-colors ${
+            isAuto
+              ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+              : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+          }`}
+        >
+          auto
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setIsAuto(false);
+            setNum("100");
+            setUnit("%");
+            onChange("100%");
+          }}
+          className="rounded px-2 py-0.5 text-[10px] transition-colors bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+        >
+          100%
+        </button>
+      </div>
+      <div className={`flex gap-1 ${isAuto ? "pointer-events-none opacity-40" : ""}`}>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          value={num}
+          disabled={isAuto}
+          onChange={(e) => {
+            setNum(e.target.value);
+            onChange(e.target.value ? `${e.target.value}${unit}` : "");
+          }}
+          placeholder="100"
+          className={`${INPUT_CLASS} w-full`}
+        />
+        <select
+          value={unit}
+          disabled={isAuto}
+          onChange={(e) => {
+            const nextUnit = e.target.value as SizeUnit;
+            setUnit(nextUnit);
+            onChange(num ? `${num}${nextUnit}` : "");
+          }}
+          className={`${INPUT_CLASS} w-[60px] shrink-0`}
+        >
+          {SIZE_UNITS.map((u) => (
+            <option key={u} value={u}>{u}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
 
 export function PropEditor() {
   const { selectedProps, actions, selectedNodeId, componentName, craftDefaultProps } = useEditor(
@@ -373,6 +473,7 @@ export function PropEditor() {
       const msg = event.data;
       if (msg?.type === "browse:mocFile:result" && selectedNodeId) {
         const { relativePath, targetProp } = msg.payload as { relativePath: string; targetProp?: string };
+        if (targetProp === "buttonGroupLinkedMocPath") return;
         if (targetProp === "linkedMocPaths" && pendingBrowseIndexRef.current >= 0) {
           const idx = pendingBrowseIndexRef.current;
           pendingBrowseIndexRef.current = -1;
@@ -474,7 +575,10 @@ export function PropEditor() {
       key !== "className" &&
       !LAYOUT_ALL_KEYS.has(key) &&
       !INTERACTION_KEYS.has(key) &&
-      !excludedProps.has(key),
+      !excludedProps.has(key) &&
+      // Typography: items は ul/ol のみ表示、text は ul/ol では非表示
+      !(componentName === "Typography" && key === "items" && selectedProps.variant !== "ul" && selectedProps.variant !== "ol") &&
+      !(componentName === "Typography" && key === "text" && (selectedProps.variant === "ul" || selectedProps.variant === "ol")),
   ).map(([key, defaultVal]) => {
     const selectedVal = selectedProps[key];
     // selectedProps の値の型が craftDefaultProps のデフォルト値と一致する場合のみ使用
@@ -494,6 +598,18 @@ export function PropEditor() {
   const activeGroups = GROUP_ORDER.filter((g) => (grouped.get(g)?.length ?? 0) > 0);
 
   function renderProp(key: string, value: unknown) {
+    // Custom UI for width/height/tabButtonWidth
+    if (key === "width" || key === "height" || key === "tabButtonWidth") {
+      return (
+        <SizeInput
+          key={`${selectedNodeId}-${key}`}
+          propKey={key}
+          value={String(value ?? "auto")}
+          onChange={(v) => handlePropChange(key, v)}
+        />
+      );
+    }
+
     // Custom UI for columnDefs (Data Table column definitions editor)
     if (key === "columnDefs" && selectedNodeId) {
       return (
@@ -546,6 +662,17 @@ export function PropEditor() {
     if (key === "panelMeta" && selectedNodeId) {
       return (
         <ResizableMetaEditor
+          key={key}
+          value={String(value ?? "")}
+          selectedNodeId={selectedNodeId}
+        />
+      );
+    }
+
+    // Custom UI for buttonData (button group structure editor)
+    if (key === "buttonData" && selectedNodeId) {
+      return (
+        <ButtonGroupMetaEditor
           key={key}
           value={String(value ?? "")}
           selectedNodeId={selectedNodeId}
@@ -1076,6 +1203,57 @@ export function PropEditor() {
             className={`${INPUT_CLASS} w-full`}
             placeholder="text-gray-700 ..."
           />
+        </div>
+      );
+    }
+
+    // Custom UI for Typography items: per-item text input with add/remove buttons
+    if (componentName === "Typography" && key === "items") {
+      const currentItems = String(value ?? "").split(",").map((s) => s.trim());
+
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
+            items
+          </label>
+          <div className="flex flex-col gap-1">
+            {currentItems.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-1">
+                <input
+                  type="text"
+                  value={item}
+                  onChange={(e) => {
+                    const next = [...currentItems];
+                    next[idx] = e.target.value;
+                    handlePropChange(key, next.join(","));
+                  }}
+                  className={`${INPUT_CLASS} flex-1`}
+                  placeholder={`Item ${idx + 1}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = currentItems.filter((_, i) => i !== idx);
+                    handlePropChange(key, next.join(","));
+                  }}
+                  className="px-1 py-0.5 text-[11px] text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-errorForeground,#f44)]"
+                  title="削除"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const next = [...currentItems, `Item ${currentItems.length + 1}`];
+              handlePropChange(key, next.join(","));
+            }}
+            className="mt-1 rounded border border-dashed border-[var(--vscode-button-border,transparent)] bg-[var(--vscode-button-secondaryBackground,#3a3d41)] px-2 py-0.5 text-[11px] text-[var(--vscode-button-secondaryForeground,#ccc)] hover:opacity-90"
+          >
+            + アイテム追加
+          </button>
         </div>
       );
     }

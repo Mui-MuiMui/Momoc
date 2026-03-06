@@ -286,23 +286,29 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   const headerRows = rowMap.slice(0, headerRowCount);
   const bodyRows = rowMap.slice(headerRowCount);
 
+  const hasWidth = Object.keys(wrapperStyle).length > 0;
+  // auto時: table に width: "100%" を付けない（各列のcol幅に追従させる）
+  // wrapper指定時: wrapper の幅に table が追従するよう width: "100%" を維持
+  const tableWidth = hasWidth ? "100%" : undefined;
+  // wrapper は fit-content でテーブルの実幅に追従。width指定時は明示幅を使用。
+  const wrapperDisplayStyle: React.CSSProperties = hasWidth
+    ? wrapperStyle
+    : { width: "fit-content" };
   return (
     <div
+      ref={(ref) => {
+        if (ref) connect(drag(ref));
+      }}
       className={cn("overflow-auto", className)}
-      style={Object.keys(wrapperStyle).length > 0 ? wrapperStyle : undefined}
+      style={wrapperDisplayStyle}
     >
-      {/* Drag handle strip — outside cell canvas, so clicks reach CraftTable's connect */}
-      <div
-        ref={(ref) => {
-          if (ref) connect(drag(ref));
-        }}
-        className="flex h-4 cursor-move select-none items-center bg-muted/20 px-1 opacity-0 transition-opacity hover:opacity-100"
-      >
+      {/* Drag handle strip — wrapper幅に追従 */}
+      <div className="flex h-4 cursor-move select-none items-center bg-muted/20 px-1 opacity-0 transition-opacity hover:opacity-100">
         <span className="text-[9px] text-muted-foreground">⠿ Table</span>
       </div>
       <table
         className={cn("caption-bottom text-sm border-separate", tableOuterBorderClass)}
-        style={{ tableLayout: "fixed", borderSpacing: 0, width: "100%", minWidth: totalColWidth > 0 ? totalColWidth : undefined }}
+        style={{ tableLayout: "fixed", borderSpacing: 0, width: tableWidth, minWidth: totalColWidth > 0 ? `${totalColWidth}px` : undefined }}
       >
         <colgroup>
           {colMap.map((physC) => {

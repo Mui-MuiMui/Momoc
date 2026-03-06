@@ -47,7 +47,7 @@ export const CraftDialog: UserComponent<CraftDialogProps> = ({
       }}
       type="button"
       className={cn(buttonVariants({ variant }), "h-9 px-4 py-2", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {triggerText}
       {linkedMocPath && (

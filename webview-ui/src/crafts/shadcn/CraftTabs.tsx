@@ -55,6 +55,7 @@ interface CraftTabsProps {
   orientation?: "horizontal" | "vertical";
   width?: string;
   height?: string;
+  tabButtonWidth?: string;
   className?: string;
   tabListBgClass?: string;
   tabActiveBgClass?: string;
@@ -70,6 +71,7 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
   orientation = "horizontal",
   width = "auto",
   height = "auto",
+  tabButtonWidth = "auto",
   className = "",
   tabListBgClass = "",
   tabActiveBgClass = "",
@@ -101,10 +103,13 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
 
   const isVertical = orientation === "vertical";
 
+  const isFullWidth = tabButtonWidth === "100%";
+  const hasFixedButtonWidth = tabButtonWidth && tabButtonWidth !== "auto" && tabButtonWidth !== "100%";
+
   const tabListCls = cn(
     isVertical
       ? "flex flex-col items-stretch bg-muted p-1 rounded-md"
-      : "inline-flex items-center bg-muted p-1 rounded-md w-full",
+      : cn("items-center bg-muted p-1 rounded-md", isFullWidth ? "flex w-full" : "inline-flex"),
     tabListBgClass,
   );
 
@@ -113,47 +118,49 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn(isVertical ? "flex flex-row" : "flex flex-col", outerBorderColor, outerShadow, className)}
+      className={cn(width && width !== "auto" ? "block" : "w-fit", isVertical ? "flex flex-row" : "flex flex-col", outerBorderColor, outerShadow, className)}
       style={{
-        width: width !== "auto" ? width : undefined,
-        height: height !== "auto" ? height : undefined,
+        width: width && width !== "auto" ? width : undefined,
+        height: height && height !== "auto" ? height : undefined,
       }}
     >
       {/* Tab list */}
       <div className={tabListCls}>
-        {meta.keys.map((key) => {
-          const label = meta.labels[String(key)] ?? `Tab ${key}`;
-          const iconName = meta.icons[String(key)];
-          const tooltip = meta.tooltips[String(key)] || "";
-          const IconComp = iconName ? (LucideIcons as Record<string, any>)[iconName] : null;
-          const isActive = key === activeKey;
-          return (
-            <div
-              key={key}
-              className={cn("relative group", isVertical ? "" : "flex-1")}
-            >
-              <button
-                type="button"
-                onClick={() => setActiveKey(key)}
-                className={cn(
-                  "inline-flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  isVertical ? "text-left" : "",
-                  isActive
-                    ? cn("bg-background text-foreground shadow", tabActiveBgClass)
-                    : "text-muted-foreground hover:text-foreground",
-                )}
+          {meta.keys.map((key) => {
+            const label = meta.labels[String(key)] ?? `Tab ${key}`;
+            const iconName = meta.icons[String(key)];
+            const tooltip = meta.tooltips[String(key)] || "";
+            const IconComp = iconName ? (LucideIcons as Record<string, any>)[iconName] : null;
+            const isActive = key === activeKey;
+            return (
+              <div
+                key={key}
+                className={cn("relative group", isVertical ? "" : (isFullWidth ? "flex-1" : ""))}
               >
-                {IconComp && <IconComp className="h-4 w-4" />}
-                {label}
-              </button>
-              {tooltip && (
-                <span className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                  {tooltip}
-                </span>
-              )}
-            </div>
-          );
-        })}
+                <button
+                  type="button"
+                  onClick={() => setActiveKey(key)}
+                  className={cn(
+                    "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    isVertical ? "text-left" : "",
+                    isFullWidth ? "w-full" : "",
+                    isActive
+                      ? cn("bg-background text-foreground shadow", tabActiveBgClass)
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  style={{ width: hasFixedButtonWidth ? tabButtonWidth : undefined }}
+                >
+                  {IconComp && <IconComp className="h-4 w-4" />}
+                  {label}
+                </button>
+                {tooltip && (
+                  <span className="pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 z-50 rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                    {tooltip}
+                  </span>
+                )}
+              </div>
+            );
+          })}
       </div>
 
       {/* Tab content slots — all rendered, inactive hidden */}
@@ -177,6 +184,7 @@ CraftTabs.craft = {
     orientation: "horizontal",
     width: "auto",
     height: "auto",
+    tabButtonWidth: "auto",
     className: "",
     tabListBgClass: "",
     tabActiveBgClass: "",

@@ -37,7 +37,7 @@ import { CraftCalendar } from "./shadcn/CraftCalendar";
 import { CraftDatePicker } from "./shadcn/CraftDatePicker";
 import { CraftResizable, ResizablePanelSlot } from "./shadcn/CraftResizable";
 import { CraftCarousel } from "./shadcn/CraftCarousel";
-import { CraftChart } from "./shadcn/CraftChart";
+import { CraftButtonGroup, DEFAULT_BUTTON_DATA } from "./shadcn/CraftButtonGroup";
 import { CraftForm } from "./shadcn/CraftForm";
 // Phase 4: Overlay components
 import { CraftDialog } from "./shadcn/CraftDialog";
@@ -53,6 +53,7 @@ import { CraftMenubar, DEFAULT_MENUBAR_DATA } from "./shadcn/CraftMenubar";
 import { CraftCommand } from "./shadcn/CraftCommand";
 import { CraftTooltip } from "./shadcn/CraftTooltip";
 import { CraftSonner } from "./shadcn/CraftSonner";
+import { CraftTypography } from "./shadcn/CraftTypography";
 
 export const resolvers = {
   CraftDiv,
@@ -99,7 +100,7 @@ export const resolvers = {
   CraftResizable,
   ResizablePanelSlot,
   CraftCarousel,
-  CraftChart,
+  CraftButtonGroup,
   CraftForm,
   // Phase 4
   CraftDialog,
@@ -116,6 +117,7 @@ export const resolvers = {
   CraftCommand,
   CraftTooltip,
   CraftSonner,
+  CraftTypography,
 };
 
 export type ResolverKey = keyof typeof resolvers;
@@ -444,12 +446,12 @@ export const paletteItems: PaletteItem[] = [
     enabled: false,
   },
   {
-    resolverKey: "CraftChart",
-    label: "Chart",
+    resolverKey: "CraftButtonGroup",
+    label: "Button Group",
     category: "shadcn",
-    icon: "BarChart3",
-    defaultProps: {},
-    enabled: false,
+    icon: "RectangleHorizontal",
+    defaultProps: { buttonData: JSON.stringify(DEFAULT_BUTTON_DATA) },
+    enabled: true,
   },
   {
     resolverKey: "CraftForm",
@@ -506,6 +508,14 @@ export const paletteItems: PaletteItem[] = [
     category: "shadcn",
     icon: "Terminal",
     defaultProps: {},
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftTypography",
+    label: "Typography",
+    category: "shadcn",
+    icon: "Type",
+    defaultProps: { text: "Heading 1" },
     enabled: true,
   },
 ];

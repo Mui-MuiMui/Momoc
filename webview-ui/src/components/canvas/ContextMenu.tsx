@@ -23,10 +23,11 @@ function serializeTree(tree: NodeTree): string {
           Object.entries(resolvers).find(([, fn]) => fn === typeFn)?.[0] ??
           typeFn?.resolvedName ??
           (typeof typeFn === "string" ? typeFn : "CraftDiv");
+        // rules は関数を含むため JSON化で消滅する。必要フィールドのみ明示的にピックアップ。
         return [
           id,
           {
-            ...node,
+            id: node.id,
             data: { ...node.data, type: typeName },
             dom: null,
             events: { selected: false, dragged: false, hovered: false },
@@ -44,17 +45,28 @@ function deserializeTree(text: string): NodeTree | null {
   try {
     const raw = JSON.parse(text.slice(CLIP_PREFIX.length)) as {
       rootNodeId: string;
-      nodes: Record<string, Node & { data: { type: string } }>;
+      nodes: Record<string, { id: string; data: Node["data"] & { type: string }; events: Node["events"] }>;
     };
     const nodes: Record<string, Node> = {};
     for (const [id, node] of Object.entries(raw.nodes)) {
       const typeFn = resolvers[node.data.type as keyof typeof resolvers];
       if (!typeFn) return null; // 未知のコンポーネントは拒否
+      // craft.rules から関数を復元（JSONで消滅するため）
+      const craftRules = (typeFn as { craft?: { rules?: { canDrag?: () => boolean; canDrop?: () => boolean; canMoveIn?: (...args: unknown[]) => boolean; canMoveOut?: () => boolean } } }).craft?.rules;
       nodes[id] = {
-        ...node,
+        id: node.id,
         data: { ...node.data, type: typeFn },
         dom: null,
         _hydrationTimestamp: Date.now(),
+        events: { selected: false, dragged: false, hovered: false },
+        rules: {
+          canDrag: craftRules?.canDrag ?? (() => true),
+          canDrop: craftRules?.canDrop ?? (() => true),
+          canMoveIn: craftRules?.canMoveIn ?? (() => true),
+          canMoveOut: craftRules?.canMoveOut ?? (() => true),
+        },
+        info: {},
+        related: {},
       } as unknown as Node;
     }
     return { rootNodeId: raw.rootNodeId, nodes };
@@ -104,8 +116,8 @@ function cloneTreeWithFreshIds(tree: NodeTree): NodeTree {
     newNodes[newId] = {
       id: newId,
       data: newData,
-      info: { ...node.info },
-      related: { ...node.related },
+      info: { ...(node.info || {}) },
+      related: { ...(node.related || {}) },
       events: { selected: false, dragged: false, hovered: false },
       rules: node.rules,
       dom: null,
@@ -169,8 +181,8 @@ export function ContextMenu() {
     if (!sel) return;
     try {
       const nodeTree = queryRef.current.node(sel).toNodeTree();
-      const freshTree = cloneTreeWithFreshIds(nodeTree);
-      navigator.clipboard.writeText(serializeTree(freshTree)).then(() => {
+      // コピー時はIDを変えない（ペースト時にfreshIDを付与）
+      navigator.clipboard.writeText(serializeTree(nodeTree)).then(() => {
         setHasClipboard(true);
       }).catch(() => {/* ignore */});
     } catch {
@@ -187,8 +199,8 @@ export function ContextMenu() {
       if (nodeHelper.isRoot() || nodeHelper.isTopLevelNode()) return;
       if (!nodeHelper.isDeletable()) return;
       const nodeTree = nodeHelper.toNodeTree();
-      const freshTree = cloneTreeWithFreshIds(nodeTree);
-      navigator.clipboard.writeText(serializeTree(freshTree)).then(() => {
+      // カット時もIDを変えない（ペースト時にfreshIDを付与）
+      navigator.clipboard.writeText(serializeTree(nodeTree)).then(() => {
         setHasClipboard(true);
         // 切り取り：クリップボード書き込み確認後に元ノードを削除
         actionsRef.current.delete(sel);

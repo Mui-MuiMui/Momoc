@@ -22,7 +22,7 @@ export const CraftForm: UserComponent<CraftFormProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("space-y-4", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div className="space-y-2">
         <label className="text-sm font-medium leading-none">Username</label>

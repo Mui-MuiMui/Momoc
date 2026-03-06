@@ -139,8 +139,8 @@ export const CraftMenubar: UserComponent<CraftMenubarProps> = ({
         className,
       )}
       style={{
-        width: width !== "auto" ? width : undefined,
-        height: height !== "auto" ? height : undefined,
+        width: width && width !== "auto" ? width : undefined,
+        height: height && height !== "auto" ? height : undefined,
       }}
     >
       {menus.map((menu, i) => (

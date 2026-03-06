@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useEditor } from "@craftjs/core";
+import { cn } from "../../utils/cn";
 
 const SPACING_SCALE = [
   "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
@@ -46,14 +47,6 @@ const MARGIN_DIRS = [
   { label: "L", prefix: "ml" },
 ] as const;
 
-const TEXT_ALIGN_OPTIONS = [
-  { label: "Left", textCls: "text-left", justifyCls: "justify-start" },
-  { label: "Center", textCls: "text-center", justifyCls: "justify-center" },
-  { label: "Right", textCls: "text-right", justifyCls: "justify-end" },
-  { label: "Justify", textCls: "text-justify", justifyCls: "justify-between" },
-];
-const ALL_TEXT_ALIGN_CLASSES = TEXT_ALIGN_OPTIONS.flatMap((o) => [o.textCls, o.justifyCls]);
-
 const ALIGN_SELF_OPTIONS = [
   { label: "Auto", cls: "self-auto" },
   { label: "Start", cls: "self-start" },
@@ -62,11 +55,21 @@ const ALIGN_SELF_OPTIONS = [
   { label: "Stretch", cls: "self-stretch" },
 ];
 
-const CONTENT_VALIGN_OPTIONS = [
-  { label: "Top", cls: "items-start" },
-  { label: "Center", cls: "items-center" },
-  { label: "End", cls: "items-end" },
+// 3×3 Content Align グリッド (flex-row前提: justify=水平, items=垂直)
+const CONTENT_ALIGN_GRID = [
+  { justify: "justify-start",  items: "items-start"  },
+  { justify: "justify-center", items: "items-start"  },
+  { justify: "justify-end",    items: "items-start"  },
+  { justify: "justify-start",  items: "items-center" },
+  { justify: "justify-center", items: "items-center" },
+  { justify: "justify-end",    items: "items-center" },
+  { justify: "justify-start",  items: "items-end"    },
+  { justify: "justify-center", items: "items-end"    },
+  { justify: "justify-end",    items: "items-end"    },
 ];
+const ALL_JUSTIFY_CLASSES = ["justify-start", "justify-center", "justify-end", "justify-between", "justify-around", "justify-evenly"];
+const ALL_ITEMS_CLASSES = ["items-start", "items-center", "items-end", "items-stretch", "items-baseline"];
+const ALL_FLEX_DIR_CLASSES = ["flex-row", "flex-col"];
 
 const FIXED_HEADER_CLASSES = ["fixed", "top-0", "inset-x-0", "z-50"];
 
@@ -203,7 +206,6 @@ export function TailwindEditor() {
   const fontWeightGroup = FONT_WEIGHT_OPTIONS.map((w) => `font-${w}`);
   const borderRadiusGroup = BORDER_RADIUS_OPTIONS.map((r) => `rounded-${r}`);
   const alignSelfGroup = ALIGN_SELF_OPTIONS.map((o) => o.cls);
-  const contentVAlignGroup = CONTENT_VALIGN_OPTIONS.map((o) => o.cls);
 
   const getShadowIndex = (): number => {
     for (let i = 0; i < SHADOW_SCALE.length; i++) {
@@ -281,23 +283,44 @@ export function TailwindEditor() {
           onChange={(idx) => setSpacingValue(currentMarginPrefix, idx)}
         />
 
-        <TailwindSection title="Text Align">
-          <div className="flex gap-1">
-            {TEXT_ALIGN_OPTIONS.map((o) => (
-              <ClassButton
-                key={o.textCls}
-                label={o.label}
-                active={activeSet.has(o.textCls)}
-                onClick={() => {
-                  const filtered = classes.filter((c) => !ALL_TEXT_ALIGN_CLASSES.includes(c));
-                  if (activeSet.has(o.textCls)) {
-                    updateClassName(filtered.join(" "));
-                  } else {
-                    updateClassName([...filtered, o.textCls, o.justifyCls].join(" "));
-                  }
-                }}
-              />
-            ))}
+        <TailwindSection title="Content Align">
+          <div className="grid grid-cols-3 gap-0.5 w-[72px]">
+            {CONTENT_ALIGN_GRID.map((cell, i) => {
+              const isActive = activeSet.has(cell.justify) && activeSet.has(cell.items);
+              return (
+                <button
+                  key={i}
+                  title={`${cell.justify} ${cell.items}`}
+                  className={cn(
+                    "w-6 h-6 rounded-sm border flex items-center justify-center",
+                    isActive
+                      ? "border-[var(--vscode-focusBorder,#007fd4)] bg-[var(--vscode-focusBorder,#007fd4)]/20"
+                      : "border-[var(--vscode-panel-border,#444)] bg-[var(--vscode-input-background,#3c3c3c)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+                  )}
+                  onClick={() => {
+                    if (isActive) {
+                      const cleared = classes.filter(
+                        (c) => !ALL_JUSTIFY_CLASSES.includes(c) &&
+                                !ALL_ITEMS_CLASSES.includes(c) &&
+                                !ALL_FLEX_DIR_CLASSES.includes(c) &&
+                                c !== "flex"
+                      );
+                      updateClassName(cleared.join(" "));
+                    } else {
+                      const cleared = classes.filter(
+                        (c) => !ALL_JUSTIFY_CLASSES.includes(c) &&
+                                !ALL_ITEMS_CLASSES.includes(c) &&
+                                !ALL_FLEX_DIR_CLASSES.includes(c) &&
+                                c !== "flex"
+                      );
+                      updateClassName([...cleared, "flex", "flex-row", cell.justify, cell.items].join(" "));
+                    }
+                  }}
+                >
+                  <span className={cn("rounded-full", isActive ? "w-2 h-2 bg-[var(--vscode-focusBorder,#007fd4)]" : "w-1.5 h-1.5 bg-[var(--vscode-foreground,#ccc)] opacity-50")} />
+                </button>
+              );
+            })}
           </div>
         </TailwindSection>
 
@@ -309,28 +332,6 @@ export function TailwindEditor() {
                 label={o.label}
                 active={activeSet.has(o.cls)}
                 onClick={() => setGroupClass(o.cls, alignSelfGroup)}
-              />
-            ))}
-          </div>
-        </TailwindSection>
-
-        <TailwindSection title="Content V-Align">
-          <div className="flex flex-wrap gap-1">
-            {CONTENT_VALIGN_OPTIONS.map((o) => (
-              <ClassButton
-                key={o.cls}
-                label={o.label}
-                active={activeSet.has(o.cls)}
-                onClick={() => {
-                  const filtered = classes.filter((c) => !contentVAlignGroup.includes(c));
-                  if (activeSet.has(o.cls)) {
-                    const noFlex = filtered.filter((c) => c !== "flex");
-                    updateClassName(noFlex.join(" "));
-                  } else {
-                    const withFlex = filtered.includes("flex") ? filtered : ["flex", ...filtered];
-                    updateClassName([...withFlex, o.cls].join(" "));
-                  }
-                }}
               />
             ))}
           </div>

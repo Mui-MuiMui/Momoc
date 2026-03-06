@@ -80,7 +80,7 @@ export const CraftPagination: UserComponent<CraftPaginationProps> = ({
       role="navigation"
       aria-label="pagination"
       className={cn("flex w-full", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <ul className="flex flex-row items-center gap-1">
         <li>

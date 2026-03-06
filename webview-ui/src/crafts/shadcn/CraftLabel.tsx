@@ -37,8 +37,8 @@ export const CraftLabel: UserComponent<CraftLabelProps> = ({
       )}
       style={{
         whiteSpace: "pre-line",
-        width: width !== "auto" ? width : undefined,
-        height: height !== "auto" ? height : undefined,
+        width: width && width !== "auto" ? width : undefined,
+        height: height && height !== "auto" ? height : undefined,
         ...((width !== "auto" || height !== "auto") &&
           !/\b(flex|grid|block|inline-block|inline-flex)\b/.test(className)
           ? { display: "inline-block" }

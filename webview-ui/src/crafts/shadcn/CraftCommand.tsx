@@ -180,8 +180,8 @@ export const CraftCommand: UserComponent<CraftCommandProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={cn("flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      className={cn(width && width !== "auto" ? "block" : "inline-grid", "flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground", className)}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <div className={cn("flex items-center border-b px-3", inputBorderClass, inputBwClass, inputRoundedClass)}>
         <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />

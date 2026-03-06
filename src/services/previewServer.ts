@@ -144,6 +144,20 @@ export async function startPreviewServer(
             pairs.push([rel, abs]);
           }
         }
+        // buttonData JSON: scan each button's linkedMocPath
+        const buttonDataStr = n?.props?.buttonData as string | undefined;
+        if (buttonDataStr) {
+          try {
+            const btns = JSON.parse(buttonDataStr) as Array<{ linkedMocPath?: string }>;
+            for (const btn of btns) {
+              if (btn.linkedMocPath) {
+                const abs = path.resolve(baseDir, btn.linkedMocPath);
+                const rel = path.relative(mocDir, abs).replace(/\\/g, "/");
+                pairs.push([rel, abs]);
+              }
+            }
+          } catch { /* ignore */ }
+        }
       }
       return pairs;
     }
@@ -493,7 +507,8 @@ export async function startPreviewServer(
     // Serve fallback shadcn/ui components: /ui/<name>.js
     if (url.startsWith("/ui/")) {
       const componentName = url.slice(4).replace(/\.js.*$/, "");
-      const js = fallbackJs.get(componentName);
+      const effectiveName = componentName;
+      const js = fallbackJs.get(effectiveName);
       if (js) {
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
@@ -696,8 +711,9 @@ export function Button(props: any) {
     const childArray = Array.isArray(children) ? children : [children];
     const placeholder = String(childArray.find((c: any) => typeof c === "string") || "Select...");
     const icons = childArray.filter((c: any) => c !== null && c !== undefined && typeof c !== "string");
+    const inputCls = cn("flex w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring", !style?.height && "h-9", className);
     return <div className="relative flex items-center z-[51] w-full" style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
-      <input ref={inputRef} type="text" className={cn("flex h-9 w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring", className)} value={comboCtx.search || ""} placeholder={placeholder} onChange={(e: any) => { comboCtx.setSearch(e.target.value); comboCtx.setOpen(true); }} onFocus={() => comboCtx.setOpen(true)} />
+      <input ref={inputRef} type="text" className={inputCls} style={style?.height ? { height: style.height } : undefined} value={comboCtx.search || ""} placeholder={placeholder} onChange={(e: any) => { comboCtx.setSearch(e.target.value); comboCtx.setOpen(true); }} onFocus={() => comboCtx.setOpen(true)} />
       <span className="absolute right-2 pointer-events-none opacity-50">{icons}</span>
     </div>;
   }
@@ -758,7 +774,7 @@ export function Table(props: any) {
   const wrapperStyle = Object.fromEntries(Object.entries({ width, height }).filter(([, v]) => v != null));
   const innerStyle = Object.fromEntries(Object.entries({ minWidth, ...tableStyle }).filter(([, v]) => v != null));
   const cls = cn("caption-bottom text-sm border-separate", className);
-  const mergedInnerStyle = { borderSpacing: 0, width: "100%", ...innerStyle };
+  const mergedInnerStyle = { borderSpacing: 0, ...(wrapperStyle.width ? { width: "100%" } : {}), ...innerStyle };
   const tableRef = useRef<HTMLTableElement>(null);
   useEffect(() => {
     if (!tableRef.current) return;
@@ -776,7 +792,8 @@ export function Table(props: any) {
       top += tr.getBoundingClientRect().height;
     }
   });
-  return <div className="relative overflow-auto" style={Object.keys(wrapperStyle).length ? wrapperStyle : undefined}><table ref={tableRef} className={cls} style={mergedInnerStyle} {...rest}>{children}</table></div>;
+  const hasWrapperWidth = !!wrapperStyle.width;
+  return <div className={hasWrapperWidth ? "block relative overflow-auto" : "inline-block relative overflow-auto"} style={Object.keys(wrapperStyle).length ? wrapperStyle : undefined}><table ref={tableRef} className={cls} style={mergedInnerStyle} {...rest}>{children}</table></div>;
 }
 export function TableHeader(props: any) {
   const { className = "", children, ...rest } = props;
@@ -1066,12 +1083,24 @@ export function DatePicker(props) {
     return cn("inline-flex items-center justify-center rounded-md text-sm h-8 w-8", hoverBgClass ? (hoveredDay === d ? hoverBgClass : "") : "hover:bg-accent hover:text-accent-foreground");
   };
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [calPos, setCalPos] = useState<{top:number;left:number} | null>(null);
+  const calRef = useRef<HTMLDivElement>(null);
+  const [calPos, setCalPos] = useState<{top:number;left:number;triggerTop:number} | null>(null);
   useLayoutEffect(() => {
     if (!open || !wrapperRef.current) return;
     const r = wrapperRef.current.getBoundingClientRect();
-    setCalPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX });
+    setCalPos({ top: r.bottom + 4, left: r.left, triggerTop: r.top });
   }, [open]);
+  useLayoutEffect(() => {
+    if (!calPos || !calRef.current) return;
+    const el = calRef.current;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    let { top, left } = calPos;
+    if (top + h > window.innerHeight) top = calPos.triggerTop - h - 4;
+    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
+    if (top < 0) top = 4;
+    el.style.top = top + "px";
+    el.style.left = left + "px";
+  }, [calPos]);
   return (
     <div ref={wrapperRef} className={cn(className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }} {...rest}>
       <div className={cn("flex w-full rounded-md border border-input overflow-hidden", height !== "auto" ? "h-full" : "h-9", disabled && "opacity-50 cursor-not-allowed")}>
@@ -1087,7 +1116,7 @@ export function DatePicker(props) {
       </div>
       {open && calPos && createPortal(<>
           <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
-          <div className={cn("fixed z-[9999] min-w-[280px] rounded-md border bg-popover p-3", calendarBorderClass, calendarShadowClass || "shadow-md")} style={{ top: calPos.top, left: calPos.left }}>
+          <div ref={calRef} className={cn("fixed z-[9999] min-w-[280px] rounded-md border bg-popover p-3", calendarBorderClass, calendarShadowClass || "shadow-md")} style={{ top: calPos.top, left: calPos.left }}>
             <div className="flex items-center justify-between mb-2">
               <button type="button" onClick={prevMonth} className="inline-flex items-center justify-center rounded-md text-sm font-medium h-7 w-7 hover:bg-accent hover:text-accent-foreground">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="m15 18-6-6 6-6"/></svg>
@@ -1367,11 +1396,12 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { createPortal } from "react-dom";
 const SelectCtx = createContext<any>(null);
 export function Select(props: any) {
-  const { children, ...rest } = props;
+  const { children, style, ...rest } = props;
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
-  return <SelectCtx.Provider value={{ value, setValue, open, setOpen, triggerRef }}><div className="inline-grid" {...rest}>{children}</div></SelectCtx.Provider>;
+  const wrapperCls = style?.width ? "block" : "inline-grid";
+  return <SelectCtx.Provider value={{ value, setValue, open, setOpen, triggerRef }}><div className={wrapperCls} style={style} {...rest}>{children}</div></SelectCtx.Provider>;
 }
 export function SelectTrigger(props: any) {
   const { className = "", children, ...rest } = props;
@@ -1384,16 +1414,28 @@ export function SelectTrigger(props: any) {
 export function SelectContent(props: any) {
   const { className = "", children, style, ...rest } = props;
   const ctx = useContext(SelectCtx);
-  const [pos, setPos] = useState<{top:number;left:number;width:number} | null>(null);
+  const [pos, setPos] = useState<{top:number;left:number;width:number;triggerTop:number} | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width, triggerTop: r.top });
   }, [ctx?.open]);
+  useLayoutEffect(() => {
+    if (!pos || !contentRef.current) return;
+    const el = contentRef.current;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    let { top, left } = pos;
+    if (top + h > window.innerHeight) top = pos.triggerTop - h - 4;
+    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
+    if (top < 0) top = 4;
+    el.style.top = top + "px";
+    el.style.left = left + "px";
+  }, [pos]);
   if (!ctx?.open || !pos) return null;
   const effectiveWidth = style?.width ?? \`\${pos.width}px\`;
   const cls = cn("fixed z-[9999] max-h-60 min-w-[8rem] overflow-auto rounded-md border border-gray-300 bg-popover p-1 text-popover-foreground shadow-lg", className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...style }} {...rest}>{children}</div></>, document.body);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...style }} {...rest}>{children}</div></>, document.body);
 }
 export function SelectItem(props: any) {
   const { value, className = "", children, ...rest } = props;
@@ -1584,6 +1626,15 @@ export function Carousel(props: any) {
   return <div className={cls} {...rest}>{children}</div>;
 }`,
 
+  "button-group": `import { cn } from "@/components/ui/_cn";
+export function ButtonGroup(props: any) {
+  const { orientation = "horizontal", className = "", style, children } = props;
+  const cls = orientation === "vertical"
+    ? "flex flex-col w-fit [&>*:not(:first-child)]:rounded-t-none [&>*:not(:first-child)]:border-t-0 [&>*:not(:last-child)]:rounded-b-none"
+    : "flex w-fit [&>*:not(:first-child)]:rounded-l-none [&>*:not(:first-child)]:border-l-0 [&>*:not(:last-child)]:rounded-r-none";
+  return <div role="group" className={cn(cls, className)} style={style}>{children}</div>;
+}`,
+
   // --- Overlay wrapper components (context-based for proper state sharing) ---
 
   tooltip: `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -1621,10 +1672,10 @@ export function TooltipContent(props: any) {
     if (!ctx?.show || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
     const gap = 8;
-    if (side === "top") setPos({ top: r.top + window.scrollY - gap, left: r.left + window.scrollX + r.width / 2 });
-    else if (side === "bottom") setPos({ top: r.bottom + window.scrollY + gap, left: r.left + window.scrollX + r.width / 2 });
-    else if (side === "left") setPos({ top: r.top + window.scrollY + r.height / 2, left: r.left + window.scrollX - gap });
-    else setPos({ top: r.top + window.scrollY + r.height / 2, left: r.right + window.scrollX + gap });
+    if (side === "top") setPos({ top: r.top - gap, left: r.left + r.width / 2 });
+    else if (side === "bottom") setPos({ top: r.bottom + gap, left: r.left + r.width / 2 });
+    else if (side === "left") setPos({ top: r.top + r.height / 2, left: r.left - gap });
+    else setPos({ top: r.top + r.height / 2, left: r.right + gap });
   }, [ctx?.show, side]);
   if (!ctx?.show || !pos) return null;
   const transformMap: Record<string, string> = {
@@ -1725,32 +1776,44 @@ import { createPortal } from "react-dom";
 import { ComboboxCtx } from "@/components/ui/_combobox";
 const Ctx = createContext<any>(null);
 export function Popover(props: any) {
-  const { style, children } = props;
+  const { style, className, children } = props;
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
   const triggerRef = useRef<HTMLElement | null>(null);
-  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className="inline-grid" style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
+  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className={cn("inline-grid", className)} style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
   const ref = useRef<HTMLSpanElement>(null);
   useEffect(() => { if (ref.current) { const child = ref.current.firstElementChild as HTMLElement | null; ctx.triggerRef.current = child ?? ref.current; } }, []);
-  return <span ref={ref} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "block", width: "100%", ...props.style }}>{props.children}</span>;
+  return <span ref={ref} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "block", ...props.style }}>{props.children}</span>;
 }
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
   const comboCtx = useContext(ComboboxCtx);
-  const [pos, setPos] = useState<{top:number;left:number;width:number} | null>(null);
+  const [pos, setPos] = useState<{top:number;left:number;width:number;triggerTop:number} | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width, triggerTop: r.top });
   }, [ctx?.open]);
+  useLayoutEffect(() => {
+    if (!pos || !contentRef.current) return;
+    const el = contentRef.current;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    let { top, left } = pos;
+    if (top + h > window.innerHeight) top = pos.triggerTop - h - 4;
+    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
+    if (top < 0) top = 4;
+    el.style.top = top + "px";
+    el.style.left = left + "px";
+  }, [pos]);
   if (!ctx?.open || !pos) return null;
   const effectiveWidth = props.style?.width ?? \`\${pos.width}px\`;
   const cls = cn("fixed z-[9999] rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
 }`,
 
   "dropdown-menu": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -1775,7 +1838,7 @@ export function DropdownMenuContent(props: any) {
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + window.scrollY + 8, left: r.left + window.scrollX });
+    setPos({ top: r.bottom + 8, left: r.left });
   }, [ctx?.open]);
   if (!ctx?.open || !pos) return null;
   const cls = ("fixed z-[9999] " + (props.className || "min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md")).trim();
@@ -1889,10 +1952,10 @@ export function HoverCardContent(props: any) {
     if (!ctx?.show || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
     const gap = 8;
-    if (side === "bottom") setPos({ top: r.bottom + window.scrollY + gap, left: r.left + window.scrollX });
-    else if (side === "top") setPos({ top: r.top + window.scrollY - gap, left: r.left + window.scrollX });
-    else if (side === "right") setPos({ top: r.top + window.scrollY, left: r.right + window.scrollX + gap });
-    else setPos({ top: r.top + window.scrollY, left: r.left + window.scrollX - gap });
+    if (side === "bottom") setPos({ top: r.bottom + gap, left: r.left });
+    else if (side === "top") setPos({ top: r.top - gap, left: r.left });
+    else if (side === "right") setPos({ top: r.top, left: r.right + gap });
+    else setPos({ top: r.top, left: r.left - gap });
   }, [ctx?.show, side]);
   if (!ctx?.show || !pos) return null;
   const defaultCls = "min-w-[200px] rounded-md border bg-popover p-4 text-popover-foreground shadow-md";

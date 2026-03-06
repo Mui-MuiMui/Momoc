@@ -71,7 +71,7 @@ export const CraftRadioGroup: UserComponent<CraftRadioGroupProps> = ({
       }}
       role="radiogroup"
       className={groupClassName}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {itemList.map((item, i) => {
         const desc = descList[i] || "";

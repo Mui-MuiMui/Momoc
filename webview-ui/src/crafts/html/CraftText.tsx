@@ -29,7 +29,7 @@ export const CraftText: UserComponent<CraftTextProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn(className)}
-      style={{ whiteSpace: "pre-line", width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ whiteSpace: "pre-line", width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       {renderKbd(text)}
     </Tag>

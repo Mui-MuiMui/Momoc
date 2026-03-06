@@ -27,7 +27,7 @@ export const CraftSonner: UserComponent<CraftSonnerProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn("flex flex-col gap-2", className)}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <button
         type="button"

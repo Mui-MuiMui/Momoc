@@ -300,9 +300,11 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: false,
   },
-  CraftChart: {
-    tag: "div",
-    propsMap: ["className"],
+  CraftButtonGroup: {
+    tag: "ButtonGroup",
+    importFrom: "@/components/ui/button-group",
+    importName: "ButtonGroup",
+    propsMap: ["orientation", "variant", "size", "className"],
     isContainer: false,
   },
   CraftForm: {
@@ -405,6 +407,12 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     textProp: "triggerText",
     isContainer: false,
   },
+  // Typography: special rendering (no shadcn import needed)
+  CraftTypography: {
+    tag: "p",
+    propsMap: [],
+    isContainer: false,
+  },
 };
 
 /** Overlay type to import configuration */
@@ -500,7 +508,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
     headerBgClass: "", hoverRowClass: "", selectedRowClass: "", headerTextClass: "", headerHoverTextClass: "", headerBorderClass: "", tableBorderClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
-  CraftChart: { chartType: "bar" },
+  CraftButtonGroup: { orientation: "horizontal", variant: "outline", size: "default", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover", hoverCardMocPath: "", hoverCardSide: "bottom", hoverCardTrigger: "hover", contextMenuMocPath: "" },
   CraftForm: {},
   // Phase 4 (legacy standalone)
   CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
@@ -517,6 +525,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftCombobox: { placeholder: "Select an option...", items: "Apple,Banana,Cherry", linkedMocPath: "", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover", contentWidth: "" },
   CraftTooltip: { triggerText: "Hover", text: "Tooltip text" },
   CraftSonner: { triggerText: "Show Toast", text: "Event has been created." },
+  CraftTypography: { variant: "h1", text: "Heading 1", items: "List item 1,List item 2,List item 3" },
 };
 
 export function craftStateToTsx(
@@ -666,6 +675,22 @@ export function craftStateToTsx(
       if (toastText) {
         addImport("sonner", "toast");
       }
+    }
+
+    // Collect imports for CraftButtonGroup buttonData
+    if (resolvedName === "CraftButtonGroup") {
+      addImport("@/components/ui/button", "Button");
+      try {
+        const btns = JSON.parse((node.props?.buttonData as string) || "[]") as Array<Record<string, unknown>>;
+        for (const btn of btns) {
+          const ot = btn.overlayType as string | undefined;
+          if (ot && ot !== "none") {
+            const oi = OVERLAY_IMPORTS[ot];
+            if (oi) for (const n of oi.names) addImport(oi.from, n);
+          }
+          if (btn.toastText) addImport("sonner", "toast");
+        }
+      } catch { /* ignore */ }
     }
 
     // Collect tooltip imports for any component with tooltipText
@@ -888,104 +913,7 @@ export function craftStateToTsx(
     ].join("\n");
   }
 
-  /** Wrap rendered element with overlay if CraftButton has overlayType set */
-  function wrapWithOverlay(rendered: string, props: Record<string, unknown>, pad: string): string {
-    const overlayType = props?.overlayType as string | undefined;
-    if (!overlayType || overlayType === "none") return rendered;
-
-    const linkedMocPath = props?.linkedMocPath as string | undefined;
-    const contentComment = linkedMocPath
-      ? `{/* linked: ${escapeJsx(linkedMocPath)} */}`
-      : "{/* overlay content */}";
-
-    // Build style attribute for overlay size
-    const overlayWidth = props?.overlayWidth as string | undefined;
-    const overlayHeight = props?.overlayHeight as string | undefined;
-    const styleParts: string[] = [];
-    if (overlayWidth) styleParts.push(`maxWidth: "${overlayWidth}"`);
-    if (overlayHeight) styleParts.push(`maxHeight: "${overlayHeight}", overflow: "auto"`);
-    const styleAttr = styleParts.length > 0 ? ` style={{ ${styleParts.join(", ")} }}` : "";
-
-    // Build className attribute for overlay content styling
-    const overlayClassName = props?.overlayClassName as string | undefined;
-    const classAttr = overlayClassName ? ` className="${escapeAttr(overlayClassName)}"` : "";
-
-    switch (overlayType) {
-      case "dialog":
-        return [
-          `${pad}<Dialog>`,
-          `${pad}  <DialogTrigger asChild>`,
-          rendered,
-          `${pad}  </DialogTrigger>`,
-          `${pad}  <DialogContent${classAttr}${styleAttr}>`,
-          `${pad}    ${contentComment}`,
-          `${pad}  </DialogContent>`,
-          `${pad}</Dialog>`,
-        ].join("\n");
-      case "alert-dialog":
-        return [
-          `${pad}<AlertDialog>`,
-          `${pad}  <AlertDialogTrigger asChild>`,
-          rendered,
-          `${pad}  </AlertDialogTrigger>`,
-          `${pad}  <AlertDialogContent${classAttr}${styleAttr}>`,
-          `${pad}    ${contentComment}`,
-          `${pad}    <AlertDialogCancel>Cancel</AlertDialogCancel>`,
-          `${pad}    <AlertDialogAction>Continue</AlertDialogAction>`,
-          `${pad}  </AlertDialogContent>`,
-          `${pad}</AlertDialog>`,
-        ].join("\n");
-      case "sheet": {
-        const side = (props?.sheetSide as string) || "right";
-        const sideAttr = side !== "right" ? ` side="${side}"` : "";
-        return [
-          `${pad}<Sheet>`,
-          `${pad}  <SheetTrigger asChild>`,
-          rendered,
-          `${pad}  </SheetTrigger>`,
-          `${pad}  <SheetContent${sideAttr}${classAttr}${styleAttr}>`,
-          `${pad}    ${contentComment}`,
-          `${pad}  </SheetContent>`,
-          `${pad}</Sheet>`,
-        ].join("\n");
-      }
-      case "drawer":
-        return [
-          `${pad}<Drawer>`,
-          `${pad}  <DrawerTrigger asChild>`,
-          rendered,
-          `${pad}  </DrawerTrigger>`,
-          `${pad}  <DrawerContent${classAttr}${styleAttr}>`,
-          `${pad}    ${contentComment}`,
-          `${pad}  </DrawerContent>`,
-          `${pad}</Drawer>`,
-        ].join("\n");
-      case "popover":
-        return [
-          `${pad}<Popover>`,
-          `${pad}  <PopoverTrigger asChild>`,
-          rendered,
-          `${pad}  </PopoverTrigger>`,
-          `${pad}  <PopoverContent${classAttr}${styleAttr}>`,
-          `${pad}    ${contentComment}`,
-          `${pad}  </PopoverContent>`,
-          `${pad}</Popover>`,
-        ].join("\n");
-      case "dropdown-menu":
-        return [
-          `${pad}<DropdownMenu>`,
-          `${pad}  <DropdownMenuTrigger asChild>`,
-          rendered,
-          `${pad}  </DropdownMenuTrigger>`,
-          `${pad}  <DropdownMenuContent${classAttr}${styleAttr}>`,
-          `${pad}    ${contentComment}`,
-          `${pad}  </DropdownMenuContent>`,
-          `${pad}</DropdownMenu>`,
-        ].join("\n");
-      default:
-        return rendered;
-    }
-  }
+  // wrapWithOverlay は module scope に移動 (renderButtonGroup からも呼び出し可能)
 
   /** Wrap rendered container with context menu if contextMenuMocPath is set */
   function wrapWithContextMenu(rendered: string, props: Record<string, unknown>, pad: string): string {
@@ -1152,6 +1080,11 @@ export function craftStateToTsx(
       }
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>\n${alertBody.join("\n")}\n${pad}</${tag}>`;
       return applyCommonWrappers(rendered);
+    }
+
+    // Typography special case: render as plain HTML tag with Tailwind classes
+    if (resolvedName === "CraftTypography") {
+      return applyCommonWrappers(`${mocComments}\n${renderTypography(node.props, classNameAttr, styleAttr, pad)}`);
     }
 
     // Accordion special case: render with AccordionItem/Trigger/Content
@@ -1342,6 +1275,11 @@ export function craftStateToTsx(
     if (resolvedName === "CraftToggleGroup") {
       rendered = `${mocComments}\n${renderToggleGroup(node.props, tag, propsStr, styleAttr, pad)}`;
       return applyCommonWrappers(rendered);
+    }
+
+    // ButtonGroup special case: render buttons from buttonData JSON
+    if (resolvedName === "CraftButtonGroup") {
+      return applyCommonWrappers(`${mocComments}\n${renderButtonGroup(node.props, propsStr, styleAttr, pad)}`);
     }
 
     // Self-closing for img
@@ -2417,19 +2355,28 @@ function renderTabs(
   const outerShadow = (node.props?.outerShadow as string) || "";
   const contentShadow = (node.props?.contentShadow as string) || "";
   const userClassName = (node.props?.className as string) || "";
+  const tabButtonWidth = (node.props?.tabButtonWidth as string) || "";
+  const tabListAlign = (node.props?.tabListAlign as string) || "start";
 
   const styleAttr = buildStyleAttr(node.props);
 
+  const width = (node.props?.width as string) || "";
+  const widthCls = width && width !== "auto" ? "block" : "w-fit";
+
   // Build outer wrapper className
-  const outerCls = [isVertical ? "flex flex-row" : "flex flex-col", outerBorderColor, outerShadow, userClassName]
+  const outerCls = [widthCls, isVertical ? "flex flex-row" : "flex flex-col", outerBorderColor, outerShadow, userClassName]
     .filter(Boolean)
     .join(" ");
   const outerClassAttr = outerCls ? ` className="${escapeAttr(outerCls)}"` : "";
 
   // Build TabsList className
+  const isFullWidth = tabButtonWidth === "100%";
+  const hasFixedButtonWidth = tabButtonWidth && tabButtonWidth !== "auto" && tabButtonWidth !== "100%";
   const tabListBase = isVertical
     ? "flex flex-col items-stretch bg-muted p-1 rounded-md"
-    : "inline-flex items-center bg-muted p-1 rounded-md w-full";
+    : isFullWidth
+      ? "flex w-full items-center bg-muted p-1 rounded-md"
+      : "inline-flex items-center bg-muted p-1 rounded-md";
   const tabListCls = [tabListBase, tabListBgClass].filter(Boolean).join(" ");
 
   // Build TabsContent className
@@ -2448,14 +2395,22 @@ function renderTabs(
     const icon = icons[String(key)] ?? "";
     const tooltip = tooltips[String(key)] ?? "";
     const iconJsx = icon ? `<${icon} className="h-4 w-4" /> ` : "";
-    const triggerClassAttr = tabActiveBgClass
-      ? ` className="${escapeAttr(`data-[state=active]:${tabActiveBgClass}`)}"`
+    const triggerExtraClass = isFullWidth
+      ? "w-full"
+      : "";
+    const triggerClassParts = [
+      tabActiveBgClass ? `data-[state=active]:${tabActiveBgClass}` : "",
+      triggerExtraClass,
+    ].filter(Boolean).join(" ");
+    const triggerClassAttr = triggerClassParts ? ` className="${escapeAttr(triggerClassParts)}"` : "";
+    const triggerStyleAttr = hasFixedButtonWidth
+      ? ` style={{ width: "${tabButtonWidth}" }}`
       : "";
     if (tooltip) {
       lines.push(`${pad}    <TooltipProvider>`);
       lines.push(`${pad}      <Tooltip>`);
       lines.push(`${pad}        <TooltipTrigger asChild>`);
-      lines.push(`${pad}          <TabsTrigger value="tab-${key}"${triggerClassAttr}>${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
+      lines.push(`${pad}          <TabsTrigger value="tab-${key}"${triggerClassAttr}${triggerStyleAttr}>${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
       lines.push(`${pad}        </TooltipTrigger>`);
       lines.push(`${pad}        <TooltipContent>`);
       lines.push(`${pad}          <p>${escapeJsx(tooltip)}</p>`);
@@ -2463,7 +2418,7 @@ function renderTabs(
       lines.push(`${pad}      </Tooltip>`);
       lines.push(`${pad}    </TooltipProvider>`);
     } else {
-      lines.push(`${pad}    <TabsTrigger value="tab-${key}"${triggerClassAttr}>${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
+      lines.push(`${pad}    <TabsTrigger value="tab-${key}"${triggerClassAttr}${triggerStyleAttr}>${iconJsx}${escapeJsx(label)}</TabsTrigger>`);
     }
   }
 
@@ -2693,6 +2648,157 @@ function renderToggleGroup(
   return lines.join("\n");
 }
 
+/** Wrap rendered element with overlay (module scope — accessible from renderButtonGroup and renderNode) */
+function wrapWithOverlay(rendered: string, props: Record<string, unknown>, pad: string): string {
+  const overlayType = props?.overlayType as string | undefined;
+  if (!overlayType || overlayType === "none") return rendered;
+
+  const linkedMocPath = props?.linkedMocPath as string | undefined;
+  const contentComment = linkedMocPath
+    ? `{/* linked: ${escapeJsx(linkedMocPath)} */}`
+    : "{/* overlay content */}";
+
+  const overlayWidth = props?.overlayWidth as string | undefined;
+  const overlayHeight = props?.overlayHeight as string | undefined;
+  const styleParts: string[] = [];
+  if (overlayWidth) styleParts.push(`maxWidth: "${overlayWidth}"`);
+  if (overlayHeight) styleParts.push(`maxHeight: "${overlayHeight}", overflow: "auto"`);
+  const styleAttr = styleParts.length > 0 ? ` style={{ ${styleParts.join(", ")} }}` : "";
+
+  const overlayClassName = props?.overlayClassName as string | undefined;
+  const classAttr = overlayClassName ? ` className="${escapeAttr(overlayClassName)}"` : "";
+
+  switch (overlayType) {
+    case "dialog":
+      return [
+        `${pad}<Dialog>`,
+        `${pad}  <DialogTrigger asChild>`,
+        rendered,
+        `${pad}  </DialogTrigger>`,
+        `${pad}  <DialogContent${classAttr}${styleAttr}>`,
+        `${pad}    ${contentComment}`,
+        `${pad}  </DialogContent>`,
+        `${pad}</Dialog>`,
+      ].join("\n");
+    case "alert-dialog":
+      return [
+        `${pad}<AlertDialog>`,
+        `${pad}  <AlertDialogTrigger asChild>`,
+        rendered,
+        `${pad}  </AlertDialogTrigger>`,
+        `${pad}  <AlertDialogContent${classAttr}${styleAttr}>`,
+        `${pad}    ${contentComment}`,
+        `${pad}    <AlertDialogCancel>Cancel</AlertDialogCancel>`,
+        `${pad}    <AlertDialogAction>Continue</AlertDialogAction>`,
+        `${pad}  </AlertDialogContent>`,
+        `${pad}</AlertDialog>`,
+      ].join("\n");
+    case "sheet": {
+      const side = (props?.sheetSide as string) || "right";
+      const sideAttr = side !== "right" ? ` side="${side}"` : "";
+      return [
+        `${pad}<Sheet>`,
+        `${pad}  <SheetTrigger asChild>`,
+        rendered,
+        `${pad}  </SheetTrigger>`,
+        `${pad}  <SheetContent${sideAttr}${classAttr}${styleAttr}>`,
+        `${pad}    ${contentComment}`,
+        `${pad}  </SheetContent>`,
+        `${pad}</Sheet>`,
+      ].join("\n");
+    }
+    case "drawer":
+      return [
+        `${pad}<Drawer>`,
+        `${pad}  <DrawerTrigger asChild>`,
+        rendered,
+        `${pad}  </DrawerTrigger>`,
+        `${pad}  <DrawerContent${classAttr}${styleAttr}>`,
+        `${pad}    ${contentComment}`,
+        `${pad}  </DrawerContent>`,
+        `${pad}</Drawer>`,
+      ].join("\n");
+    case "popover":
+      return [
+        `${pad}<Popover>`,
+        `${pad}  <PopoverTrigger asChild>`,
+        rendered,
+        `${pad}  </PopoverTrigger>`,
+        `${pad}  <PopoverContent${classAttr}${styleAttr}>`,
+        `${pad}    ${contentComment}`,
+        `${pad}  </PopoverContent>`,
+        `${pad}</Popover>`,
+      ].join("\n");
+    case "dropdown-menu":
+      return [
+        `${pad}<DropdownMenu>`,
+        `${pad}  <DropdownMenuTrigger asChild>`,
+        rendered,
+        `${pad}  </DropdownMenuTrigger>`,
+        `${pad}  <DropdownMenuContent${classAttr}${styleAttr}>`,
+        `${pad}    ${contentComment}`,
+        `${pad}  </DropdownMenuContent>`,
+        `${pad}</DropdownMenu>`,
+      ].join("\n");
+    default:
+      return rendered;
+  }
+}
+
+function renderButtonGroup(
+  props: Record<string, unknown>,
+  propsStr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  interface ButtonDef {
+    text: string;
+    variant?: string;
+    size?: string;
+    disabled?: boolean;
+    overlayType?: string;
+    linkedMocPath?: string;
+    sheetSide?: string;
+    overlayWidth?: string;
+    overlayHeight?: string;
+    overlayClassName?: string;
+    toastText?: string;
+    toastPosition?: string;
+  }
+
+  let btns: ButtonDef[] = [];
+  try {
+    btns = JSON.parse((props?.buttonData as string) || "[]") as ButtonDef[];
+  } catch { /* ignore */ }
+
+  const lines: string[] = [];
+  lines.push(`${pad}<ButtonGroup${propsStr}${styleAttr}>`);
+
+  const groupVariant = (props?.variant as string) || "outline";
+  const groupSize = (props?.size as string) || "default";
+
+  for (const btn of btns) {
+    const variantAttr = groupVariant !== "default" ? ` variant="${escapeAttr(groupVariant)}"` : "";
+    const sizeAttr = groupSize !== "default" ? ` size="${escapeAttr(groupSize)}"` : "";
+    const disabledAttr = btn.disabled ? " disabled" : "";
+    const pos = btn.toastPosition || "bottom-right";
+    const toastOnClick = btn.toastText && (!btn.overlayType || btn.overlayType === "none")
+      ? ` onClick={() => toast("${escapeAttr(btn.toastText)}", { position: "${pos}" })}`
+      : "";
+    const btnRendered = `${pad}  <Button${variantAttr}${sizeAttr}${disabledAttr}${toastOnClick}>${escapeJsx(btn.text)}</Button>`;
+
+    if (btn.overlayType && btn.overlayType !== "none") {
+      const wrapped = wrapWithOverlay(btnRendered, btn as Record<string, unknown>, `${pad}  `);
+      lines.push(wrapped);
+    } else {
+      lines.push(btnRendered);
+    }
+  }
+
+  lines.push(`${pad}</ButtonGroup>`);
+  return lines.join("\n");
+}
+
 function renderSelect(
   props: Record<string, unknown>,
   tag: string,
@@ -2709,13 +2815,28 @@ function renderSelect(
   const contentWidth = (props?.contentWidth as string) || "";
   const contentStyleAttr = contentWidth ? ` style={{ width: "${escapeAttr(contentWidth)}" }}` : "";
 
+  // width は <Select> wrapper に渡す（inline-grid を block に切り替えるため）
+  // height は <SelectTrigger> に渡す（button自体の高さ調整のため）
+  const w = normalizeCssSize(props?.width as string | undefined);
+  const h = normalizeCssSize(props?.height as string | undefined);
+  const wrapperStyleAttr = w && w !== "auto" ? ` style={{ width: "${escapeAttr(w)}" }}` : "";
+  const triggerStyleAttr = h && h !== "auto" ? ` style={{ height: "${escapeAttr(h)}" }}` : "";
+
+  // margin クラスは <Select> ラッパーに、非 margin クラスは <SelectTrigger> に渡す
+  const userClass = (props?.className as string) || "";
+  const allClasses = userClass ? userClass.split(" ").filter(Boolean) : [];
+  const marginCls = allClasses.filter((c) => /^-?m[trblxy]?-/.test(c));
+  const nonMarginCls = allClasses.filter((c) => !/^-?m[trblxy]?-/.test(c));
+  const wrapperClassAttr = marginCls.length ? ` className="${escapeAttr(marginCls.join(" "))}"` : "";
+  const triggerClassAttr = nonMarginCls.length ? ` className="${escapeAttr(nonMarginCls.join(" "))}"` : "";
+
   const lines: string[] = [];
-  lines.push(`${pad}<${tag}>`);
+  lines.push(`${pad}<${tag}${wrapperClassAttr}${wrapperStyleAttr}>`);
   if (tooltipText) {
     lines.push(`${pad}  <TooltipProvider>`);
     lines.push(`${pad}    <Tooltip>`);
     lines.push(`${pad}      <TooltipTrigger asChild>`);
-    lines.push(`${pad}        <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}        <SelectTrigger${triggerClassAttr}${triggerStyleAttr}>`);
     lines.push(`${pad}          <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}        </SelectTrigger>`);
     lines.push(`${pad}      </TooltipTrigger>`);
@@ -2725,7 +2846,7 @@ function renderSelect(
     lines.push(`${pad}    </Tooltip>`);
     lines.push(`${pad}  </TooltipProvider>`);
   } else {
-    lines.push(`${pad}  <SelectTrigger${classNameAttr}${styleAttr}>`);
+    lines.push(`${pad}  <SelectTrigger${triggerClassAttr}${triggerStyleAttr}>`);
     lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}  </SelectTrigger>`);
   }
@@ -2877,17 +2998,20 @@ function renderCombobox(
   const width = normalizeCssSize((props?.width as string) || "auto") || "auto";
   const height = normalizeCssSize((props?.height as string) || "auto") || "auto";
 
-  // width は <Popover> ラッパー (inline-grid な div) に渡す。height は <button> に渡す。
-  // auto の場合は編集画面の w-full 挙動に合わせて 100% を渡す。
-  const popoverWidth = width !== "auto" ? width : "100%";
-  const popoverStyleAttr = ` style={{ width: "${escapeAttr(popoverWidth)}" }}`;
+  // width は <Popover> ラッパーに渡す。指定がある時のみ付与。height は <button> に渡す。
+  const popoverStyleAttr = width !== "auto" ? ` style={{ width: "${escapeAttr(width)}" }}` : "";
   const buttonStyleAttr = height !== "auto" ? ` style={{ height: "${escapeAttr(height)}" }}` : "";
   // w-full は PopoverTrigger(span[inline-block]) 自体に幅を持たせるため不要。width は Popover に委ねる。
+  // margin クラスは <Popover> ラッパーに、非 margin クラスは <Button> に渡す
   const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
-  const buttonClassName = ["w-full justify-between", userClass].filter(Boolean).join(" ");
+  const allClasses = userClass ? userClass.split(" ").filter(Boolean) : [];
+  const marginCls = allClasses.filter((c) => /^-?m[trblxy]?-/.test(c));
+  const nonMarginCls = allClasses.filter((c) => !/^-?m[trblxy]?-/.test(c));
+  const popoverClassAttr = marginCls.length ? ` className="${escapeAttr(marginCls.join(" "))}"` : "";
+  const buttonClassName = ["w-full justify-between", ...nonMarginCls].filter(Boolean).join(" ");
 
   const lines: string[] = [];
-  lines.push(`${pad}<Popover${popoverStyleAttr}>`);
+  lines.push(`${pad}<Popover${popoverClassAttr}${popoverStyleAttr}>`);
   lines.push(`${pad}  <PopoverTrigger asChild>`);
   lines.push(`${pad}    <Button variant="outline" role="combobox" className="${buttonClassName}"${buttonStyleAttr}>`);
   lines.push(`${pad}      ${escapeJsx(placeholder)}`);
@@ -3018,6 +3142,59 @@ function renderBreadcrumb(
 
   lines.push(`${pad}  </BreadcrumbList>`);
   lines.push(`${pad}</Breadcrumb>`);
+  return lines.join("\n");
+}
+
+function renderTypography(
+  props: Record<string, unknown>,
+  classNameAttr: string,
+  styleAttr: string,
+  pad: string,
+): string {
+  const variant = (props?.variant as string) || "h1";
+  const text = (props?.text as string) || "";
+  const items = (props?.items as string) || "";
+
+  const VARIANT_CONFIG: Record<string, { tag: string; className: string }> = {
+    h1:         { tag: "h1",         className: "scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl" },
+    h2:         { tag: "h2",         className: "scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0" },
+    h3:         { tag: "h3",         className: "scroll-m-20 text-2xl font-semibold tracking-tight" },
+    h4:         { tag: "h4",         className: "scroll-m-20 text-xl font-semibold tracking-tight" },
+    p:          { tag: "p",          className: "leading-7 [&:not(:first-child)]:mt-6" },
+    blockquote: { tag: "blockquote", className: "border-l-4 pl-6 italic bg-transparent" },
+    ul:         { tag: "ul",         className: "list-disc [&>li]:mt-2" },
+    ol:         { tag: "ol",         className: "list-decimal [&>li]:mt-2" },
+    code:       { tag: "code",       className: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold" },
+    lead:       { tag: "p",          className: "text-xl text-muted-foreground" },
+    large:      { tag: "div",        className: "text-lg font-semibold" },
+    small:      { tag: "small",      className: "text-sm font-medium leading-none" },
+    muted:      { tag: "p",          className: "text-sm text-muted-foreground" },
+  };
+
+  const config = VARIANT_CONFIG[variant] ?? VARIANT_CONFIG.h1;
+  const { tag, className } = config;
+  const isList = variant === "ul" || variant === "ol";
+
+  // Build className attr: merge variant class with any extra classNameAttr
+  const variantClass = ` className="${className}"`;
+  const extraClass = classNameAttr ? classNameAttr.replace(/className="/, 'className="').trim() : "";
+  // If classNameAttr is empty, just use variantClass; else combine
+  const mergedClassAttr = extraClass
+    ? ` className="${className} ${extraClass.replace(/^className="/, "").replace(/"$/, "")}"`
+    : variantClass;
+
+  const lines: string[] = [];
+  if (isList) {
+    const listItems = items.split(",").map((s) => s.trim()).filter(Boolean);
+    lines.push(`${pad}<${tag}${mergedClassAttr}${styleAttr}>`);
+    for (const item of listItems) {
+      lines.push(`${pad}  <li>${escapeJsx(item)}</li>`);
+    }
+    lines.push(`${pad}</${tag}>`);
+  } else {
+    lines.push(`${pad}<${tag}${mergedClassAttr}${styleAttr}>${escapeJsx(text)}</${tag}>`);
+  }
+
   return lines.join("\n");
 }
 

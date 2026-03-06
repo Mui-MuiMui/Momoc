@@ -29,8 +29,8 @@ export const CraftPlaceholderImage: UserComponent<CraftPlaceholderImageProps> = 
       }}
       className={cn(className)}
       style={{
-        width: width !== "auto" ? width : undefined,
-        height: height !== "auto" ? height : undefined,
+        width: width && width !== "auto" ? width : undefined,
+        height: height && height !== "auto" ? height : undefined,
       }}
     >
       <img
