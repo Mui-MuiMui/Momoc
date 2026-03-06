@@ -300,6 +300,21 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: false,
   },
+  CraftButtonGroup: {
+    tag: "ButtonGroup",
+    importFrom: "@/components/ui/button-group",
+    importName: "ButtonGroup",
+    propsMap: ["orientation", "className"],
+    isContainer: true,
+  },
+  CraftButtonGroupItem: {
+    tag: "Button",
+    importFrom: "@/components/ui/button",
+    importName: "Button",
+    propsMap: ["variant", "size", "disabled", "className"],
+    textProp: "text",
+    isContainer: false,
+  },
   CraftForm: {
     tag: "form",
     propsMap: ["className"],
@@ -495,6 +510,9 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
     headerBgClass: "", hoverRowClass: "", selectedRowClass: "", headerTextClass: "", headerHoverTextClass: "", headerBorderClass: "", tableBorderClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
+  CraftButtonGroup: { orientation: "horizontal" },
+  CraftButtonGroupItem: { variant: "outline", size: "default", disabled: false, text: "Button",
+    overlayType: "none", linkedMocPath: "", sheetSide: "right", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", tooltipSide: "", toastText: "", toastPosition: "bottom-right" },
   CraftForm: {},
   // Phase 4 (legacy standalone)
   CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
@@ -645,8 +663,8 @@ export function craftStateToTsx(
       addImport("lucide-react", "ChevronsUpDown");
     }
 
-    // Collect overlay-related imports for CraftButton
-    if (resolvedName === "CraftButton") {
+    // Collect overlay-related imports for CraftButton / CraftButtonGroupItem
+    if (resolvedName === "CraftButton" || resolvedName === "CraftButtonGroupItem") {
       const overlayType = node.props?.overlayType as string | undefined;
       if (overlayType && overlayType !== "none") {
         const overlayImport = OVERLAY_IMPORTS[overlayType];
@@ -1395,8 +1413,8 @@ export function craftStateToTsx(
           ? `{"${escapeJsString(textContent)}"}`
           : escapeJsx(textContent);
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>${escapedTextContent}</${tag}>`;
-      // Apply overlay wrapper for CraftButton (must be inside tooltip)
-      if (resolvedName === "CraftButton") {
+      // Apply overlay wrapper for CraftButton / CraftButtonGroupItem (must be inside tooltip)
+      if (resolvedName === "CraftButton" || resolvedName === "CraftButtonGroupItem") {
         rendered = wrapWithOverlay(rendered, node.props, pad);
       }
       return applyCommonWrappers(rendered);
@@ -1410,8 +1428,8 @@ export function craftStateToTsx(
 
     // Fallback self-closing
     rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr} />`;
-    // Apply overlay wrapper for CraftButton (must be inside tooltip)
-    if (resolvedName === "CraftButton") {
+    // Apply overlay wrapper for CraftButton / CraftButtonGroupItem (must be inside tooltip)
+    if (resolvedName === "CraftButton" || resolvedName === "CraftButtonGroupItem") {
       rendered = wrapWithOverlay(rendered, node.props, pad);
     }
     return applyCommonWrappers(rendered);

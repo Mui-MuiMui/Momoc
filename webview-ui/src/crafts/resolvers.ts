@@ -37,6 +37,7 @@ import { CraftCalendar } from "./shadcn/CraftCalendar";
 import { CraftDatePicker } from "./shadcn/CraftDatePicker";
 import { CraftResizable, ResizablePanelSlot } from "./shadcn/CraftResizable";
 import { CraftCarousel } from "./shadcn/CraftCarousel";
+import { CraftButtonGroup, CraftButtonGroupItem } from "./shadcn/CraftButtonGroup";
 import { CraftForm } from "./shadcn/CraftForm";
 // Phase 4: Overlay components
 import { CraftDialog } from "./shadcn/CraftDialog";
@@ -98,6 +99,8 @@ export const resolvers = {
   CraftResizable,
   ResizablePanelSlot,
   CraftCarousel,
+  CraftButtonGroup,
+  CraftButtonGroupItem,
   CraftForm,
   // Phase 4
   CraftDialog,
@@ -440,6 +443,23 @@ export const paletteItems: PaletteItem[] = [
     icon: "GalleryHorizontal",
     defaultProps: {},
     enabled: false,
+  },
+  {
+    resolverKey: "CraftButtonGroup",
+    label: "Button Group",
+    category: "shadcn",
+    icon: "RectangleHorizontal",
+    defaultProps: {},
+    isCanvas: true,
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftButtonGroupItem",
+    label: "Button Group Item",
+    category: "shadcn",
+    icon: "MousePointerClick",
+    defaultProps: { text: "Button" },
+    enabled: true,
   },
   {
     resolverKey: "CraftForm",

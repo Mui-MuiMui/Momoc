@@ -493,7 +493,9 @@ export async function startPreviewServer(
     // Serve fallback shadcn/ui components: /ui/<name>.js
     if (url.startsWith("/ui/")) {
       const componentName = url.slice(4).replace(/\.js.*$/, "");
-      const js = fallbackJs.get(componentName);
+      const aliasMap: Record<string, string> = { "button-group-item": "button" };
+      const effectiveName = aliasMap[componentName] ?? componentName;
+      const js = fallbackJs.get(effectiveName);
       if (js) {
         res.writeHead(200, {
           "Content-Type": "application/javascript; charset=utf-8",
@@ -1609,6 +1611,15 @@ export function Carousel(props: any) {
   const { className = "", children, ...rest } = props;
   const cls = cn("relative w-full", className);
   return <div className={cls} {...rest}>{children}</div>;
+}`,
+
+  "button-group": `import { cn } from "@/components/ui/_cn";
+export function ButtonGroup(props: any) {
+  const { orientation = "horizontal", className = "", style, children } = props;
+  const cls = orientation === "vertical"
+    ? "flex flex-col w-fit [&>*:not(:first-child)]:rounded-t-none [&>*:not(:first-child)]:border-t-0 [&>*:not(:last-child)]:rounded-b-none"
+    : "flex w-fit [&>*:not(:first-child)]:rounded-l-none [&>*:not(:first-child)]:border-l-0 [&>*:not(:last-child)]:rounded-r-none";
+  return <div role="group" className={cn(cls, className)} style={style}>{children}</div>;
 }`,
 
   // --- Overlay wrapper components (context-based for proper state sharing) ---
