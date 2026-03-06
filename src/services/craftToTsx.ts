@@ -3161,7 +3161,7 @@ function renderTypography(
     h3:         { tag: "h3",         className: "scroll-m-20 text-2xl font-semibold tracking-tight" },
     h4:         { tag: "h4",         className: "scroll-m-20 text-xl font-semibold tracking-tight" },
     p:          { tag: "p",          className: "leading-7 [&:not(:first-child)]:mt-6" },
-    blockquote: { tag: "blockquote", className: "mt-6 border-l-4 pl-6 italic" },
+    blockquote: { tag: "blockquote", className: "border-l-4 pl-6 italic bg-transparent" },
     ul:         { tag: "ul",         className: "list-disc [&>li]:mt-2" },
     ol:         { tag: "ol",         className: "list-decimal [&>li]:mt-2" },
     code:       { tag: "code",       className: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold" },
