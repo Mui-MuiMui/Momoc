@@ -2710,13 +2710,12 @@ function renderSelect(
   const contentStyleAttr = contentWidth ? ` style={{ width: "${escapeAttr(contentWidth)}" }}` : "";
 
   const lines: string[] = [];
-  // styleAttr(width/height) は Select wrapper に付ける。SelectTrigger は w-full で wrapper に追従する
-  lines.push(`${pad}<${tag}${styleAttr}>`);
+  lines.push(`${pad}<${tag}>`);
   if (tooltipText) {
     lines.push(`${pad}  <TooltipProvider>`);
     lines.push(`${pad}    <Tooltip>`);
     lines.push(`${pad}      <TooltipTrigger asChild>`);
-    lines.push(`${pad}        <SelectTrigger${classNameAttr}>`);
+    lines.push(`${pad}        <SelectTrigger${classNameAttr}${styleAttr}>`);
     lines.push(`${pad}          <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}        </SelectTrigger>`);
     lines.push(`${pad}      </TooltipTrigger>`);
@@ -2726,7 +2725,7 @@ function renderSelect(
     lines.push(`${pad}    </Tooltip>`);
     lines.push(`${pad}  </TooltipProvider>`);
   } else {
-    lines.push(`${pad}  <SelectTrigger${classNameAttr}>`);
+    lines.push(`${pad}  <SelectTrigger${classNameAttr}${styleAttr}>`);
     lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}  </SelectTrigger>`);
   }
@@ -2878,9 +2877,10 @@ function renderCombobox(
   const width = normalizeCssSize((props?.width as string) || "auto") || "auto";
   const height = normalizeCssSize((props?.height as string) || "auto") || "auto";
 
-  // width は <Popover> ラッパーに渡す（Select と同パターン: 指定時のみ付与）
-  // height は <Button> に渡す
-  const popoverStyleAttr = width !== "auto" ? ` style={{ width: "${escapeAttr(width)}" }}` : "";
+  // width は <Popover> ラッパー (inline-grid な div) に渡す。height は <button> に渡す。
+  // auto の場合は編集画面の w-full 挙動に合わせて 100% を渡す。
+  const popoverWidth = width !== "auto" ? width : "100%";
+  const popoverStyleAttr = ` style={{ width: "${escapeAttr(popoverWidth)}" }}`;
   const buttonStyleAttr = height !== "auto" ? ` style={{ height: "${escapeAttr(height)}" }}` : "";
   // w-full は PopoverTrigger(span[inline-block]) 自体に幅を持たせるため不要。width は Popover に委ねる。
   const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
