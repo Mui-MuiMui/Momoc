@@ -347,6 +347,10 @@ export async function startPreviewServer(
     }
     /* Toggle: icon fill when pressed */
     [data-toggle-pressed] svg.lucide { fill: currentColor; }
+    /* Typography variant font weights (Tailwind v4 preflight resets to inherit) */
+    .font-extrabold { font-weight: 800; }
+    .font-semibold  { font-weight: 600; }
+    .font-medium    { font-weight: 500; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style type="text/tailwindcss">
