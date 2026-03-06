@@ -83,16 +83,20 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
 
   const overlayLabel = overlayType !== "none" ? OVERLAY_LABELS[overlayType] : null;
 
+  const classes = className ? className.split(" ").filter(Boolean) : [];
+  const marginClasses = classes.filter((c) => /^-?m[trblxy]?-/.test(c));
+  const nonMarginClasses = classes.filter((c) => !/^-?m[trblxy]?-/.test(c));
+
   return (
     <div
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className="relative inline-flex"
+      className={cn("relative inline-flex", marginClasses.join(" "))}
       style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <button
-        className={cn(buttonVariants({ variant, size }), className, width !== "auto" && "w-full", height !== "auto" && "h-full")}
+        className={cn(buttonVariants({ variant, size }), nonMarginClasses.join(" "), width !== "auto" && "w-full", height !== "auto" && "h-full")}
         disabled={disabled}
         type="button"
       >
