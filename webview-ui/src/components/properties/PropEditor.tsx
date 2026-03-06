@@ -369,25 +369,39 @@ function SizeInput({
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">{propKey}</label>
-      <button
-        type="button"
-        onClick={() => {
-          const next = !isAuto;
-          setIsAuto(next);
-          if (next) {
-            onChange("auto");
-          } else {
-            onChange(num ? `${num}${unit}` : "");
-          }
-        }}
-        className={`w-fit rounded px-2 py-0.5 text-[10px] transition-colors ${
-          isAuto
-            ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
-            : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
-        }`}
-      >
-        auto
-      </button>
+      <div className="flex gap-1">
+        <button
+          type="button"
+          onClick={() => {
+            const next = !isAuto;
+            setIsAuto(next);
+            if (next) {
+              onChange("auto");
+            } else {
+              onChange(num ? `${num}${unit}` : "");
+            }
+          }}
+          className={`rounded px-2 py-0.5 text-[10px] transition-colors ${
+            isAuto
+              ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+              : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+          }`}
+        >
+          auto
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setIsAuto(false);
+            setNum("100");
+            setUnit("%");
+            onChange("100%");
+          }}
+          className="rounded px-2 py-0.5 text-[10px] transition-colors bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+        >
+          100%
+        </button>
+      </div>
       <div className={`flex gap-1 ${isAuto ? "pointer-events-none opacity-40" : ""}`}>
         <input
           type="number"
