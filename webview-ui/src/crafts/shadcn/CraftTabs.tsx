@@ -56,7 +56,6 @@ interface CraftTabsProps {
   width?: string;
   height?: string;
   tabButtonWidth?: string;
-  tabListAlign?: "start" | "center" | "end";
   className?: string;
   tabListBgClass?: string;
   tabActiveBgClass?: string;
@@ -73,7 +72,6 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
   width = "auto",
   height = "auto",
   tabButtonWidth = "auto",
-  tabListAlign = "start",
   className = "",
   tabListBgClass = "",
   tabActiveBgClass = "",
@@ -106,18 +104,13 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
   const isVertical = orientation === "vertical";
 
   const hasFixedButtonWidth = tabButtonWidth && tabButtonWidth !== "auto";
-  const justifyCls = tabListAlign === "end" ? "justify-end" : tabListAlign === "center" ? "justify-center" : "justify-start";
 
-  // タブリスト自体のクラス
   const tabListCls = cn(
     isVertical
       ? "flex flex-col items-stretch bg-muted p-1 rounded-md"
-      : cn("inline-flex items-center bg-muted p-1 rounded-md", hasFixedButtonWidth ? justifyCls : "w-full"),
+      : "inline-flex items-center bg-muted p-1 rounded-md w-full",
     tabListBgClass,
   );
-
-  // tabButtonWidth が auto かつ水平の場合、外側ラッパーで配置を制御する
-  const needsAlignWrapper = !isVertical && !hasFixedButtonWidth;
 
   return (
     <div
@@ -131,8 +124,7 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
       }}
     >
       {/* Tab list */}
-      <div className={needsAlignWrapper ? cn("flex w-full", justifyCls) : undefined}>
-        <div className={tabListCls}>
+      <div className={tabListCls}>
           {meta.keys.map((key) => {
             const label = meta.labels[String(key)] ?? `Tab ${key}`;
             const iconName = meta.icons[String(key)];
@@ -167,7 +159,6 @@ export const CraftTabs: UserComponent<CraftTabsProps> = ({
               </div>
             );
           })}
-        </div>
       </div>
 
       {/* Tab content slots — all rendered, inactive hidden */}
@@ -192,7 +183,6 @@ CraftTabs.craft = {
     width: "auto",
     height: "auto",
     tabButtonWidth: "auto",
-    tabListAlign: "start",
     className: "",
     tabListBgClass: "",
     tabActiveBgClass: "",
