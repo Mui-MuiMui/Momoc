@@ -595,7 +595,7 @@ export function PropEditor() {
     if (key === "width" || key === "height" || key === "tabButtonWidth") {
       return (
         <SizeInput
-          key={`${selectedNodeId}-${key}-${String(value ?? "auto")}`}
+          key={`${selectedNodeId}-${key}`}
           propKey={key}
           value={String(value ?? "auto")}
           onChange={(v) => handlePropChange(key, v)}
