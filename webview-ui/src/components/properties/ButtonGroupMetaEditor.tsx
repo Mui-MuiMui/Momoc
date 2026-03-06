@@ -71,7 +71,7 @@ export function ButtonGroupMetaEditor({ value, selectedNodeId }: ButtonGroupMeta
   }
 
   function addButton() {
-    updateButtons([...buttons, { text: `Button ${buttons.length + 1}`, variant: "outline", overlayType: "none" }]);
+    updateButtons([...buttons, { text: `Button ${buttons.length + 1}`, overlayType: "none" }]);
   }
 
   function removeButton(idx: number) {
@@ -130,20 +130,6 @@ export function ButtonGroupMetaEditor({ value, selectedNodeId }: ButtonGroupMeta
                   className={`${INPUT_CLASS} w-full`}
                   placeholder="Button"
                 />
-              </div>
-
-              {/* variant */}
-              <div className="flex items-center gap-1">
-                <label className="shrink-0 text-[11px] text-[var(--vscode-descriptionForeground,#888)]">variant</label>
-                <select
-                  value={btn.variant ?? "outline"}
-                  onChange={(e) => updateButton(idx, { variant: e.target.value as ButtonDef["variant"] })}
-                  className={`${INPUT_CLASS} flex-1`}
-                >
-                  {["default", "destructive", "outline", "secondary", "ghost", "link"].map((v) => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </select>
               </div>
 
               {/* disabled */}

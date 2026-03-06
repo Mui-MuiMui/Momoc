@@ -40,7 +40,6 @@ const OVERLAY_LABELS: Record<string, string> = {
 
 export interface ButtonDef {
   text: string;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   disabled?: boolean;
   overlayType?: "none" | "dialog" | "alert-dialog" | "sheet" | "drawer" | "popover" | "dropdown-menu";
   linkedMocPath?: string;
@@ -53,9 +52,9 @@ export interface ButtonDef {
 }
 
 export const DEFAULT_BUTTON_DATA: ButtonDef[] = [
-  { text: "Button 1", variant: "outline", overlayType: "none" },
-  { text: "Button 2", variant: "outline", overlayType: "none" },
-  { text: "Button 3", variant: "outline", overlayType: "none" },
+  { text: "Button 1", overlayType: "none" },
+  { text: "Button 2", overlayType: "none" },
+  { text: "Button 3", overlayType: "none" },
 ];
 
 function parseButtonData(raw: string): ButtonDef[] {
@@ -70,6 +69,7 @@ function parseButtonData(raw: string): ButtonDef[] {
 
 interface CraftButtonGroupProps {
   orientation?: "horizontal" | "vertical";
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
   buttonData?: string;
   width?: string;
@@ -79,6 +79,7 @@ interface CraftButtonGroupProps {
 
 export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
   orientation = "horizontal",
+  variant = "outline",
   size = "default",
   buttonData = JSON.stringify(DEFAULT_BUTTON_DATA),
   width = "auto",
@@ -110,7 +111,7 @@ export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
         return (
           <div key={i} className="relative inline-flex">
             <button
-              className={buttonVariants({ variant: btn.variant ?? "outline", size: size ?? "default" })}
+              className={buttonVariants({ variant: variant ?? "outline", size: size ?? "default" })}
               disabled={btn.disabled}
               type="button"
             >
@@ -138,6 +139,7 @@ CraftButtonGroup.craft = {
   props: {
     buttonData: JSON.stringify(DEFAULT_BUTTON_DATA),
     orientation: "horizontal",
+    variant: "outline",
     size: "default",
     width: "auto",
     height: "auto",
