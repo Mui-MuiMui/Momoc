@@ -339,6 +339,95 @@ const COMPONENT_EXCLUDED_PROPS: Record<string, Set<string>> = {
   Table: new Set(["stickyHeader", "pinnedLeft"]),
 };
 
+// --- サイズ入力 UI ---
+
+const SIZE_UNITS = ["px", "%", "rem", "em", "vw", "vh"] as const;
+type SizeUnit = (typeof SIZE_UNITS)[number];
+
+function parseSizeValue(val: string): { isAuto: boolean; num: string; unit: SizeUnit } {
+  if (!val || val === "auto") return { isAuto: true, num: "", unit: "px" };
+  const m = val.match(/^(\d*\.?\d+)(px|%|rem|em|vw|vh)$/);
+  if (m) return { isAuto: false, num: m[1], unit: m[2] as SizeUnit };
+  return { isAuto: true, num: "", unit: "px" };
+}
+
+function SizeInput({
+  propKey,
+  value,
+  onChange,
+}: {
+  propKey: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const parsed = parseSizeValue(value);
+  const [isAuto, setIsAuto] = useState(parsed.isAuto);
+  const [num, setNum] = useState(parsed.num);
+  const [unit, setUnit] = useState<SizeUnit>(parsed.unit);
+
+  useEffect(() => {
+    const p = parseSizeValue(value);
+    setIsAuto(p.isAuto);
+    setNum(p.num);
+    setUnit(p.unit);
+  }, [value]);
+
+  const commit = (nextIsAuto: boolean, nextNum: string, nextUnit: SizeUnit) => {
+    if (nextIsAuto) { onChange("auto"); return; }
+    onChange(nextNum ? `${nextNum}${nextUnit}` : "");
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">{propKey}</label>
+      <button
+        type="button"
+        onClick={() => {
+          const next = !isAuto;
+          setIsAuto(next);
+          commit(next, num, unit);
+        }}
+        className={`w-fit rounded px-2 py-0.5 text-[10px] transition-colors ${
+          isAuto
+            ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+            : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
+        }`}
+      >
+        auto
+      </button>
+      <div className={`flex gap-1 ${isAuto ? "pointer-events-none opacity-40" : ""}`}>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          value={num}
+          disabled={isAuto}
+          onChange={(e) => {
+            setNum(e.target.value);
+            commit(false, e.target.value, unit);
+          }}
+          placeholder="100"
+          className={`${INPUT_CLASS} w-full`}
+        />
+        <select
+          value={unit}
+          disabled={isAuto}
+          onChange={(e) => {
+            const nextUnit = e.target.value as SizeUnit;
+            setUnit(nextUnit);
+            commit(false, num, nextUnit);
+          }}
+          className={`${INPUT_CLASS} w-[60px] shrink-0`}
+        >
+          {SIZE_UNITS.map((u) => (
+            <option key={u} value={u}>{u}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export function PropEditor() {
   const { selectedProps, actions, selectedNodeId, componentName, craftDefaultProps } = useEditor(
     (state) => {
@@ -494,6 +583,18 @@ export function PropEditor() {
   const activeGroups = GROUP_ORDER.filter((g) => (grouped.get(g)?.length ?? 0) > 0);
 
   function renderProp(key: string, value: unknown) {
+    // Custom UI for width/height
+    if (key === "width" || key === "height") {
+      return (
+        <SizeInput
+          key={key}
+          propKey={key}
+          value={String(value ?? "auto")}
+          onChange={(v) => handlePropChange(key, v)}
+        />
+      );
+    }
+
     // Custom UI for columnDefs (Data Table column definitions editor)
     if (key === "columnDefs" && selectedNodeId) {
       return (

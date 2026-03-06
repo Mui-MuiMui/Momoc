@@ -34,7 +34,8 @@ export const CraftTextarea: UserComponent<CraftTextareaProps> = ({
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }}
+      className={!width || width === "auto" ? "w-full" : undefined}
+      style={{ width: width && width !== "auto" ? width : undefined, height: height && height !== "auto" ? height : undefined }}
     >
       <textarea
         placeholder={placeholder}
