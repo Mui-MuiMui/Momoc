@@ -41,7 +41,6 @@ const OVERLAY_LABELS: Record<string, string> = {
 export interface ButtonDef {
   text: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  size?: "default" | "sm" | "lg" | "icon";
   disabled?: boolean;
   overlayType?: "none" | "dialog" | "alert-dialog" | "sheet" | "drawer" | "popover" | "dropdown-menu";
   linkedMocPath?: string;
@@ -71,6 +70,7 @@ function parseButtonData(raw: string): ButtonDef[] {
 
 interface CraftButtonGroupProps {
   orientation?: "horizontal" | "vertical";
+  size?: "default" | "sm" | "lg" | "icon";
   buttonData?: string;
   width?: string;
   height?: string;
@@ -79,6 +79,7 @@ interface CraftButtonGroupProps {
 
 export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
   orientation = "horizontal",
+  size = "default",
   buttonData = JSON.stringify(DEFAULT_BUTTON_DATA),
   width = "auto",
   height = "auto",
@@ -109,7 +110,7 @@ export const CraftButtonGroup: UserComponent<CraftButtonGroupProps> = ({
         return (
           <div key={i} className="relative inline-flex">
             <button
-              className={buttonVariants({ variant: btn.variant ?? "outline", size: btn.size ?? "default" })}
+              className={buttonVariants({ variant: btn.variant ?? "outline", size: size ?? "default" })}
               disabled={btn.disabled}
               type="button"
             >
@@ -137,6 +138,7 @@ CraftButtonGroup.craft = {
   props: {
     buttonData: JSON.stringify(DEFAULT_BUTTON_DATA),
     orientation: "horizontal",
+    size: "default",
     width: "auto",
     height: "auto",
     className: "",

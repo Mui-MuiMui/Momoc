@@ -304,7 +304,7 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     tag: "ButtonGroup",
     importFrom: "@/components/ui/button-group",
     importName: "ButtonGroup",
-    propsMap: ["orientation", "className"],
+    propsMap: ["orientation", "size", "className"],
     isContainer: false,
   },
   CraftForm: {
@@ -502,7 +502,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
     headerBgClass: "", hoverRowClass: "", selectedRowClass: "", headerTextClass: "", headerHoverTextClass: "", headerBorderClass: "", tableBorderClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
-  CraftButtonGroup: { orientation: "horizontal" },
+  CraftButtonGroup: { orientation: "horizontal", size: "default" },
   CraftForm: {},
   // Phase 4 (legacy standalone)
   CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
@@ -2762,9 +2762,11 @@ function renderButtonGroup(
   const lines: string[] = [];
   lines.push(`${pad}<ButtonGroup${propsStr}${styleAttr}>`);
 
+  const groupSize = (props?.size as string) || "default";
+
   for (const btn of btns) {
     const variantAttr = btn.variant && btn.variant !== "default" ? ` variant="${escapeAttr(btn.variant)}"` : "";
-    const sizeAttr = btn.size && btn.size !== "default" ? ` size="${escapeAttr(btn.size)}"` : "";
+    const sizeAttr = groupSize !== "default" ? ` size="${escapeAttr(groupSize)}"` : "";
     const disabledAttr = btn.disabled ? " disabled" : "";
     const pos = btn.toastPosition || "bottom-right";
     const toastOnClick = btn.toastText && (!btn.overlayType || btn.overlayType === "none")

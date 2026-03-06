@@ -146,20 +146,6 @@ export function ButtonGroupMetaEditor({ value, selectedNodeId }: ButtonGroupMeta
                 </select>
               </div>
 
-              {/* size */}
-              <div className="flex items-center gap-1">
-                <label className="shrink-0 text-[11px] text-[var(--vscode-descriptionForeground,#888)]">size</label>
-                <select
-                  value={btn.size ?? "default"}
-                  onChange={(e) => updateButton(idx, { size: e.target.value as ButtonDef["size"] })}
-                  className={`${INPUT_CLASS} flex-1`}
-                >
-                  {["default", "sm", "lg", "icon"].map((v) => (
-                    <option key={v} value={v}>{v}</option>
-                  ))}
-                </select>
-              </div>
-
               {/* disabled */}
               <div className="flex items-center gap-1.5">
                 <input
