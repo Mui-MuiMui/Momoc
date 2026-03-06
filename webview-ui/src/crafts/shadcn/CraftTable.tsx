@@ -287,9 +287,12 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
   const bodyRows = rowMap.slice(headerRowCount);
 
   const hasWidth = Object.keys(wrapperStyle).length > 0;
+  // auto時: table に width: "100%" を付けない（各列のcol幅に追従させる）
+  // wrapper指定時: wrapper の幅に table が追従するよう width: "100%" を維持
+  const tableWidth = hasWidth ? "100%" : undefined;
   return (
     <div
-      className={cn(hasWidth ? "block" : "inline-grid", "overflow-auto", className)}
+      className={cn("overflow-auto", className)}
       style={hasWidth ? wrapperStyle : undefined}
     >
       {/* Drag handle strip — outside cell canvas, so clicks reach CraftTable's connect */}
@@ -303,7 +306,7 @@ export const CraftTable: UserComponent<CraftTableProps> = ({
       </div>
       <table
         className={cn("caption-bottom text-sm border-separate", tableOuterBorderClass)}
-        style={{ tableLayout: "fixed", borderSpacing: 0, width: "100%", minWidth: totalColWidth > 0 ? totalColWidth : undefined }}
+        style={{ tableLayout: "fixed", borderSpacing: 0, width: tableWidth, minWidth: totalColWidth > 0 ? `${totalColWidth}px` : undefined }}
       >
         <colgroup>
           {colMap.map((physC) => {
