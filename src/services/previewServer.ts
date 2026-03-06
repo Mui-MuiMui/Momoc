@@ -1072,7 +1072,7 @@ export function DatePicker(props) {
   useLayoutEffect(() => {
     if (!open || !wrapperRef.current) return;
     const r = wrapperRef.current.getBoundingClientRect();
-    setCalPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX });
+    setCalPos({ top: r.bottom + 4, left: r.left });
   }, [open]);
   return (
     <div ref={wrapperRef} className={cn(className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }} {...rest}>
@@ -1391,7 +1391,7 @@ export function SelectContent(props: any) {
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
   }, [ctx?.open]);
   if (!ctx?.open || !pos) return null;
   const effectiveWidth = style?.width ?? \`\${pos.width}px\`;
@@ -1624,10 +1624,10 @@ export function TooltipContent(props: any) {
     if (!ctx?.show || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
     const gap = 8;
-    if (side === "top") setPos({ top: r.top + window.scrollY - gap, left: r.left + window.scrollX + r.width / 2 });
-    else if (side === "bottom") setPos({ top: r.bottom + window.scrollY + gap, left: r.left + window.scrollX + r.width / 2 });
-    else if (side === "left") setPos({ top: r.top + window.scrollY + r.height / 2, left: r.left + window.scrollX - gap });
-    else setPos({ top: r.top + window.scrollY + r.height / 2, left: r.right + window.scrollX + gap });
+    if (side === "top") setPos({ top: r.top - gap, left: r.left + r.width / 2 });
+    else if (side === "bottom") setPos({ top: r.bottom + gap, left: r.left + r.width / 2 });
+    else if (side === "left") setPos({ top: r.top + r.height / 2, left: r.left - gap });
+    else setPos({ top: r.top + r.height / 2, left: r.right + gap });
   }, [ctx?.show, side]);
   if (!ctx?.show || !pos) return null;
   const transformMap: Record<string, string> = {
@@ -1748,7 +1748,7 @@ export function PopoverContent(props: any) {
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width });
+    setPos({ top: r.bottom + 4, left: r.left, width: r.width });
   }, [ctx?.open]);
   if (!ctx?.open || !pos) return null;
   const effectiveWidth = props.style?.width ?? \`\${pos.width}px\`;
@@ -1778,7 +1778,7 @@ export function DropdownMenuContent(props: any) {
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + window.scrollY + 8, left: r.left + window.scrollX });
+    setPos({ top: r.bottom + 8, left: r.left });
   }, [ctx?.open]);
   if (!ctx?.open || !pos) return null;
   const cls = ("fixed z-[9999] " + (props.className || "min-w-[8rem] rounded-md border bg-popover p-1 text-popover-foreground shadow-md")).trim();
@@ -1892,10 +1892,10 @@ export function HoverCardContent(props: any) {
     if (!ctx?.show || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
     const gap = 8;
-    if (side === "bottom") setPos({ top: r.bottom + window.scrollY + gap, left: r.left + window.scrollX });
-    else if (side === "top") setPos({ top: r.top + window.scrollY - gap, left: r.left + window.scrollX });
-    else if (side === "right") setPos({ top: r.top + window.scrollY, left: r.right + window.scrollX + gap });
-    else setPos({ top: r.top + window.scrollY, left: r.left + window.scrollX - gap });
+    if (side === "bottom") setPos({ top: r.bottom + gap, left: r.left });
+    else if (side === "top") setPos({ top: r.top - gap, left: r.left });
+    else if (side === "right") setPos({ top: r.top, left: r.right + gap });
+    else setPos({ top: r.top, left: r.left - gap });
   }, [ctx?.show, side]);
   if (!ctx?.show || !pos) return null;
   const defaultCls = "min-w-[200px] rounded-md border bg-popover p-4 text-popover-foreground shadow-md";
