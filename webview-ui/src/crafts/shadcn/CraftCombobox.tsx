@@ -26,19 +26,22 @@ export const CraftCombobox: UserComponent<CraftComboboxProps> = ({
   } = useNode();
 
   const hasWidth = width && width !== "auto";
+  const classes = className ? className.split(" ").filter(Boolean) : [];
+  const marginClasses = classes.filter((c) => /^-?m[trblxy]?-/.test(c));
+  const nonMarginClasses = classes.filter((c) => !/^-?m[trblxy]?-/.test(c));
   return (
     <div
       ref={(ref) => {
         if (ref) connect(drag(ref));
       }}
-      className={hasWidth ? "block" : "inline-grid"}
+      className={cn(hasWidth ? "block" : "inline-grid", marginClasses.join(" "))}
       style={{ width: hasWidth ? width : undefined }}
     >
       <button
         type="button"
         className={cn(
           "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-          className,
+          nonMarginClasses.join(" "),
         )}
         style={{ height: height && height !== "auto" ? height : undefined }}
       >

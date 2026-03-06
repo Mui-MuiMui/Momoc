@@ -1728,12 +1728,12 @@ import { createPortal } from "react-dom";
 import { ComboboxCtx } from "@/components/ui/_combobox";
 const Ctx = createContext<any>(null);
 export function Popover(props: any) {
-  const { style, children } = props;
+  const { style, className, children } = props;
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
   const triggerRef = useRef<HTMLElement | null>(null);
-  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className="inline-grid" style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
+  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className={cn("inline-grid", className)} style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);

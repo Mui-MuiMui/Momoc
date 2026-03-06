@@ -2733,13 +2733,21 @@ function renderSelect(
   const wrapperStyleAttr = w && w !== "auto" ? ` style={{ width: "${escapeAttr(w)}" }}` : "";
   const triggerStyleAttr = h && h !== "auto" ? ` style={{ height: "${escapeAttr(h)}" }}` : "";
 
+  // margin クラスは <Select> ラッパーに、非 margin クラスは <SelectTrigger> に渡す
+  const userClass = (props?.className as string) || "";
+  const allClasses = userClass ? userClass.split(" ").filter(Boolean) : [];
+  const marginCls = allClasses.filter((c) => /^-?m[trblxy]?-/.test(c));
+  const nonMarginCls = allClasses.filter((c) => !/^-?m[trblxy]?-/.test(c));
+  const wrapperClassAttr = marginCls.length ? ` className="${escapeAttr(marginCls.join(" "))}"` : "";
+  const triggerClassAttr = nonMarginCls.length ? ` className="${escapeAttr(nonMarginCls.join(" "))}"` : "";
+
   const lines: string[] = [];
-  lines.push(`${pad}<${tag}${wrapperStyleAttr}>`);
+  lines.push(`${pad}<${tag}${wrapperClassAttr}${wrapperStyleAttr}>`);
   if (tooltipText) {
     lines.push(`${pad}  <TooltipProvider>`);
     lines.push(`${pad}    <Tooltip>`);
     lines.push(`${pad}      <TooltipTrigger asChild>`);
-    lines.push(`${pad}        <SelectTrigger${classNameAttr}${triggerStyleAttr}>`);
+    lines.push(`${pad}        <SelectTrigger${triggerClassAttr}${triggerStyleAttr}>`);
     lines.push(`${pad}          <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}        </SelectTrigger>`);
     lines.push(`${pad}      </TooltipTrigger>`);
@@ -2749,7 +2757,7 @@ function renderSelect(
     lines.push(`${pad}    </Tooltip>`);
     lines.push(`${pad}  </TooltipProvider>`);
   } else {
-    lines.push(`${pad}  <SelectTrigger${classNameAttr}${triggerStyleAttr}>`);
+    lines.push(`${pad}  <SelectTrigger${triggerClassAttr}${triggerStyleAttr}>`);
     lines.push(`${pad}    <SelectValue placeholder="${escapeAttr(placeholder)}" />`);
     lines.push(`${pad}  </SelectTrigger>`);
   }
@@ -2905,11 +2913,16 @@ function renderCombobox(
   const popoverStyleAttr = width !== "auto" ? ` style={{ width: "${escapeAttr(width)}" }}` : "";
   const buttonStyleAttr = height !== "auto" ? ` style={{ height: "${escapeAttr(height)}" }}` : "";
   // w-full は PopoverTrigger(span[inline-block]) 自体に幅を持たせるため不要。width は Popover に委ねる。
+  // margin クラスは <Popover> ラッパーに、非 margin クラスは <Button> に渡す
   const userClass = classNameAttr.match(/className="([^"]*)"/)?.[ 1] ?? "";
-  const buttonClassName = ["w-full justify-between", userClass].filter(Boolean).join(" ");
+  const allClasses = userClass ? userClass.split(" ").filter(Boolean) : [];
+  const marginCls = allClasses.filter((c) => /^-?m[trblxy]?-/.test(c));
+  const nonMarginCls = allClasses.filter((c) => !/^-?m[trblxy]?-/.test(c));
+  const popoverClassAttr = marginCls.length ? ` className="${escapeAttr(marginCls.join(" "))}"` : "";
+  const buttonClassName = ["w-full justify-between", ...nonMarginCls].filter(Boolean).join(" ");
 
   const lines: string[] = [];
-  lines.push(`${pad}<Popover${popoverStyleAttr}>`);
+  lines.push(`${pad}<Popover${popoverClassAttr}${popoverStyleAttr}>`);
   lines.push(`${pad}  <PopoverTrigger asChild>`);
   lines.push(`${pad}    <Button variant="outline" role="combobox" className="${buttonClassName}"${buttonStyleAttr}>`);
   lines.push(`${pad}      ${escapeJsx(placeholder)}`);
