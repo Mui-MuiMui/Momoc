@@ -2432,14 +2432,14 @@ function renderTabs(
   const outerClassAttr = outerCls ? ` className="${escapeAttr(outerCls)}"` : "";
 
   // Build TabsList className
-  const hasFixedButtonWidth = tabButtonWidth && tabButtonWidth !== "auto";
-  const alignCls = hasFixedButtonWidth
-    ? tabListAlign === "end" ? "justify-end" : tabListAlign === "center" ? "justify-center" : "justify-start"
-    : "";
+  const isFullWidth = tabButtonWidth === "100%";
+  const hasFixedButtonWidth = tabButtonWidth && tabButtonWidth !== "auto" && tabButtonWidth !== "100%";
   const tabListBase = isVertical
     ? "flex flex-col items-stretch bg-muted p-1 rounded-md"
-    : "inline-flex items-center bg-muted p-1 rounded-md w-full";
-  const tabListCls = [tabListBase, alignCls, tabListBgClass].filter(Boolean).join(" ");
+    : isFullWidth
+      ? "flex w-full items-center bg-muted p-1 rounded-md"
+      : "inline-flex items-center bg-muted p-1 rounded-md";
+  const tabListCls = [tabListBase, tabListBgClass].filter(Boolean).join(" ");
 
   // Build TabsContent className
   const contentCls = [contentBgClass, contentBorderColor, contentShadow].filter(Boolean).join(" ");
@@ -2457,10 +2457,15 @@ function renderTabs(
     const icon = icons[String(key)] ?? "";
     const tooltip = tooltips[String(key)] ?? "";
     const iconJsx = icon ? `<${icon} className="h-4 w-4" /> ` : "";
-    const triggerClassAttr = tabActiveBgClass
-      ? ` className="${escapeAttr(`data-[state=active]:${tabActiveBgClass}`)}"`
+    const triggerExtraClass = isFullWidth
+      ? "w-full"
       : "";
-    const triggerStyleAttr = tabButtonWidth && tabButtonWidth !== "auto"
+    const triggerClassParts = [
+      tabActiveBgClass ? `data-[state=active]:${tabActiveBgClass}` : "",
+      triggerExtraClass,
+    ].filter(Boolean).join(" ");
+    const triggerClassAttr = triggerClassParts ? ` className="${escapeAttr(triggerClassParts)}"` : "";
+    const triggerStyleAttr = hasFixedButtonWidth
       ? ` style={{ width: "${tabButtonWidth}" }}`
       : "";
     if (tooltip) {
