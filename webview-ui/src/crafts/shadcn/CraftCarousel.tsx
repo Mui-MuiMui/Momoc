@@ -107,7 +107,6 @@ export const CraftCarousel: UserComponent<CraftCarouselProps> = ({
       className={cn(
         "relative",
         width && width !== "auto" ? "block" : "inline-grid",
-        className,
       )}
       style={{
         width: width && width !== "auto" ? width : undefined,
@@ -122,7 +121,7 @@ export const CraftCarousel: UserComponent<CraftCarouselProps> = ({
       {/* Slide content slots — w-full h-full でCarouselを埋める */}
       <div className="overflow-hidden w-full h-full">
         {meta.keys.map((key) => (
-          <div key={key} className="h-full" style={{ display: key === activeKey ? undefined : "none" }}>
+          <div key={key} className={cn("h-full", className)} style={{ display: key === activeKey ? undefined : "none" }}>
             <Element id={`slide_${key}`} is={SlideContentSlot} canvas />
           </div>
         ))}
