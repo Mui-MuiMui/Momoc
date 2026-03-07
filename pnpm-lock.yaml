@@ -153,6 +153,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.1.0
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@tailwindcss/browser':
+        specifier: ^4.2.1
+        version: 4.2.1
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -1489,6 +1492,9 @@ packages:
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
+  '@tailwindcss/browser@4.2.1':
+    resolution: {integrity: sha512-MxT97DWtwSupE6I4spsGQMewI6BbRY/dXZJd1f+WtWqqci++ApWfoQsVqtlRscmWSFWvPn5pzf3Wi/d2IF0w5A==}
 
   '@tailwindcss/node@4.1.18':
     resolution: {integrity: sha512-DoR7U1P7iYhw16qJ49fgXUlry1t4CpXeErJHnQ44JgTSKMaZUdf17cfn5mHchfJ4KRBZRFA/Coo+MUF5+gOaCQ==}
@@ -5501,6 +5507,8 @@ snapshots:
   '@standard-schema/spec@1.1.0': {}
 
   '@standard-schema/utils@0.3.0': {}
+
+  '@tailwindcss/browser@4.2.1': {}
 
   '@tailwindcss/node@4.1.18':
     dependencies:

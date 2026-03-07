@@ -948,6 +948,13 @@ export function PropEditor() {
           <div className="flex justify-between text-[8px] text-[var(--vscode-descriptionForeground,#666)]">
             <span>50</span><span>500</span><span>950</span>
           </div>
+          <input
+            type="text"
+            value={currentValue}
+            onChange={(e) => handlePropChange(key, e.target.value)}
+            className={`${INPUT_CLASS} w-full`}
+            placeholder="#ff0000"
+          />
         </div>
       );
     }
