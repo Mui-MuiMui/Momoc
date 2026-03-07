@@ -2578,12 +2578,16 @@ function renderSidebar(
   const collapsible = (node.props?.collapsible as string) || "icon";
   const isCollapsible = collapsible !== "none";
   const isIconMode = collapsible === "icon";
+  const headerCollapseMode = (node.props?.headerCollapseMode as string) || "clip";
+  const footerCollapseMode = (node.props?.footerCollapseMode as string) || "clip";
 
   // ref callback for preview toggle (DOM manipulation, no React state needed)
   let refAttr = "";
   if (isCollapsible) {
     if (isIconMode) {
-      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; const fw = '${escapeAttr(sidebarWidth)}'; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; const w = c ? '48px' : fw; aside.style.width = w; aside.style.minWidth = w; aside.querySelectorAll('[data-sb-label]').forEach((n: any) => { n.style.display = c ? 'none' : ''; }); })); }}`;
+      const hdrHide = headerCollapseMode === "hide" ? " const hdr = aside.querySelector('[data-sb-header]'); if (hdr) hdr.style.display = c ? 'none' : '';" : "";
+      const ftrHide = footerCollapseMode === "hide" ? " const ftr = aside.querySelector('[data-sb-footer]'); if (ftr) ftr.style.display = c ? 'none' : '';" : "";
+      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; const fw = '${escapeAttr(sidebarWidth)}'; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; const w = c ? '48px' : fw; aside.style.width = w; aside.style.minWidth = w; aside.querySelectorAll('[data-sb-label]').forEach((n: any) => { n.style.display = c ? 'none' : ''; });${hdrHide}${ftrHide} })); }}`;
     } else {
       // offcanvas: hide the aside entirely
       refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; aside.style.display = c ? 'none' : ''; })); }}`;
@@ -2597,7 +2601,7 @@ function renderSidebar(
   lines.push(`${pad}  <aside data-sb-aside className="${escapeAttr(sidebarCls)}" style={{ width: "${escapeAttr(sidebarWidth)}", minWidth: "${escapeAttr(sidebarWidth)}", flexShrink: 0 }}>`);
 
   // Header slot
-  lines.push(`${pad}    <div className="${escapeAttr(headerCls)}">`);
+  lines.push(`${pad}    <div data-sb-header className="${escapeAttr(headerCls)}">`);
   if (headerChildren) lines.push(headerChildren);
   lines.push(`${pad}    </div>`);
 
@@ -2607,7 +2611,7 @@ function renderSidebar(
   lines.push(`${pad}    </nav>`);
 
   // Footer slot
-  lines.push(`${pad}    <div className="${escapeAttr(footerCls)}">`);
+  lines.push(`${pad}    <div data-sb-footer className="${escapeAttr(footerCls)}">`);
   if (footerChildren) lines.push(footerChildren);
   lines.push(`${pad}    </div>`);
 
