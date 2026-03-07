@@ -181,6 +181,11 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: [],
     isContainer: true,
   },
+  SlideContentSlot: {
+    tag: "div",
+    propsMap: [],
+    isContainer: true,
+  },
   NavMenuSlot: {
     tag: "div",
     propsMap: [],
@@ -527,7 +532,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftDataTable: { filterType: "none", pageable: false, pageSize: "10", selectable: false, columnToggle: false, stickyHeader: false, pinnedLeft: "0",
     headerBgClass: "", hoverRowClass: "", selectedRowClass: "", headerTextClass: "", headerHoverTextClass: "", headerBorderClass: "", tableBorderClass: "" },
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
-  CraftCarousel: { items: "Slide 1,Slide 2,Slide 3" },
+  CraftCarousel: { slideMeta: '{"keys":[0,1,2],"nextKey":3,"labels":{"0":"Slide 1","1":"Slide 2","2":"Slide 3"}}' },
   CraftButtonGroup: { orientation: "horizontal", variant: "outline", size: "default", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover", hoverCardMocPath: "", hoverCardSide: "bottom", hoverCardTrigger: "hover", contextMenuMocPath: "" },
   CraftForm: {},
   // Phase 4 (legacy standalone)
@@ -852,6 +857,18 @@ export function craftStateToTsx(
       } catch {
         // ignore parse errors
       }
+      for (const linkedId of Object.values(node.linkedNodes || {})) {
+        collectImports(linkedId);
+      }
+      return;
+    }
+
+    // CraftCarousel: add carousel sub-component imports and traverse linkedNodes
+    if (resolvedName === "CraftCarousel") {
+      addImport("@/components/ui/carousel", "CarouselContent");
+      addImport("@/components/ui/carousel", "CarouselItem");
+      addImport("@/components/ui/carousel", "CarouselPrevious");
+      addImport("@/components/ui/carousel", "CarouselNext");
       for (const linkedId of Object.values(node.linkedNodes || {})) {
         collectImports(linkedId);
       }
@@ -1253,6 +1270,11 @@ export function craftStateToTsx(
     // Tabs special case: render as LinkedNodes tabs
     if (resolvedName === "CraftTabs") {
       return applyCommonWrappers(`${mocComments}\n${renderTabs(node, craftState, indent, renderNode)}`);
+    }
+
+    // Carousel special case: render as LinkedNodes carousel
+    if (resolvedName === "CraftCarousel") {
+      return applyCommonWrappers(`${mocComments}\n${renderCarousel(node, craftState, indent, renderNode)}`);
     }
 
     // NavigationMenu special case: render nav bar with hover dropdown slots
@@ -2767,6 +2789,66 @@ function renderTabs(
   }
 
   lines.push(`${pad}</Tabs>`);
+  return lines.join("\n");
+}
+
+function renderCarousel(
+  node: CraftNodeData,
+  craftState: CraftSerializedState,
+  indent: number,
+  renderNodeFn: (nodeId: string, indent: number) => string,
+): string {
+  const pad = "  ".repeat(indent);
+
+  // Parse slideMeta
+  let keys: number[] = [0, 1, 2];
+  try {
+    const meta = JSON.parse((node.props?.slideMeta as string) || "{}");
+    if (Array.isArray(meta.keys)) keys = meta.keys;
+  } catch {
+    // use defaults
+  }
+
+  const orientation = (node.props?.orientation as string) || "horizontal";
+  const loop = (node.props?.loop as string) === "true";
+  const slideSize = (node.props?.slideSize as string) || "100%";
+  const showArrows = (node.props?.showArrows as string) !== "false";
+  const userClassName = (node.props?.className as string) || "";
+  const styleAttr = buildStyleAttr(node.props);
+
+  const optsAttr = `opts={{ loop: ${loop} }}`;
+  const orientationAttr = orientation === "vertical" ? ` orientation="vertical"` : "";
+  const classAttr = userClassName ? ` className="${escapeAttr(userClassName)}"` : "";
+
+  const basisCls = slideSize && slideSize !== "100%" ? ` basis-[${slideSize}]` : "";
+  const itemClassAttr = basisCls ? ` className="${basisCls.trim()}"` : "";
+
+  const lines: string[] = [];
+  lines.push(`${pad}<Carousel ${optsAttr}${orientationAttr}${classAttr}${styleAttr}>`);
+  lines.push(`${pad}  <CarouselContent>`);
+
+  for (const key of keys) {
+    const slotId = node.linkedNodes?.[`slide_${key}`];
+    const slotNode = slotId ? craftState[slotId] : null;
+    const slotChildren = slotNode
+      ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, indent + 4)).filter(Boolean)
+      : [];
+
+    if (slotChildren.length > 0) {
+      lines.push(`${pad}    <CarouselItem${itemClassAttr}>`);
+      for (const child of slotChildren) lines.push(child);
+      lines.push(`${pad}    </CarouselItem>`);
+    } else {
+      lines.push(`${pad}    <CarouselItem${itemClassAttr} />`);
+    }
+  }
+
+  lines.push(`${pad}  </CarouselContent>`);
+  if (showArrows) {
+    lines.push(`${pad}  <CarouselPrevious />`);
+    lines.push(`${pad}  <CarouselNext />`);
+  }
+  lines.push(`${pad}</Carousel>`);
   return lines.join("\n");
 }
 

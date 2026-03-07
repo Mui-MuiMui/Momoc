@@ -4,6 +4,7 @@ import { getVsCodeApi } from "../../utils/vscodeApi";
 import { IconCombobox } from "./IconCombobox";
 import { TableMetaEditor } from "./TableMetaEditor";
 import { TabMetaEditor } from "./TabMetaEditor";
+import { SlideMetaEditor } from "./SlideMetaEditor";
 import { ResizableMetaEditor } from "./ResizableMetaEditor";
 import { MenubarMetaEditor } from "./MenubarMetaEditor";
 import { SidebarMetaEditor } from "./SidebarMetaEditor";
@@ -300,7 +301,7 @@ const INTERACTION_ORDERED: string[] = [
 const INTERACTION_EXCLUDED_COMPONENTS = new Set([
   "Tooltip", "ContextMenu", "HoverCard", "FreeCanvas",
   "ResizablePanelSlot", "TableCellSlot", "DataTableSlot",
-  "NavMenuSlot", "CollapsibleSlot", "TabContentSlot",
+  "NavMenuSlot", "CollapsibleSlot", "TabContentSlot", "SlideContentSlot",
   "SidebarHeaderSlot", "SidebarFooterSlot", "SidebarInsetSlot",
 ]);
 
@@ -670,6 +671,17 @@ export function PropEditor() {
     if (key === "tabMeta" && selectedNodeId) {
       return (
         <TabMetaEditor
+          key={key}
+          value={String(value ?? "")}
+          selectedNodeId={selectedNodeId}
+        />
+      );
+    }
+
+    // Custom UI for slideMeta (carousel slide structure editor)
+    if (key === "slideMeta" && selectedNodeId) {
+      return (
+        <SlideMetaEditor
           key={key}
           value={String(value ?? "")}
           selectedNodeId={selectedNodeId}

@@ -1636,11 +1636,57 @@ export function ResizableHandle(props) {
   );
 }`,
 
-  carousel: `import { cn } from "@/components/ui/_cn";
-export function Carousel(props: any) {
-  const { className = "", children, ...rest } = props;
-  const cls = cn("relative w-full", className);
-  return <div className={cls} {...rest}>{children}</div>;
+  carousel: `import { createContext, useContext, useEffect, useState } from "react";
+import { cn } from "@/components/ui/_cn";
+const CarouselCtx = createContext<any>(null);
+export function Carousel({ opts = {}, orientation = "horizontal", className = "", children, ...rest }: any) {
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
+  const loop = opts?.loop ?? false;
+  const scrollPrev = () => setCurrent((i: number) => loop ? (i - 1 + count) % count : Math.max(0, i - 1));
+  const scrollNext = () => setCurrent((i: number) => loop ? (i + 1) % count : Math.min(count - 1, i + 1));
+  const canPrev = loop || current > 0;
+  const canNext = loop || current < count - 1;
+  return (
+    <CarouselCtx.Provider value={{ current, setCurrent, count, setCount, scrollPrev, scrollNext, canPrev, canNext, orientation }}>
+      <div className={cn("relative", className)} data-orientation={orientation} {...rest}>{children}</div>
+    </CarouselCtx.Provider>
+  );
+}
+export function CarouselContent({ className = "", children, ...rest }: any) {
+  const ctx = useContext(CarouselCtx);
+  const items = Array.isArray(children) ? children : children ? [children] : [];
+  useEffect(() => { ctx?.setCount(items.length); }, [items.length]);
+  return (
+    <div className={cn("overflow-hidden", className)} {...rest}>
+      {items.map((item: any, i: number) => (
+        <div key={i} style={{ display: i === ctx?.current ? undefined : "none" }}>{item}</div>
+      ))}
+    </div>
+  );
+}
+export function CarouselItem({ className = "", children, ...rest }: any) {
+  return <div className={cn("min-w-0 shrink-0 grow-0", className)} {...rest}>{children}</div>;
+}
+export function CarouselPrevious({ className = "", ...rest }: any) {
+  const ctx = useContext(CarouselCtx);
+  return (
+    <button type="button" disabled={!ctx?.canPrev}
+      className={cn("absolute left-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow hover:bg-accent disabled:opacity-40", className)}
+      onClick={() => ctx?.scrollPrev()} {...rest}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+  );
+}
+export function CarouselNext({ className = "", ...rest }: any) {
+  const ctx = useContext(CarouselCtx);
+  return (
+    <button type="button" disabled={!ctx?.canNext}
+      className={cn("absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow hover:bg-accent disabled:opacity-40", className)}
+      onClick={() => ctx?.scrollNext()} {...rest}>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+  );
 }`,
 
   "button-group": `import { cn } from "@/components/ui/_cn";
