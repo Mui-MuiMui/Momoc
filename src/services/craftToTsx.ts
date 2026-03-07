@@ -2546,7 +2546,6 @@ function renderSidebar(
     headerBgClass,
     headerBorderColor,
     headerShadow,
-    slotClassName("sidebar_header"),
   ].filter(Boolean).join(" ");
 
   const footerCls = [
@@ -2554,7 +2553,6 @@ function renderSidebar(
     footerBgClass,
     footerBorderColor,
     footerShadow,
-    slotClassName("sidebar_footer"),
   ].filter(Boolean).join(" ");
 
   const insetCls = [
@@ -2562,7 +2560,6 @@ function renderSidebar(
     insetBgClass,
     insetBorderColor,
     insetShadow,
-    slotClassName("sidebar_inset"),
   ].filter(Boolean).join(" ");
 
   // Resolve slot children and slot className
@@ -2610,8 +2607,11 @@ function renderSidebar(
   lines.push(`${pad}  <aside data-sb-aside className="${escapeAttr(sidebarCls)}" style={{ width: "${escapeAttr(sidebarWidth)}", minWidth: "${escapeAttr(sidebarWidth)}", flexShrink: 0 }}>`);
 
   // Header slot
+  const headerInnerCls = ["min-h-[40px]", slotClassName("sidebar_header")].filter(Boolean).join(" ");
   lines.push(`${pad}    <div data-sb-header className="${escapeAttr(headerCls)}">`);
+  lines.push(`${pad}      <div className="${escapeAttr(headerInnerCls)}">`);
   if (headerChildren) lines.push(headerChildren);
+  lines.push(`${pad}      </div>`);
   lines.push(`${pad}    </div>`);
 
   // Nav items
@@ -2620,8 +2620,11 @@ function renderSidebar(
   lines.push(`${pad}    </nav>`);
 
   // Footer slot
+  const footerInnerCls = ["min-h-[40px]", slotClassName("sidebar_footer")].filter(Boolean).join(" ");
   lines.push(`${pad}    <div data-sb-footer className="${escapeAttr(footerCls)}">`);
+  lines.push(`${pad}      <div className="${escapeAttr(footerInnerCls)}">`);
   if (footerChildren) lines.push(footerChildren);
+  lines.push(`${pad}      </div>`);
   lines.push(`${pad}    </div>`);
 
   lines.push(`${pad}  </aside>`);
@@ -2634,7 +2637,10 @@ function renderSidebar(
     lines.push(`${pad}      <button data-sb-toggle type="button" className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground">${toggleArrow}</button>`);
     lines.push(`${pad}    </div>`);
   }
+  const insetContentCls = ["flex-1 overflow-auto", slotClassName("sidebar_inset")].filter(Boolean).join(" ");
+  lines.push(`${pad}    <div className="${escapeAttr(insetContentCls)}">`);
   if (insetChildren) lines.push(insetChildren);
+  lines.push(`${pad}    </div>`);
   lines.push(`${pad}  </main>`);
 
   lines.push(`${pad}</div>`);
