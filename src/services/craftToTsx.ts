@@ -2443,7 +2443,7 @@ function renderNavItemsHtml(
       lines.push(`${pad}<hr className="my-1 border-t border-border mx-2" />`);
     } else if (item.type === "group-label") {
       const groupCls = ["px-2 py-1 text-xs font-medium uppercase tracking-wide", navTextClass || "text-muted-foreground"].filter(Boolean).join(" ");
-      lines.push(`${pad}<div className="${escapeAttr(groupCls)}">${escapeJsx(item.label || "")}</div>`);
+      lines.push(`${pad}<div data-sb-label className="${escapeAttr(groupCls)}">${escapeJsx(item.label || "")}</div>`);
     } else {
       const isActive = !!item.active;
       const indentClass = depth === 1 ? "pl-5" : depth >= 2 ? "pl-8" : "";
@@ -2465,9 +2465,9 @@ function renderNavItemsHtml(
           const iconCls = ["mt-0.5 h-4 w-4 shrink-0", navIconClass].filter(Boolean).join(" ");
           lines.push(`${innerPad}  <${escapeJsx(item.icon)} className="${escapeAttr(iconCls)}" />`);
         }
-        lines.push(`${innerPad}  <span className="min-w-0 flex-1 break-words">${escapeJsx(item.label || "")}</span>`);
+        lines.push(`${innerPad}  <span data-sb-label className="min-w-0 flex-1 break-words">${escapeJsx(item.label || "")}</span>`);
         lines.push(`${innerPad}</summary>`);
-        lines.push(`${innerPad}<div className="flex flex-col gap-0.5">`);
+        lines.push(`${innerPad}<div data-sb-label className="flex flex-col gap-0.5">`);
         lines.push(...renderNavItemsHtml(item.children!, innerPad + "  ", depth + 1, navActiveBgClass, navHoverBgClass, navTextClass, navIconClass));
         lines.push(`${innerPad}</div>`);
         lines.push(`${pad}</details>`);
@@ -2477,14 +2477,14 @@ function renderNavItemsHtml(
           const iconCls = ["mt-0.5 h-4 w-4 shrink-0", navIconClass].filter(Boolean).join(" ");
           lines.push(`${innerPad}<${escapeJsx(item.icon)} className="${escapeAttr(iconCls)}" />`);
         }
-        lines.push(`${innerPad}<span className="min-w-0 flex-1 break-words">${escapeJsx(item.label || "")}</span>`);
+        lines.push(`${innerPad}<span data-sb-label className="min-w-0 flex-1 break-words">${escapeJsx(item.label || "")}</span>`);
         if (item.badge) {
           const badgeCls = [
             "ml-auto inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
             item.badgeBgClass || "bg-primary",
             item.badgeTextClass || "text-primary-foreground",
           ].filter(Boolean).join(" ");
-          lines.push(`${innerPad}<span className="${escapeAttr(badgeCls)}">${escapeJsx(item.badge)}</span>`);
+          lines.push(`${innerPad}<span data-sb-label className="${escapeAttr(badgeCls)}">${escapeJsx(item.badge)}</span>`);
         }
         lines.push(`${pad}</button>`);
       }
@@ -2577,12 +2577,18 @@ function renderSidebar(
 
   const collapsible = (node.props?.collapsible as string) || "icon";
   const isCollapsible = collapsible !== "none";
-  const iconWidth = "48px";
+  const isIconMode = collapsible === "icon";
 
   // ref callback for preview toggle (DOM manipulation, no React state needed)
-  const refAttr = isCollapsible
-    ? ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; const fw = '${escapeAttr(sidebarWidth)}'; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; const w = c ? '${iconWidth}' : fw; aside.style.width = w; aside.style.minWidth = w; })); }}`
-    : "";
+  let refAttr = "";
+  if (isCollapsible) {
+    if (isIconMode) {
+      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; const fw = '${escapeAttr(sidebarWidth)}'; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; const w = c ? '48px' : fw; aside.style.width = w; aside.style.minWidth = w; aside.querySelectorAll('[data-sb-label]').forEach((n: any) => { n.style.display = c ? 'none' : ''; }); })); }}`;
+    } else {
+      // offcanvas: hide the aside entirely
+      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; aside.style.display = c ? 'none' : ''; })); }}`;
+    }
+  }
 
   const lines: string[] = [];
   lines.push(`${pad}<div className="${escapeAttr(outerCls)}"${styleAttr}${refAttr}>`);
