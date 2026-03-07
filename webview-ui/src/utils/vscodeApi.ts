@@ -1,5 +1,7 @@
+import type { WebviewToExtensionMessage } from "../shared/messages";
+
 interface VsCodeApi {
-  postMessage(message: unknown): void;
+  postMessage(message: WebviewToExtensionMessage): void;
   getState(): unknown;
   setState(state: unknown): void;
 }

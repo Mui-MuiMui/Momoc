@@ -1,14 +1,15 @@
 import { useEffect, useCallback } from "react";
 import { getVsCodeApi } from "../utils/vscodeApi";
+import type { ExtensionToWebviewMessage, WebviewToExtensionMessage } from "../shared/messages";
 
-type MessageHandler = (message: { type: string; payload?: unknown }) => void;
+type MessageHandler = (message: ExtensionToWebviewMessage) => void;
 
 export function useVscodeMessage(handler: MessageHandler) {
   useEffect(() => {
     const listener = (event: MessageEvent) => {
       const message = event.data;
       if (message && typeof message.type === "string") {
-        handler(message);
+        handler(message as ExtensionToWebviewMessage);
       }
     };
 
@@ -18,7 +19,7 @@ export function useVscodeMessage(handler: MessageHandler) {
 }
 
 export function useSendMessage() {
-  return useCallback((type: string, payload?: unknown) => {
-    getVsCodeApi().postMessage({ type, payload });
+  return useCallback((message: WebviewToExtensionMessage) => {
+    getVsCodeApi().postMessage(message);
   }, []);
 }

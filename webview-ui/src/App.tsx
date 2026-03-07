@@ -149,27 +149,23 @@ export default function App() {
 
   // --- VSCode message handler ---
   const handleMessage = useCallback(
-    (message: { type: string; payload?: unknown }) => {
+    (message: import("./shared/messages").ExtensionToWebviewMessage) => {
       switch (message.type) {
         case "doc:load": {
-          const p = message.payload as { content: string; fileName: string };
-          setDocumentContent(p.content);
-          setFileName(p.fileName);
+          setDocumentContent(message.payload.content);
+          setFileName(message.payload.fileName);
           break;
         }
         case "doc:externalChange": {
-          const p = message.payload as { content: string };
-          setDocumentContent(p.content);
+          setDocumentContent(message.payload.content);
           break;
         }
         case "theme:set": {
-          const p = message.payload as { theme: "light" | "dark" };
-          setThemeMode(p.theme);
+          setThemeMode(message.payload.theme);
           break;
         }
         case "i18n:locale": {
-          const p = message.payload as { locale: string };
-          const lang = p.locale.split("-")[0];
+          const lang = message.payload.locale.split("-")[0];
           i18n.changeLanguage(lang);
           break;
         }

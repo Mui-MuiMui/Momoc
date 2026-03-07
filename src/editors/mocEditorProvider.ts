@@ -10,7 +10,7 @@ import {
 import { parseMocFile } from "../services/mocParser.js";
 import { serializeMocFile } from "../services/mocSerializer.js";
 import { craftStateToTsx } from "../services/craftToTsx.js";
-import type { MocDocument, MocEditorData } from "../shared/types.js";
+import type { MocDocument, MocEditorData, ExtensionToWebviewMessage, WebviewToExtensionMessage } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
 export class MocEditorProvider implements vscode.CustomTextEditorProvider {
@@ -38,7 +38,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
   }
 
   /** Send a message to the active webview panel */
-  public static postToWebview(message: { type: string; payload?: unknown }): boolean {
+  public static postToWebview(message: ExtensionToWebviewMessage): boolean {
     const panel = MocEditorProvider.instance?.activeWebviewPanel;
     if (panel) {
       panel.webview.postMessage(message);
@@ -95,11 +95,12 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         }
       });
 
-    webviewPanel.webview.onDidReceiveMessage(async (message) => {
+    webviewPanel.webview.onDidReceiveMessage(async (rawMessage) => {
+      const message = rawMessage as WebviewToExtensionMessage;
+
       if (message.type === "doc:save") {
-        const payload = message.payload as { content: string };
-        if (payload?.content) {
-          lastAppliedContent = this.webviewJsonToFile(payload.content, document.fileName);
+        if (message.payload?.content) {
+          lastAppliedContent = this.webviewJsonToFile(message.payload.content, document.fileName);
         }
       }
 
@@ -259,21 +260,20 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
   }
 
   private async handleWebviewMessage(
-    message: { type: string; payload?: unknown },
+    message: WebviewToExtensionMessage,
     document: vscode.TextDocument,
     webviewPanel: vscode.WebviewPanel,
   ): Promise<void> {
     switch (message.type) {
       case "doc:save": {
         try {
-          const payload = message.payload as { content: string };
-          if (!payload?.content) {
+          if (!message.payload?.content) {
             console.error("[Momoc] doc:save received empty content");
             break;
           }
 
           // Convert webview JSON → .moc TSX format
-          const mocContent = this.webviewJsonToFile(payload.content, document.fileName);
+          const mocContent = this.webviewJsonToFile(message.payload.content, document.fileName);
 
           const edit = new vscode.WorkspaceEdit();
           const fullRange = new vscode.Range(
@@ -294,30 +294,25 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
 
       case "doc:requestBuild": {
-        const payload = message.payload as {
-          componentId: string;
-          tsx: string;
-        };
         const workspaceRoot = this.getWorkspaceRoot();
         if (!workspaceRoot) break;
 
-        const result = await compileTsx(payload.tsx, workspaceRoot);
+        const result = await compileTsx(message.payload.tsx, workspaceRoot);
         if (result.error) {
           webviewPanel.webview.postMessage({
             type: "build:error",
-            payload: { componentId: payload.componentId, error: result.error },
-          });
+            payload: { componentId: message.payload.componentId, error: result.error },
+          } satisfies ExtensionToWebviewMessage);
         } else {
           webviewPanel.webview.postMessage({
             type: "build:result",
-            payload: { componentId: payload.componentId, jsCode: result.code },
-          });
+            payload: { componentId: message.payload.componentId, jsCode: result.code },
+          } satisfies ExtensionToWebviewMessage);
         }
         break;
       }
 
       case "shadcn:install": {
-        const payload = message.payload as { components: string[] };
         const workspaceRoot = this.getWorkspaceRoot();
         if (!workspaceRoot) break;
 
@@ -328,7 +323,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         }
 
         const componentMap = getShadcnComponentMap();
-        for (const comp of payload.components) {
+        for (const comp of message.payload.components) {
           const shadcnName = componentMap[comp];
           if (shadcnName) {
             await installComponent(workspaceRoot, shadcnName);
@@ -341,7 +336,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         // Store selection context for agent access
         const content = document.getText();
         const mocDoc = parseMocFile(content);
-        mocDoc.metadata.selection = message.payload as MocDocument["metadata"]["selection"];
+        mocDoc.metadata.selection = message.payload;
         break;
       }
 
@@ -356,7 +351,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
 
       case "capture:complete": {
-        const { dataUrl } = message.payload as { dataUrl: string };
+        const { dataUrl } = message.payload;
 
         const defaultUri = vscode.Uri.file(
           document.fileName.replace(/\.moc$/, ".png"),
@@ -379,7 +374,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
 
       case "capture:error": {
-        const { error } = message.payload as { error: string };
+        const { error } = message.payload;
         vscode.window.showErrorMessage(
           vscode.l10n.t("Image capture failed: {0}", error),
         );
@@ -387,7 +382,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
 
       case "resolve:imageUri": {
-        const { src } = message.payload as { src: string };
+        const { src } = message.payload;
         let fileUri: vscode.Uri;
         if (path.isAbsolute(src)) {
           fileUri = vscode.Uri.file(src);
@@ -404,7 +399,6 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
 
       case "browse:mocFile": {
-        const browsePayload = message.payload as { currentPath?: string; targetProp?: string };
         const docDir = vscode.Uri.joinPath(document.uri, "..");
         const result = await vscode.window.showOpenDialog({
           defaultUri: docDir,
@@ -419,14 +413,13 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           const relativePath = path.relative(docDirPath, selectedPath).replace(/\\/g, "/");
           webviewPanel.webview.postMessage({
             type: "browse:mocFile:result",
-            payload: { relativePath, targetProp: browsePayload?.targetProp },
+            payload: { relativePath, targetProp: message.payload?.targetProp },
           });
         }
         break;
       }
 
       case "browse:imageFile": {
-        const imagePayload = message.payload as { currentPath?: string; targetProp?: string };
         const docDir = vscode.Uri.joinPath(document.uri, "..");
         const result = await vscode.window.showOpenDialog({
           defaultUri: docDir,
@@ -441,14 +434,14 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           const relativePath = path.relative(docDirPath, selectedPath).replace(/\\/g, "/");
           webviewPanel.webview.postMessage({
             type: "browse:imageFile:result",
-            payload: { relativePath, targetProp: imagePayload?.targetProp },
+            payload: { relativePath, targetProp: message.payload?.targetProp },
           });
         }
         break;
       }
 
       case "resolve:mocFile": {
-        const { path: mocPath } = message.payload as { path: string };
+        const { path: mocPath } = message.payload;
         let filePath: string;
         if (path.isAbsolute(mocPath)) {
           filePath = mocPath;

@@ -27,14 +27,12 @@ const ZOOM_MAX = 2;
 
 export function EditorCanvas() {
   const { t } = useTranslation();
-  const {
-    themeMode,
-    viewportMode,
-    customViewportWidth,
-    customViewportHeight,
-    zoom,
-    setZoom,
-  } = useEditorStore();
+  const themeMode = useEditorStore((s) => s.themeMode);
+  const viewportMode = useEditorStore((s) => s.viewportMode);
+  const customViewportWidth = useEditorStore((s) => s.customViewportWidth);
+  const customViewportHeight = useEditorStore((s) => s.customViewportHeight);
+  const zoom = useEditorStore((s) => s.zoom);
+  const setZoom = useEditorStore((s) => s.setZoom);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollContentRef = useRef<HTMLDivElement>(null);

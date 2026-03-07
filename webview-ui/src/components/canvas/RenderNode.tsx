@@ -1,5 +1,5 @@
 import { useNode, useEditor } from "@craftjs/core";
-import { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useEditorStore } from "../../stores/editorStore";
 
 type HandlePosition = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "right" | "bottom";
@@ -15,7 +15,7 @@ const cursorMap: Record<HandlePosition, string> = {
   bottom: "ns-resize",
 };
 
-export function RenderNode({
+export const RenderNode = React.memo(function RenderNode({
   render,
 }: {
   render: React.ReactElement;
@@ -361,4 +361,4 @@ export function RenderNode({
   }, [dom, isActive, noResize, onMouseDown]);
 
   return <>{render}</>;
-}
+});
