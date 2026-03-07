@@ -427,7 +427,7 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
   const insetPanel = (
     <div
       className={cn(
-        "flex flex-col flex-1 overflow-hidden",
+        "flex flex-col flex-1 basis-[40px] overflow-hidden",
         insetBgClass || "bg-background",
         insetBorderColor,
         insetShadow,
@@ -465,7 +465,6 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
       style={{
         width: width && width !== "auto" ? width : undefined,
         height: height && height !== "auto" ? height : undefined,
-        minWidth: (!width || width === "auto") ? `calc(${sidebarWidth || "240px"} + 40px)` : undefined,
       }}
     >
       {sidebarPanel}
