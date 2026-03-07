@@ -4,7 +4,7 @@ import { cn } from "../../utils/cn";
 import type { ReactNode } from "react";
 
 /** Internal canvas slot for each slide's content */
-export const SlideContentSlot: UserComponent<{ children?: ReactNode }> = ({ children }) => {
+export const SlideContentSlot: UserComponent<{ className?: string; children?: ReactNode }> = ({ className = "", children }) => {
   const {
     connectors: { connect },
   } = useNode();
@@ -14,7 +14,7 @@ export const SlideContentSlot: UserComponent<{ children?: ReactNode }> = ({ chil
       ref={(ref) => {
         if (ref) connect(ref);
       }}
-      className="min-h-[100px] h-full w-full"
+      className={cn("min-h-[100px] h-full w-full", className)}
     >
       {children}
     </div>
@@ -23,6 +23,7 @@ export const SlideContentSlot: UserComponent<{ children?: ReactNode }> = ({ chil
 
 SlideContentSlot.craft = {
   displayName: "SlideContentSlot",
+  props: { className: "" },
   rules: {
     canDrag: () => false,
     canDrop: () => true,
