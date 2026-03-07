@@ -2828,13 +2828,17 @@ function renderCarousel(
   for (const key of keys) {
     const slotId = node.linkedNodes?.[`slide_${key}`];
     const slotNode = slotId ? craftState[slotId] : null;
+    const slotClassName = (slotNode?.props?.className as string) || "";
     const slotChildren = slotNode
-      ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, indent + 4)).filter(Boolean)
+      ? (slotNode.nodes || []).map((childId) => renderNodeFn(childId, indent + 5)).filter(Boolean)
       : [];
 
     if (slotChildren.length > 0) {
+      const innerCls = ["h-full w-full", slotClassName].filter(Boolean).join(" ");
       lines.push(`${pad}    <CarouselItem${itemClassAttr}>`);
+      lines.push(`${pad}      <div className="${escapeAttr(innerCls)}">`);
       for (const child of slotChildren) lines.push(child);
+      lines.push(`${pad}      </div>`);
       lines.push(`${pad}    </CarouselItem>`);
     } else {
       lines.push(`${pad}    <CarouselItem${itemClassAttr} />`);
