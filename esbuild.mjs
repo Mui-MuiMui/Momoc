@@ -30,16 +30,27 @@ function copyWasm() {
   console.log("[esbuild] Copied esbuild.wasm to out/");
 }
 
+function copyTailwindBrowser() {
+  mkdirSync("out", { recursive: true });
+  copyFileSync(
+    "webview-ui/node_modules/@tailwindcss/browser/dist/index.global.js",
+    "out/tailwindcss-browser.js",
+  );
+  console.log("[esbuild] Copied tailwindcss-browser.js to out/");
+}
+
 async function main() {
   if (watch) {
     const ctx = await esbuild.context(buildOptions);
     await ctx.watch();
     console.log("[esbuild] Watching for changes...");
     copyWasm();
+    copyTailwindBrowser();
   } else {
     await esbuild.build(buildOptions);
     console.log("[esbuild] Build complete.");
     copyWasm();
+    copyTailwindBrowser();
   }
 }
 

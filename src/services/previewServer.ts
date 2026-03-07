@@ -348,7 +348,7 @@ export async function startPreviewServer(
     /* Toggle: icon fill when pressed */
     [data-toggle-pressed] svg.lucide { fill: currentColor; }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="/tailwindcss-browser.js"></script>
   <style type="text/tailwindcss">
     @import "tailwindcss";
     @theme {
@@ -478,6 +478,23 @@ export async function startPreviewServer(
     if (url === "/" || url === "/index.html") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       res.end(buildPreviewHtml());
+      return;
+    }
+
+    if (url === "/tailwindcss-browser.js") {
+      const twBrowserPath = path.join(__dirname, "tailwindcss-browser.js");
+      try {
+        const fs = await import("fs");
+        const content = fs.readFileSync(twBrowserPath);
+        res.writeHead(200, {
+          "Content-Type": "application/javascript; charset=utf-8",
+          "Cache-Control": "public, max-age=86400",
+        });
+        res.end(content);
+      } catch {
+        res.writeHead(404);
+        res.end("Not found");
+      }
       return;
     }
 
