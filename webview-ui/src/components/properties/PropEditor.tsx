@@ -131,6 +131,12 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   Typography: {
     variant: ["h1", "h2", "h3", "h4", "p", "blockquote", "ul", "ol", "code", "lead", "large", "small", "muted"],
   },
+  Carousel: {
+    orientation: ["horizontal", "vertical"],
+    loop: ["false", "true"],
+    slideSize: ["100%", "80%", "60%", "33%"],
+    showArrows: ["true", "false"],
+  },
   Sidebar: {
     side: ["left", "right"],
     collapsible: ["icon", "offcanvas", "none"],
