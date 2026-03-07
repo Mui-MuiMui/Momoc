@@ -465,7 +465,7 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
       style={{
         width: width && width !== "auto" ? width : undefined,
         height: height && height !== "auto" ? height : undefined,
-        minWidth: (!width || width === "auto") ? `calc(${sidebarWidth || "240px"} + 40px)` : undefined,
+        minWidth: (!width || width === "auto") ? `calc(${sidebarWidth || "240px"} + 150px)` : undefined,
       }}
     >
       {sidebarPanel}
