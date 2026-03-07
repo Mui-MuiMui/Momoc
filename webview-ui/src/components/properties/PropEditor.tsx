@@ -133,7 +133,6 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
   },
   Carousel: {
     orientation: ["horizontal", "vertical"],
-    slideSize: ["100%", "80%", "60%", "33%"],
   },
   Sidebar: {
     side: ["left", "right"],

@@ -2811,7 +2811,6 @@ function renderCarousel(
 
   const orientation = (node.props?.orientation as string) || "horizontal";
   const loop = !!(node.props?.loop);
-  const slideSize = (node.props?.slideSize as string) || "100%";
   const showArrows = node.props?.showArrows !== false;
   const userClassName = (node.props?.className as string) || "";
   const styleAttr = buildStyleAttr(node.props);
@@ -2820,8 +2819,7 @@ function renderCarousel(
   const orientationAttr = orientation === "vertical" ? ` orientation="vertical"` : "";
   const classAttr = userClassName ? ` className="${escapeAttr(userClassName)}"` : "";
 
-  const basisCls = slideSize && slideSize !== "100%" ? ` basis-[${slideSize}]` : "";
-  const itemClassAttr = basisCls ? ` className="${basisCls.trim()}"` : "";
+  const itemClassAttr = "";
 
   const lines: string[] = [];
   lines.push(`${pad}<Carousel ${optsAttr}${orientationAttr}${classAttr}${styleAttr}>`);

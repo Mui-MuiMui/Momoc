@@ -49,7 +49,7 @@ interface CraftCarouselProps {
   slideMeta?: string;
   orientation?: "horizontal" | "vertical";
   loop?: boolean;
-  slideSize?: string;
+
   showArrows?: boolean;
   width?: string;
   height?: string;
@@ -60,7 +60,7 @@ export const CraftCarousel: UserComponent<CraftCarouselProps> = ({
   slideMeta = DEFAULT_SLIDE_META_JSON,
   orientation = "horizontal",
   loop = false,
-  slideSize: _slideSize = "100%",
+
   showArrows = true,
   width = "auto",
   height = "auto",
@@ -184,7 +184,7 @@ CraftCarousel.craft = {
     slideMeta: DEFAULT_SLIDE_META_JSON,
     orientation: "horizontal",
     loop: false,
-    slideSize: "100%",
+
     showArrows: true,
     width: "320px",
     height: "200px",
