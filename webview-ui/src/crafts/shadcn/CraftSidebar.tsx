@@ -74,7 +74,7 @@ export const SidebarInsetSlot: UserComponent<{ children?: ReactNode; className?:
       ref={(ref) => {
         if (ref) connect(ref);
       }}
-      className={cn("min-h-[40px] flex-1", className)}
+      className={cn("flex-1", className)}
     >
       {children}
     </div>
@@ -446,7 +446,7 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
           </button>
         </div>
       )}
-      <div className="flex-1 overflow-auto">
+      <div className="flex flex-col flex-1 overflow-auto">
         <Element id="sidebar_inset" is={SidebarInsetSlot} canvas />
       </div>
     </div>
