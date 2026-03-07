@@ -458,7 +458,7 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
         if (ref) connect(drag(ref));
       }}
       className={cn(
-        "flex overflow-hidden",
+        "flex",
         side === "right" ? "flex-row-reverse" : "flex-row",
         className,
       )}
