@@ -1707,7 +1707,7 @@ export function CarouselNext({ className = "", ...rest }: any) {
     <button type="button" disabled={!ctx?.canNext}
       className={cn(
         "absolute inline-flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow hover:bg-accent disabled:opacity-40",
-        isVertical ? "bottom-2 left-1/2 -translate-x-1/2" : "right-2 top-1/2 -translate-y-1/2",
+        isVertical ? "bottom-8 left-1/2 -translate-x-1/2" : "right-2 top-1/2 -translate-y-1/2",
         className,
       )}
       onClick={() => ctx?.scrollNext()} {...rest}>
