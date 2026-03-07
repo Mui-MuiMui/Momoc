@@ -1666,7 +1666,7 @@ export function CarouselContent({ className = "", children, ...rest }: any) {
   );
 }
 export function CarouselItem({ className = "", children, ...rest }: any) {
-  return <div className={cn("min-w-0 shrink-0 grow-0", className)} {...rest}>{children}</div>;
+  return <div className={cn("min-w-0 shrink-0 grow-0 h-full w-full", className)} {...rest}>{children}</div>;
 }
 export function CarouselPrevious({ className = "", ...rest }: any) {
   const ctx = useContext(CarouselCtx);
