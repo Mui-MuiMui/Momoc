@@ -295,7 +295,7 @@ export async function startPreviewServer(
     }
   }
 
-  // Build import map: React CDN + shadcn/ui fallback routes + linked components
+  // Build import map: React (esm.sh) + shadcn/ui fallback routes + linked components
   function buildImportMap(): string {
     const imports: Record<string, string> = {
       "react": "https://esm.sh/react@19",
