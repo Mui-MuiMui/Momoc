@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Element, useNode, type UserComponent } from "@craftjs/core";
+import { Element, useEditor, useNode, type UserComponent } from "@craftjs/core";
 import * as LucideIcons from "lucide-react";
 import { cn } from "../../utils/cn";
 import type { ReactNode } from "react";
@@ -335,6 +335,7 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
   const {
     connectors: { connect, drag },
   } = useNode();
+  const { enabled } = useEditor((state) => ({ enabled: state.options.enabled }));
   const [collapsed, setCollapsed] = useState(false);
   const [openKeys, setOpenKeys] = useState<Set<number>>(() => {
     const initial = parseSidebarData(sidebarData);
@@ -438,7 +439,7 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
         <div className="flex items-center border-b px-2 py-1">
           <button
             type="button"
-            onClick={() => setCollapsed((v) => !v)}
+            onClick={() => !enabled && setCollapsed((v) => !v)}
             className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             title={collapsed ? "サイドバーを開く" : "サイドバーを閉じる"}
           >
@@ -464,7 +465,11 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
         className,
       )}
       style={{
-        width: width && width !== "auto" ? width : undefined,
+        width: width && width !== "auto"
+          ? width
+          : enabled
+            ? `calc(${sidebarWidth || "240px"} + 40px)`
+            : undefined,
         height: height && height !== "auto" ? height : undefined,
       }}
     >
