@@ -436,7 +436,7 @@ const DEFAULT_DROPDOWN_DATA_STR = JSON.stringify([
 
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
-  CraftButton: { variant: "default", size: "default", disabled: false, text: "Button",
+  CraftButton: { buttonType: "text", icon: "", variant: "default", size: "default", disabled: false, text: "Button",
     overlayType: "none", linkedMocPath: "", sheetSide: "right", alertDialogPattern: "cancel-continue", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", tooltipSide: "", toastText: "", toastPosition: "bottom-right" },
   CraftInput: { type: "text", disabled: false, tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
   CraftBadge: { variant: "default", text: "Badge", tooltipText: "", tooltipSide: "" },
@@ -654,6 +654,11 @@ export function craftStateToTsx(
       const toastText = node.props?.toastText as string | undefined;
       if (toastText) {
         addImport("sonner", "toast");
+      }
+      const buttonType = node.props?.buttonType as string | undefined;
+      const icon = node.props?.icon as string | undefined;
+      if (buttonType === "icon" && icon) {
+        addImport("lucide-react", icon);
       }
     }
 
@@ -1355,6 +1360,17 @@ export function craftStateToTsx(
         : escapedText;
       rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${styleAttr}>${inner}</${tag}>`;
       return applyCommonWrappers(rendered);
+    }
+
+    // CraftButton: icon モード時はアイコンを子要素として描画
+    if (resolvedName === "CraftButton") {
+      const buttonType = node.props?.buttonType as string | undefined;
+      const icon = node.props?.icon as string | undefined;
+      if (buttonType === "icon" && icon) {
+        rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>\n${pad}  <${icon} className="h-4 w-4" />\n${pad}</${tag}>`;
+        rendered = wrapWithOverlay(rendered, node.props, pad);
+        return applyCommonWrappers(rendered);
+      }
     }
 
     // Text content

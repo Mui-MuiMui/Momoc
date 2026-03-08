@@ -2,6 +2,7 @@ import { useNode, type UserComponent } from "@craftjs/core";
 import { cn } from "../../utils/cn";
 import { cva } from "class-variance-authority";
 import { renderKbd } from "../../utils/renderKbd";
+import * as Icons from "lucide-react";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-pre-line rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
@@ -39,7 +40,9 @@ const OVERLAY_LABELS: Record<string, string> = {
 };
 
 interface CraftButtonProps {
+  buttonType?: "text" | "icon";
   text?: string;
+  icon?: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
   disabled?: boolean;
@@ -60,7 +63,9 @@ interface CraftButtonProps {
 }
 
 export const CraftButton: UserComponent<CraftButtonProps> = ({
+  buttonType = "text",
   text = "Button",
+  icon = "",
   variant = "default",
   size = "default",
   disabled = false,
@@ -85,6 +90,10 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
 
   const overlayLabel = overlayType !== "none" ? OVERLAY_LABELS[overlayType] : null;
 
+  const IconComponent = icon
+    ? (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[icon]
+    : null;
+
   const classes = className ? className.split(" ").filter(Boolean) : [];
   const marginClasses = classes.filter((c) => /^-?m[trblxy]?-/.test(c));
   const nonMarginClasses = classes.filter((c) => !/^-?m[trblxy]?-/.test(c));
@@ -102,7 +111,7 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
         disabled={disabled}
         type="button"
       >
-        {renderKbd(text)}
+        {buttonType === "icon" && IconComponent ? <IconComponent className="h-4 w-4" /> : renderKbd(text)}
         {linkedMocPath && (
           <span className="ml-1 opacity-60" title={linkedMocPath}>
             &#128279;
@@ -121,7 +130,9 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
 CraftButton.craft = {
   displayName: "Button",
   props: {
+    buttonType: "text",
     text: "Button",
+    icon: "",
     variant: "default",
     size: "default",
     disabled: false,

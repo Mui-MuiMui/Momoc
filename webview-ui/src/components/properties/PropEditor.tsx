@@ -147,6 +147,9 @@ const COMPONENT_PROP_OPTIONS: Record<string, Record<string, string[]>> = {
 
 /** Property names rendered as a button group (toggle buttons) per component. */
 const BUTTON_GROUP_PROPS: Record<string, Record<string, string[]>> = {
+  Button: {
+    buttonType: ["text", "icon"],
+  },
   "Navigation Menu": {
     buttonBorderWidth: ["", "0", "1", "2", "4", "8"],
   },
@@ -608,7 +611,10 @@ export function PropEditor() {
       !(componentName === "Typography" && key === "items" && selectedProps.variant !== "ul" && selectedProps.variant !== "ol") &&
       !(componentName === "Typography" && key === "text" && (selectedProps.variant === "ul" || selectedProps.variant === "ol")) &&
       // Button: alertDialogPattern は alert-dialog 選択時のみ表示
-      !(componentName === "Button" && key === "alertDialogPattern" && selectedProps.overlayType !== "alert-dialog"),
+      !(componentName === "Button" && key === "alertDialogPattern" && selectedProps.overlayType !== "alert-dialog") &&
+      // Button: icon モード時は text を非表示、text モード時は icon を非表示
+      !(componentName === "Button" && key === "text" && selectedProps.buttonType === "icon") &&
+      !(componentName === "Button" && key === "icon" && selectedProps.buttonType !== "icon"),
   ).map(([key, defaultVal]) => {
     const selectedVal = selectedProps[key];
     // selectedProps の値の型が craftDefaultProps のデフォルト値と一致する場合のみ使用
