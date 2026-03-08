@@ -67,6 +67,7 @@ shadcn/ui の `<Button>` コンポーネントをそのまま出力。
 | overlayType | "none"\|"dialog"\|"alert-dialog"\|"sheet"\|"drawer"\|"popover"\|"dropdown-menu" | "none" | トリガーするオーバーレイ種別 |
 | linkedMocPath | string | "" | オーバーレイコンテンツの .moc パス |
 | sheetSide | "top"\|"right"\|"bottom"\|"left" | "right" | Sheet の出現方向 |
+| alertDialogPattern | "cancel-continue"\|"continue-cancel"\|"yes-no"\|"no-yes"\|"ok-cancel"\|"cancel-ok" | "cancel-continue" | Alert Dialog のボタン配置パターン（overlayType="alert-dialog" 時のみ有効） |
 | overlayWidth | string | "" | オーバーレイの幅 |
 | overlayHeight | string | "" | オーバーレイの高さ |
 | overlayClassName | string | "" | オーバーレイに適用するクラス |
