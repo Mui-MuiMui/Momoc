@@ -684,10 +684,10 @@ function startAbsoluteDrag(
     document.removeEventListener("mouseup", onUp);
     ghost.remove();
 
-    // キャンバスの viewport 要素でドロップ範囲と座標を確認
-    const viewport = document.querySelector("[data-momoc-viewport]");
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
+    // キャンバスエリア（minHeight 付きの zoom スケール div）でドロップ範囲を確認
+    const canvasArea = document.querySelector("[data-momoc-canvas-area]");
+    if (!canvasArea) return;
+    const rect = canvasArea.getBoundingClientRect();
     if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)
       return;
 

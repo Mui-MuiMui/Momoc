@@ -325,6 +325,7 @@ export function EditorCanvas() {
             }}
           >
             <div
+              data-momoc-canvas-area
               ref={canvasScaleRef}
               style={{
                 width: viewportWidth,
