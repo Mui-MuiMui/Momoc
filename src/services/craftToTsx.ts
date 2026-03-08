@@ -436,7 +436,7 @@ const DEFAULT_DROPDOWN_DATA_STR = JSON.stringify([
 
 /** Default prop values to omit from generated TSX */
 const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
-  CraftButton: { buttonType: "text", icon: "", variant: "default", size: "default", disabled: false, text: "Button",
+  CraftButton: { buttonType: "text", icon: "", iconSize: "4", variant: "default", size: "default", disabled: false, text: "Button",
     overlayType: "none", linkedMocPath: "", sheetSide: "right", alertDialogPattern: "cancel-continue", overlayWidth: "", overlayHeight: "", overlayClassName: "", tooltipText: "", tooltipSide: "", toastText: "", toastPosition: "bottom-right" },
   CraftInput: { type: "text", disabled: false, tooltipText: "", tooltipSide: "", tooltipTrigger: "hover" },
   CraftBadge: { variant: "default", text: "Badge", tooltipText: "", tooltipSide: "" },
@@ -1366,8 +1366,9 @@ export function craftStateToTsx(
     if (resolvedName === "CraftButton") {
       const buttonType = node.props?.buttonType as string | undefined;
       const icon = node.props?.icon as string | undefined;
+      const iconSize = (node.props?.iconSize as string | undefined) || "4";
       if (buttonType === "icon" && icon) {
-        rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>\n${pad}  <${icon} className="h-4 w-4" />\n${pad}</${tag}>`;
+        rendered = `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${toastOnClick}${styleAttr}>\n${pad}  <${icon} className="h-${iconSize} w-${iconSize}" />\n${pad}</${tag}>`;
         rendered = wrapWithOverlay(rendered, node.props, pad);
         return applyCommonWrappers(rendered);
       }

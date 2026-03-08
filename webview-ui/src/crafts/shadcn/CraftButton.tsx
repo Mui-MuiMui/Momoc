@@ -43,6 +43,7 @@ interface CraftButtonProps {
   buttonType?: "text" | "icon";
   text?: string;
   icon?: string;
+  iconSize?: string;
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   size?: "default" | "sm" | "lg" | "icon";
   disabled?: boolean;
@@ -66,6 +67,7 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
   buttonType = "text",
   text = "Button",
   icon = "",
+  iconSize = "4",
   variant = "default",
   size = "default",
   disabled = false,
@@ -111,7 +113,7 @@ export const CraftButton: UserComponent<CraftButtonProps> = ({
         disabled={disabled}
         type="button"
       >
-        {buttonType === "icon" && IconComponent ? <IconComponent className="h-4 w-4" /> : renderKbd(text)}
+        {buttonType === "icon" && IconComponent ? <IconComponent className={`h-${iconSize} w-${iconSize}`} /> : renderKbd(text)}
         {linkedMocPath && (
           <span className="ml-1 opacity-60" title={linkedMocPath}>
             &#128279;
@@ -133,6 +135,7 @@ CraftButton.craft = {
     buttonType: "text",
     text: "Button",
     icon: "",
+    iconSize: "4",
     variant: "default",
     size: "default",
     disabled: false,

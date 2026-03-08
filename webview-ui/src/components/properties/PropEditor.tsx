@@ -612,9 +612,10 @@ export function PropEditor() {
       !(componentName === "Typography" && key === "text" && (selectedProps.variant === "ul" || selectedProps.variant === "ol")) &&
       // Button: alertDialogPattern は alert-dialog 選択時のみ表示
       !(componentName === "Button" && key === "alertDialogPattern" && selectedProps.overlayType !== "alert-dialog") &&
-      // Button: icon モード時は text を非表示、text モード時は icon を非表示
+      // Button: icon モード時は text を非表示、text モード時は icon/iconSize を非表示
       !(componentName === "Button" && key === "text" && selectedProps.buttonType === "icon") &&
-      !(componentName === "Button" && key === "icon" && selectedProps.buttonType !== "icon"),
+      !(componentName === "Button" && key === "icon" && selectedProps.buttonType !== "icon") &&
+      !(componentName === "Button" && key === "iconSize" && selectedProps.buttonType !== "icon"),
   ).map(([key, defaultVal]) => {
     const selectedVal = selectedProps[key];
     // selectedProps の値の型が craftDefaultProps のデフォルト値と一致する場合のみ使用
@@ -634,6 +635,31 @@ export function PropEditor() {
   const activeGroups = GROUP_ORDER.filter((g) => (grouped.get(g)?.length ?? 0) > 0);
 
   function renderProp(key: string, value: unknown) {
+    // Custom UI for iconSize (slider) — Button icon mode
+    if (key === "iconSize") {
+      const ICON_SIZE_SCALE = ["2","2.5","3","3.5","4","5","6","7","8","9","10","11","12","14","16","20","24","28","32","36","40","44","48","52","56","60","64","72","80","96"];
+      const currentVal = String(value ?? "4");
+      const idx = Math.max(0, ICON_SIZE_SCALE.indexOf(currentVal));
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">iconSize</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0}
+              max={ICON_SIZE_SCALE.length - 1}
+              value={idx}
+              onChange={(e) => handlePropChange(key, ICON_SIZE_SCALE[Number(e.target.value)])}
+              className="flex-1 accent-[var(--vscode-button-background,#0e639c)]"
+            />
+            <span className="w-10 text-right text-[10px] text-[var(--vscode-foreground,#ccc)]">
+              {ICON_SIZE_SCALE[idx]}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
     // Custom UI for gap (slider)
     if (key === "gap") {
       const GAP_SCALE = ["0","1","2","3","4","5","6","8","10","12","16","20","24"];
