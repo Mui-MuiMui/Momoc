@@ -2553,16 +2553,20 @@ function renderSidebar(
   const headerCollapseMode = (node.props?.headerCollapseMode as string) || "clip";
   const footerCollapseMode = (node.props?.footerCollapseMode as string) || "clip";
 
+  const defaultCollapsed = !!(node.props?.defaultCollapsed);
+
   // ref callback for preview toggle (DOM manipulation, no React state needed)
+  // apply() function handles all state-dependent DOM updates (called on mount for initial state and on click)
   let refAttr = "";
   if (isCollapsible) {
+    const initC = defaultCollapsed ? "true" : "false";
     if (isIconMode) {
       const hdrHide = headerCollapseMode === "hide" ? " const hdr = aside.querySelector('[data-sb-header]'); if (hdr) hdr.style.display = c ? 'none' : '';" : "";
       const ftrHide = footerCollapseMode === "hide" ? " const ftr = aside.querySelector('[data-sb-footer]'); if (ftr) ftr.style.display = c ? 'none' : '';" : "";
-      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; const fw = '${escapeAttr(sidebarWidth)}'; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; const w = c ? '48px' : fw; aside.style.width = w; aside.style.minWidth = w; aside.querySelectorAll('[data-sb-label]').forEach((n: any) => { n.style.display = c ? 'none' : ''; });${hdrHide}${ftrHide} b.querySelectorAll('[data-sb-open-icon]').forEach((i: any) => { i.style.display = c ? '' : 'none'; }); b.querySelectorAll('[data-sb-close-icon]').forEach((i: any) => { i.style.display = c ? 'none' : ''; }); })); }}`;
+      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; const fw = '${escapeAttr(sidebarWidth)}'; let c = ${initC}; const apply = () => { const w = c ? '48px' : fw; aside.style.width = w; aside.style.minWidth = w; aside.querySelectorAll('[data-sb-label]').forEach((n: any) => { n.style.display = c ? 'none' : ''; });${hdrHide}${ftrHide} toggles.forEach((b: any) => { b.querySelectorAll('[data-sb-open-icon]').forEach((i: any) => { i.style.display = c ? '' : 'none'; }); b.querySelectorAll('[data-sb-close-icon]').forEach((i: any) => { i.style.display = c ? 'none' : ''; }); }); }; apply(); toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; apply(); })); }}`;
     } else {
       // offcanvas: hide the aside entirely
-      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; let c = false; toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; aside.style.display = c ? 'none' : ''; b.querySelectorAll('[data-sb-open-icon]').forEach((i: any) => { i.style.display = c ? '' : 'none'; }); b.querySelectorAll('[data-sb-close-icon]').forEach((i: any) => { i.style.display = c ? 'none' : ''; }); })); }}`;
+      refAttr = ` ref={(el: any) => { if (!el || el.__sbInit) return; el.__sbInit = true; const aside = el.querySelector('[data-sb-aside]'); const toggles = el.querySelectorAll('[data-sb-toggle]'); if (!aside || !toggles.length) return; let c = ${initC}; const apply = () => { aside.style.display = c ? 'none' : ''; toggles.forEach((b: any) => { b.querySelectorAll('[data-sb-open-icon]').forEach((i: any) => { i.style.display = c ? '' : 'none'; }); b.querySelectorAll('[data-sb-close-icon]').forEach((i: any) => { i.style.display = c ? 'none' : ''; }); }); }; apply(); toggles.forEach((b: any) => b.addEventListener('click', () => { c = !c; apply(); })); }}`;
     }
   }
 

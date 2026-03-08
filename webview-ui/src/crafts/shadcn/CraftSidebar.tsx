@@ -305,6 +305,7 @@ interface CraftSidebarProps {
   toggleOpenIcon?: string;
   toggleCloseIcon?: string;
   toggleIconSize?: string;
+  defaultCollapsed?: boolean;
   className?: string;
 }
 
@@ -336,6 +337,7 @@ export const CraftSidebar: UserComponent<CraftSidebarProps> = ({
   toggleOpenIcon = "",
   toggleCloseIcon = "",
   toggleIconSize = "4",
+  defaultCollapsed = false,
   className = "",
 }) => {
   const {
@@ -520,6 +522,7 @@ CraftSidebar.craft = {
     toggleOpenIcon: "",
     toggleCloseIcon: "",
     toggleIconSize: "4",
+    defaultCollapsed: false,
     className: "",
   },
   rules: {
