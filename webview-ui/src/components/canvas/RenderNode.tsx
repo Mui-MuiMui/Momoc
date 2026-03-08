@@ -112,11 +112,14 @@ export const RenderNode = React.memo(function RenderNode({
       dom.style.top = nodeTop || "0px";
       dom.style.left = nodeLeft || "0px";
       dom.style.zIndex = nodeZIndex != null ? String(nodeZIndex) : "";
+      // CSS の [data-momoc-absolute-canvas] > * { visibility: hidden } を解除
+      dom.style.visibility = "visible";
     } else {
       dom.style.position = "";
       dom.style.top = "";
       dom.style.left = "";
       dom.style.zIndex = "";
+      dom.style.visibility = "";
     }
   }, [dom, layoutMode, nodeTop, nodeLeft, nodeZIndex, parentIsGroup]);
 

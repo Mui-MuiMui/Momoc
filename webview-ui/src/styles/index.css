@@ -179,3 +179,8 @@ body {
   width: 100vw;
   height: 100vh;
 }
+
+/* 自由配置モードで新規追加されたノードを RenderNode が位置設定するまで非表示にする */
+[data-momoc-absolute-canvas] > * {
+  visibility: hidden;
+}
