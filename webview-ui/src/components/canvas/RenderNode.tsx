@@ -1,6 +1,7 @@
 import { useNode, useEditor } from "@craftjs/core";
 import React, { useEffect, useRef, useCallback } from "react";
 import { useEditorStore } from "../../stores/editorStore";
+import { CraftGroup } from "../../crafts/layout/CraftGroup";
 
 type HandlePosition = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "right" | "bottom";
 
@@ -48,6 +49,17 @@ export const RenderNode = React.memo(function RenderNode({
   const layoutMode = useEditorStore((s) => s.layoutMode);
 
   const { actions: editorActions } = useEditor();
+
+  // 親ノードが CraftGroup かどうか（layoutMode に関わらず常に absolute 配置を適用するため）
+  const { parentIsGroup } = useEditor((state) => {
+    const node = state.nodes[id];
+    if (!node) return { parentIsGroup: false };
+    const parentId = node.data.parent;
+    if (!parentId) return { parentIsGroup: false };
+    const parent = state.nodes[parentId];
+    if (!parent) return { parentIsGroup: false };
+    return { parentIsGroup: parent.data.type === CraftGroup };
+  });
   const handlesRef = useRef<HTMLDivElement[]>([]);
   const resizeStateRef = useRef<{
     startX: number;
@@ -89,10 +101,10 @@ export const RenderNode = React.memo(function RenderNode({
     }
   }, [dom, isActive, isHover, isCanvas]);
 
-  // Apply absolute positioning when layoutMode === "absolute"
+  // Apply absolute positioning when layoutMode === "absolute" OR when inside CraftGroup
   useEffect(() => {
     if (!dom) return;
-    if (layoutMode === "absolute") {
+    if (layoutMode === "absolute" || parentIsGroup) {
       dom.style.position = "absolute";
       dom.style.top = nodeTop || "0px";
       dom.style.left = nodeLeft || "0px";
@@ -103,11 +115,11 @@ export const RenderNode = React.memo(function RenderNode({
       dom.style.left = "";
       dom.style.zIndex = "";
     }
-  }, [dom, layoutMode, nodeTop, nodeLeft, nodeZIndex]);
+  }, [dom, layoutMode, nodeTop, nodeLeft, nodeZIndex, parentIsGroup]);
 
-  // Drag-to-move in absolute mode (active node only)
+  // Drag-to-move in absolute mode (active node only, not inside CraftGroup)
   useEffect(() => {
-    if (!dom || !isActive || layoutMode !== "absolute") return;
+    if (!dom || !isActive || layoutMode !== "absolute" || parentIsGroup) return;
 
     const onMouseDown = (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest("[data-momoc-handle]")) return;
@@ -139,7 +151,7 @@ export const RenderNode = React.memo(function RenderNode({
 
     dom.addEventListener("mousedown", onMouseDown);
     return () => dom.removeEventListener("mousedown", onMouseDown);
-  }, [dom, isActive, layoutMode, editorActions, id]);
+  }, [dom, isActive, layoutMode, editorActions, id, parentIsGroup]);
 
   // Label badge
   useEffect(() => {
