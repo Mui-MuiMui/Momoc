@@ -3035,8 +3035,10 @@ function wrapWithOverlay(rendered: string, props: Record<string, unknown>, pad: 
         `${pad}  </AlertDialogTrigger>`,
         `${pad}  <AlertDialogContent${classAttr}${styleAttr}>`,
         `${pad}    ${contentComment}`,
-        `${pad}    <AlertDialogCancel>Cancel</AlertDialogCancel>`,
-        `${pad}    <AlertDialogAction>Continue</AlertDialogAction>`,
+        `${pad}    <div className="flex justify-end gap-2">`,
+        `${pad}      <AlertDialogCancel>Cancel</AlertDialogCancel>`,
+        `${pad}      <AlertDialogAction>Continue</AlertDialogAction>`,
+        `${pad}    </div>`,
         `${pad}  </AlertDialogContent>`,
         `${pad}</AlertDialog>`,
       ].join("\n");
