@@ -1,5 +1,5 @@
 import { useNode, useEditor } from "@craftjs/core";
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { useEditorStore } from "../../stores/editorStore";
 import { CraftGroup } from "../../crafts/layout/CraftGroup";
 
@@ -104,7 +104,8 @@ export const RenderNode = React.memo(function RenderNode({
   }, [dom, isActive, isHover, isCanvas, parentIsGroup]);
 
   // Apply absolute positioning when layoutMode === "absolute" OR when inside CraftGroup
-  useEffect(() => {
+  // useLayoutEffect でブラウザ描画前に適用し、配置時のちらつきを防止
+  useLayoutEffect(() => {
     if (!dom) return;
     if (layoutMode === "absolute" || parentIsGroup) {
       dom.style.position = "absolute";
