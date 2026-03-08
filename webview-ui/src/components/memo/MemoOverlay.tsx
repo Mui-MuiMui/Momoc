@@ -36,17 +36,15 @@ export function MemoAddButton() {
   };
 
   return (
-    <div className="pointer-events-none absolute right-4 top-2 z-50">
-      <button
-        type="button"
-        onClick={handleAddMemo}
-        className="pointer-events-auto flex items-center gap-1 rounded bg-yellow-500/80 px-2 py-1 text-xs text-black hover:bg-yellow-500"
-        title={t("memo.addNew")}
-      >
-        <Plus size={14} />
-        <StickyNote size={14} />
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={handleAddMemo}
+      className="flex items-center gap-1 rounded bg-yellow-500/80 px-2 py-1 text-xs text-black hover:bg-yellow-500"
+      title={t("memo.addNew")}
+    >
+      <Plus size={14} />
+      <StickyNote size={14} />
+    </button>
   );
 }
 

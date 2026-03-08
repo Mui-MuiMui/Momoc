@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
 import { CraftContainer } from "../../crafts/layout/CraftContainer";
 import { MemoAddButton, MemoStickers } from "../memo/MemoOverlay";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useVscodeMessage } from "../../hooks/useVscodeMessage";
 import { captureViewport } from "../../utils/captureImage";
 import { getVsCodeApi } from "../../utils/vscodeApi";
@@ -33,6 +33,8 @@ export function EditorCanvas() {
   const customViewportHeight = useEditorStore((s) => s.customViewportHeight);
   const zoom = useEditorStore((s) => s.zoom);
   const setZoom = useEditorStore((s) => s.setZoom);
+  const isPropertiesOpen = useEditorStore((s) => s.isPropertiesOpen);
+  const toggleProperties = useEditorStore((s) => s.toggleProperties);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const scrollContentRef = useRef<HTMLDivElement>(null);
@@ -286,7 +288,20 @@ export function EditorCanvas() {
       </div>
 
       {/* Fixed overlays (outside scroll container) */}
-      <MemoAddButton />
+      <div className="pointer-events-none absolute right-4 top-2 z-50 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={toggleProperties}
+          title={t("properties.toggle")}
+          className="pointer-events-auto flex h-7 items-center gap-1 rounded border border-[var(--vscode-panel-border,#454545)] bg-[var(--vscode-editor-background,#1e1e1e)] px-1.5 text-[10px] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)]"
+        >
+          {isPropertiesOpen ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+          <span>props</span>
+        </button>
+        <div className="pointer-events-auto">
+          <MemoAddButton />
+        </div>
+      </div>
 
       {/* Zoom controls - fixed bottom-right, inset to avoid scrollbar overlap */}
       <div className="pointer-events-none absolute bottom-4 right-5 z-50">

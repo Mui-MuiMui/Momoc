@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useEditor, Element } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { paletteItems, resolvers, type ResolverKey } from "../../crafts/resolvers";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import * as Icons from "lucide-react";
+import { useEditorStore } from "../../stores/editorStore";
 
 type SortMode = "category" | "alpha-asc" | "alpha-desc";
 
@@ -25,6 +26,8 @@ type SubCategory = (typeof SUB_CATEGORIES)[number];
 export function ComponentPalette() {
   const { t } = useTranslation();
   const { connectors } = useEditor();
+  const isPaletteOpen = useEditorStore((s) => s.isPaletteOpen);
+  const togglePalette = useEditorStore((s) => s.togglePalette);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>(loadSortMode);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
@@ -72,6 +75,21 @@ export function ComponentPalette() {
 
   const isAlphaMode = sortMode === "alpha-asc" || sortMode === "alpha-desc";
 
+  if (!isPaletteOpen) {
+    return (
+      <div className="flex w-8 flex-col items-center border-r border-[var(--vscode-panel-border,#333)] bg-[var(--vscode-sideBar-background,#252526)] pt-2">
+        <button
+          type="button"
+          onClick={togglePalette}
+          title={t("palette.title")}
+          className="flex h-6 w-6 items-center justify-center rounded text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+        >
+          <ChevronRight size={14} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex w-56 flex-col border-r border-[var(--vscode-panel-border,#333)] bg-[var(--vscode-sideBar-background,#252526)]">
       <div className="border-b border-[var(--vscode-panel-border,#333)] p-2">
@@ -103,6 +121,14 @@ export function ComponentPalette() {
               }`}
             >
               ≡
+            </button>
+            <button
+              type="button"
+              onClick={togglePalette}
+              title={t("palette.collapse")}
+              className="rounded px-1 py-0.5 text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+            >
+              <ChevronLeft size={14} />
             </button>
           </div>
         </div>

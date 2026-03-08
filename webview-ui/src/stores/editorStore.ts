@@ -30,6 +30,8 @@ interface EditorState {
   memos: Memo[];
   zoom: number;
   intent: string;
+  isPaletteOpen: boolean;
+  isPropertiesOpen: boolean;
 
   setLayoutMode: (mode: LayoutMode) => void;
   setThemeMode: (mode: ThemeMode) => void;
@@ -45,6 +47,8 @@ interface EditorState {
   removeMemo: (id: string) => void;
   setZoom: (zoom: number) => void;
   setIntent: (intent: string) => void;
+  togglePalette: () => void;
+  toggleProperties: () => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -60,6 +64,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   memos: [],
   zoom: 1,
   intent: "",
+  isPaletteOpen: true,
+  isPropertiesOpen: true,
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
   setThemeMode: (mode) => set({ themeMode: mode }),
@@ -80,4 +86,6 @@ export const useEditorStore = create<EditorState>((set) => ({
     set((state) => ({ memos: state.memos.filter((m) => m.id !== id) })),
   setZoom: (zoom) => set({ zoom }),
   setIntent: (intent) => set({ intent }),
+  togglePalette: () => set((state) => ({ isPaletteOpen: !state.isPaletteOpen })),
+  toggleProperties: () => set((state) => ({ isPropertiesOpen: !state.isPropertiesOpen })),
 }));

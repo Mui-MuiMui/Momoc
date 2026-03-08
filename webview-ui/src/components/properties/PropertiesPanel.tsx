@@ -2,9 +2,11 @@ import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { PropEditor } from "./PropEditor";
 import { TailwindEditor } from "./TailwindEditor";
+import { useEditorStore } from "../../stores/editorStore";
 
 export function PropertiesPanel() {
   const { t } = useTranslation();
+  const isPropertiesOpen = useEditorStore((s) => s.isPropertiesOpen);
   const { selected, selectedNodeDisplayName } = useEditor((state) => {
     const currentNodeId = state.events.selected?.values().next().value;
     let selectedNodeDisplayName = "";
@@ -20,6 +22,8 @@ export function PropertiesPanel() {
       selectedNodeDisplayName,
     };
   });
+
+  if (!isPropertiesOpen) return null;
 
   return (
     <div className="flex w-64 flex-col border-l border-[var(--vscode-panel-border,#333)] bg-[var(--vscode-sideBar-background,#252526)]">
