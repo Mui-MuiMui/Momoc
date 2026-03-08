@@ -640,6 +640,77 @@ export function ComponentPalette() {
   );
 }
 
+/**
+ * 自由配置モード専用ドラッグ実装。
+ * Craft.js DnD を使わずゴーストを表示し、mouseup 位置でノードを直接 ROOT へ追加する。
+ */
+function startAbsoluteDrag(
+  startEvent: React.MouseEvent,
+  label: string,
+  getTree: () => NodeTree | null,
+  zoom: number,
+  actions: ReturnType<typeof useEditor>["actions"],
+) {
+  startEvent.preventDefault();
+  startEvent.stopPropagation();
+
+  // ゴースト要素を作成
+  const ghost = document.createElement("div");
+  ghost.style.cssText = `
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    background: rgba(33,150,243,0.15);
+    border: 1.5px dashed #2196f3;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: #2196f3;
+    font-family: system-ui, sans-serif;
+    white-space: nowrap;
+    left: ${startEvent.clientX + 10}px;
+    top: ${startEvent.clientY + 10}px;
+  `;
+  ghost.textContent = label;
+  document.body.appendChild(ghost);
+
+  const onMove = (e: MouseEvent) => {
+    ghost.style.left = `${e.clientX + 10}px`;
+    ghost.style.top = `${e.clientY + 10}px`;
+  };
+
+  const onUp = (e: MouseEvent) => {
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+    ghost.remove();
+
+    // キャンバスの viewport 要素でドロップ範囲と座標を確認
+    const viewport = document.querySelector("[data-momoc-viewport]");
+    if (!viewport) return;
+    const rect = viewport.getBoundingClientRect();
+    if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)
+      return;
+
+    const tree = getTree();
+    if (!tree) return;
+
+    // ドロップ位置をキャンバス相対座標に変換（getBoundingClientRect は zoom 後の視覚座標）
+    const x = Math.max(0, Math.round((e.clientX - rect.left) / zoom));
+    const y = Math.max(0, Math.round((e.clientY - rect.top) / zoom));
+
+    const rootNode = tree.nodes[tree.rootNodeId];
+    if (rootNode) {
+      rootNode.data.props.top = `${y}px`;
+      rootNode.data.props.left = `${x}px`;
+    }
+
+    actions.addNodeTree(tree, "ROOT");
+  };
+
+  document.addEventListener("mousemove", onMove);
+  document.addEventListener("mouseup", onUp);
+}
+
 function CustomComponentCard({
   entry,
   connectors,
@@ -649,16 +720,23 @@ function CustomComponentCard({
   connectors: ReturnType<typeof useEditor>["connectors"];
   onContextMenu: (e: React.MouseEvent) => void;
 }) {
+  const { actions } = useEditor();
+  const layoutMode = useEditorStore((s) => s.layoutMode);
+  const zoom = useEditorStore((s) => s.zoom);
+
   return (
     <div
       ref={(ref) => {
-        if (ref) {
-          connectors.create(ref, () => {
-            const tree = buildGroupTreeFromCraftState(entry.craftState);
-            if (!tree) return <div />;
-            return tree;
-          });
-        }
+        if (!ref || layoutMode === "absolute") return;
+        connectors.create(ref, () => {
+          const tree = buildGroupTreeFromCraftState(entry.craftState);
+          if (!tree) return <div />;
+          return tree;
+        });
+      }}
+      onMouseDown={(e) => {
+        if (layoutMode !== "absolute") return;
+        startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState), zoom, actions);
       }}
       onContextMenu={onContextMenu}
       className="flex cursor-grab items-center gap-2 rounded border border-transparent px-2 py-1.5 text-left text-xs text-[var(--vscode-foreground,#ccc)] transition-colors hover:border-[var(--vscode-focusBorder,#007fd4)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)] active:cursor-grabbing"
@@ -676,18 +754,35 @@ function PaletteItemCard({
   item: (typeof paletteItems)[0];
   connectors: ReturnType<typeof useEditor>["connectors"];
 }) {
+  const { query, actions } = useEditor();
+  const layoutMode = useEditorStore((s) => s.layoutMode);
+  const zoom = useEditorStore((s) => s.zoom);
   const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ size?: number }>>)[item.icon];
   const Component = resolvers[item.resolverKey as ResolverKey];
 
   return (
     <div
       ref={(ref) => {
-        if (ref) {
-          connectors.create(
-            ref,
-            <Element is={Component} canvas={item.isCanvas ?? false} {...item.defaultProps} />,
-          );
-        }
+        if (!ref || layoutMode === "absolute") return;
+        connectors.create(
+          ref,
+          <Element is={Component} canvas={item.isCanvas ?? false} {...item.defaultProps} />,
+        );
+      }}
+      onMouseDown={(e) => {
+        if (layoutMode !== "absolute") return;
+        startAbsoluteDrag(
+          e,
+          item.label,
+          () =>
+            query
+              .parseReactElement(
+                <Element is={Component} canvas={item.isCanvas ?? false} {...item.defaultProps} />,
+              )
+              .toNodeTree(),
+          zoom,
+          actions,
+        );
       }}
       className="flex cursor-grab flex-col items-center gap-1 rounded border border-transparent p-2 text-center text-xs text-[var(--vscode-foreground,#ccc)] transition-colors hover:border-[var(--vscode-focusBorder,#007fd4)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)] active:cursor-grabbing"
     >
