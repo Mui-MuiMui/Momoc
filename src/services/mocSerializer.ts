@@ -1,7 +1,9 @@
 import type { MocDocument, MocMetadata, MocEditorData } from "../shared/types.js";
+import { COMPONENT_SCHEMAS, SLOT_COMPONENT_NAMES } from "../shared/componentSchemas.js";
 
 export function serializeMocFile(doc: MocDocument): string {
-  const metadataBlock = serializeMetadata(doc.metadata);
+  const usedComponents = extractUsedComponents(doc.editorData?.craftState);
+  const metadataBlock = serializeMetadata(doc.metadata, usedComponents);
   const parts = [metadataBlock];
 
   if (doc.imports.trim()) {
@@ -21,7 +23,19 @@ export function serializeMocFile(doc: MocDocument): string {
   return result;
 }
 
-function serializeMetadata(metadata: MocMetadata): string {
+function extractUsedComponents(craftState: Record<string, unknown> | undefined): string[] {
+  if (!craftState) return [];
+  const names = new Set<string>();
+  for (const node of Object.values(craftState)) {
+    const resolvedName = (node as { type?: { resolvedName?: string } })?.type?.resolvedName;
+    if (resolvedName && !SLOT_COMPONENT_NAMES.has(resolvedName)) {
+      names.add(resolvedName);
+    }
+  }
+  return [...names].sort();
+}
+
+function serializeMetadata(metadata: MocMetadata, usedComponents: string[]): string {
   const lines: string[] = ["/**"];
 
   // Data structure description prompt for AI agents
@@ -65,6 +79,12 @@ function serializeMetadata(metadata: MocMetadata): string {
   lines.push(" *   各メモは @moc-memo タグで記述され、対象要素IDと指示テキストのペアです。");
   lines.push(" *   AIはこのメモを読み取り、該当要素に対する修正・提案を行ってください。");
   lines.push(" *");
+  lines.push(" * コンポーネントスキーマ（v1.1.0）:");
+  lines.push(" *   @moc-component <コンポーネント名> <propsスキーマJSON>");
+  lines.push(" *   このファイルで使用されているMomocコンポーネントのプロパティ定義です。");
+  lines.push(" *   type: 受け付ける値の型または選択肢（A|B|C形式）、default: デフォルト値。");
+  lines.push(" *   AIはcraftStateの各ノードのpropsをこの定義と照合して解釈してください。");
+  lines.push(" *");
   lines.push(" * TSX内コメント規約:");
   lines.push(" *   @moc-node <nodeID>  - Craft.jsノードとの対応付け");
   lines.push(" *   @moc-role <役割>     - 要素の役割説明");
@@ -76,6 +96,13 @@ function serializeMetadata(metadata: MocMetadata): string {
   lines.push(` * @moc-theme ${metadata.theme}`);
   lines.push(` * @moc-layout ${metadata.layout}`);
   lines.push(` * @moc-viewport ${metadata.viewport}`);
+
+  for (const name of usedComponents) {
+    const schema = COMPONENT_SCHEMAS[name];
+    if (schema) {
+      lines.push(` * @moc-component ${name} ${JSON.stringify(schema)}`);
+    }
+  }
 
   lines.push(" */");
 

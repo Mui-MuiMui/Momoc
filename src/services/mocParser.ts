@@ -35,13 +35,29 @@ function parseMetadata(content: string): MocMetadata {
 
   const comment = commentMatch[0];
   const tags: Record<string, string> = {};
+  const componentEntries: Array<[string, { displayName: string; props: Record<string, { type: string; default: unknown }> }]> = [];
 
   let match;
   const tagRegex = new RegExp(MOC_TAG_REGEX.source, "g");
   while ((match = tagRegex.exec(comment)) !== null) {
     const key = match[1];
     const value = match[2].trim();
-    if (key !== "memo") {
+    if (key === "memo") {
+      // handled below
+    } else if (key === "component") {
+      // @moc-component <Name> <JSON>
+      const spaceIdx = value.indexOf(" ");
+      if (spaceIdx !== -1) {
+        const name = value.slice(0, spaceIdx);
+        const json = value.slice(spaceIdx + 1);
+        try {
+          const schema = JSON.parse(json) as { displayName: string; props: Record<string, { type: string; default: unknown }> };
+          componentEntries.push([name, schema]);
+        } catch {
+          // invalid JSON: ignore
+        }
+      }
+    } else {
       tags[key] = value;
     }
   }
@@ -58,6 +74,10 @@ function parseMetadata(content: string): MocMetadata {
   const theme = tags["theme"] === "dark" ? "dark" : DEFAULT_METADATA.theme;
   const layout = tags["layout"] === "absolute" ? "absolute" : DEFAULT_METADATA.layout;
 
+  const componentSchemas = componentEntries.length > 0
+    ? Object.fromEntries(componentEntries)
+    : undefined;
+
   return {
     version: tags["version"] || MOC_VERSION,
     intent: tags["intent"] || "",
@@ -67,6 +87,7 @@ function parseMetadata(content: string): MocMetadata {
     memos,
     craftState: tags["craft-state"] || undefined,
     selection: undefined,
+    componentSchemas,
   };
 }
 

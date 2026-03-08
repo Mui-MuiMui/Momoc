@@ -226,6 +226,171 @@ const __mocEditorData = \`
     });
   });
 
+  describe("@moc-component tags (v1.1.0)", () => {
+    it("should output @moc-component tags for components in craftState", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.1.0",
+          intent: "Component schema test",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+        editorData: {
+          craftState: {
+            ROOT: {
+              type: { resolvedName: "CraftContainer" },
+              props: {},
+              nodes: ["btn1"],
+              linkedNodes: {},
+              parent: null,
+            },
+            btn1: {
+              type: { resolvedName: "CraftButton" },
+              props: { text: "Click me" },
+              nodes: [],
+              linkedNodes: {},
+              parent: "ROOT",
+            },
+          },
+          memos: [],
+        },
+      };
+
+      const content = serializeMocFile(doc);
+
+      expect(content).toContain("@moc-component CraftButton");
+      expect(content).toContain("@moc-component CraftContainer");
+      // JSON should include displayName and props
+      expect(content).toContain('"displayName":"Button"');
+      expect(content).toContain('"displayName":"Container"');
+    });
+
+    it("should not output @moc-component tags for slot components", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.1.0",
+          intent: "Slot exclusion test",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+        editorData: {
+          craftState: {
+            ROOT: {
+              type: { resolvedName: "CraftContainer" },
+              props: {},
+              nodes: ["slot1"],
+              linkedNodes: {},
+              parent: null,
+            },
+            slot1: {
+              type: { resolvedName: "TableCellSlot" },
+              props: {},
+              nodes: [],
+              linkedNodes: {},
+              parent: "ROOT",
+            },
+          },
+          memos: [],
+        },
+      };
+
+      const content = serializeMocFile(doc);
+
+      expect(content).not.toContain("@moc-component TableCellSlot");
+      expect(content).toContain("@moc-component CraftContainer");
+    });
+
+    it("should not output @moc-component tags when no editorData", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.1.0",
+          intent: "No editor data",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+      };
+
+      const content = serializeMocFile(doc);
+
+      // 実際のタグ行（` * @moc-component Name {`）は存在しないこと
+      // 説明ブロックの `*   @moc-component` は除外してチェック
+      expect(content).not.toMatch(/ \* @moc-component \w/);
+    });
+
+    it("should output @moc-version 1.1.0 by default", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.1.0",
+          intent: "",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+      };
+
+      const content = serializeMocFile(doc);
+      expect(content).toContain("@moc-version 1.1.0");
+    });
+
+    it("should output @moc-component as valid JSON", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.1.0",
+          intent: "",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+        editorData: {
+          craftState: {
+            ROOT: {
+              type: { resolvedName: "CraftButton" },
+              props: {},
+              nodes: [],
+              linkedNodes: {},
+              parent: null,
+            },
+          },
+          memos: [],
+        },
+      };
+
+      const content = serializeMocFile(doc);
+
+      // Extract the @moc-component line and verify the JSON part is valid
+      const match = content.match(/ \* @moc-component CraftButton (.+)/);
+      expect(match).not.toBeNull();
+      const json = match![1];
+      expect(() => JSON.parse(json)).not.toThrow();
+      const parsed = JSON.parse(json);
+      expect(parsed.displayName).toBe("Button");
+      expect(parsed.props).toBeDefined();
+    });
+  });
+
   describe("updateMetadataField", () => {
     it("should update an existing field", () => {
       const content = `/**

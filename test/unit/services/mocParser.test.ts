@@ -115,7 +115,7 @@ describe("mocParser", () => {
 `;
       const doc = parseMocFile(content);
 
-      expect(doc.metadata.version).toBe("1.0.0");
+      expect(doc.metadata.version).toBe("1.1.0");
       expect(doc.metadata.memos).toHaveLength(0);
       expect(doc.tsxSource).toContain("export default function Test()");
     });
@@ -188,6 +188,86 @@ describe("mocParser", () => {
       expect(doc.editorData).toBeDefined();
       const root = doc.editorData!.craftState.ROOT as { props: Record<string, unknown> };
       expect(root.props.className).toBe("test with ` backtick and ${expr}");
+    });
+  });
+
+  describe("@moc-component tag (v1.1.0)", () => {
+    it("should parse @moc-component tags into componentSchemas", () => {
+      const schema = JSON.stringify({
+        displayName: "Button",
+        props: {
+          text: { type: "string", default: "Button" },
+          variant: { type: "default|destructive|outline", default: "default" },
+        },
+      });
+      const content = [
+        "/**",
+        " * @moc-version 1.1.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        ` * @moc-component CraftButton ${schema}`,
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(doc.metadata.componentSchemas).toBeDefined();
+      expect(doc.metadata.componentSchemas!["CraftButton"]).toBeDefined();
+      expect(doc.metadata.componentSchemas!["CraftButton"].displayName).toBe("Button");
+      expect(doc.metadata.componentSchemas!["CraftButton"].props.text.type).toBe("string");
+      expect(doc.metadata.componentSchemas!["CraftButton"].props.variant.default).toBe("default");
+    });
+
+    it("should parse multiple @moc-component tags", () => {
+      const btnSchema = JSON.stringify({ displayName: "Button", props: { text: { type: "string", default: "Button" } } });
+      const cardSchema = JSON.stringify({ displayName: "Card", props: { title: { type: "string", default: "Card Title" } } });
+      const content = [
+        "/**",
+        " * @moc-version 1.1.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        ` * @moc-component CraftButton ${btnSchema}`,
+        ` * @moc-component CraftCard ${cardSchema}`,
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(Object.keys(doc.metadata.componentSchemas!)).toHaveLength(2);
+      expect(doc.metadata.componentSchemas!["CraftButton"].displayName).toBe("Button");
+      expect(doc.metadata.componentSchemas!["CraftCard"].displayName).toBe("Card");
+    });
+
+    it("should ignore @moc-component tags with invalid JSON", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.1.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " * @moc-component CraftButton {invalid json}",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(doc.metadata.componentSchemas).toBeUndefined();
+    });
+
+    it("should return undefined componentSchemas when no @moc-component tags present", () => {
+      const doc = parseMocFile(sampleMoc);
+      expect(doc.metadata.componentSchemas).toBeUndefined();
     });
   });
 

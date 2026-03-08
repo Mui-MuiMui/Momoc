@@ -7,6 +7,8 @@ export interface MocMetadata {
   memos: MocMemo[];
   craftState?: string;
   selection?: SelectionContext;
+  /** v1.1.0: ファイル内で使用されているコンポーネントのスキーマ（パース結果） */
+  componentSchemas?: Record<string, { displayName: string; props: Record<string, { type: string; default: unknown }> }>;
 }
 
 export interface MocMemo {
