@@ -61,6 +61,16 @@ export type LayoutMode = "flow" | "absolute";
 export type ThemeMode = "light" | "dark";
 export type ViewportMode = "desktop" | "tablet" | "mobile";
 
+/** カスタムコンポーネントのエントリ（workspaceState に保存） */
+export interface CustomComponentEntry {
+  id: string;
+  name: string;
+  path: string;
+  craftState: string;
+  layoutMode: string;
+  importedAt: number;
+}
+
 // ---------------------------------------------------------------------------
 // postMessage 型定義 (Extension ↔ Webview)
 // ---------------------------------------------------------------------------

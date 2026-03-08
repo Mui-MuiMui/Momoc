@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "node:path";
+import * as crypto from "node:crypto";
 import { compileTsx } from "../services/esbuildService.js";
 import {
   isProjectInitialized,
@@ -10,7 +11,7 @@ import {
 import { parseMocFile } from "../services/mocParser.js";
 import { serializeMocFile } from "../services/mocSerializer.js";
 import { craftStateToTsx } from "../services/craftToTsx.js";
-import type { MocDocument, MocEditorData, ExtensionToWebviewMessage, WebviewToExtensionMessage } from "../shared/types.js";
+import type { MocDocument, MocEditorData, ExtensionToWebviewMessage, WebviewToExtensionMessage, CustomComponentEntry } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
 export class MocEditorProvider implements vscode.CustomTextEditorProvider {
@@ -466,6 +467,194 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
 
       case "editor:ready":
         break;
+
+      case "customComponent:getAll": {
+        const entries = this.context.workspaceState.get<CustomComponentEntry[]>("customComponents", []);
+        webviewPanel.webview.postMessage({
+          type: "customComponent:all",
+          payload: entries,
+        } satisfies ExtensionToWebviewMessage);
+        break;
+      }
+
+      case "customComponent:import": {
+        const result = await vscode.window.showOpenDialog({
+          canSelectFiles: true,
+          canSelectFolders: false,
+          canSelectMany: false,
+          filters: { "Moc Files": ["moc"] },
+        });
+        if (!result || !result[0]) break;
+
+        const selectedUri = result[0];
+        // 自己参照チェック
+        if (selectedUri.fsPath === document.uri.fsPath) {
+          webviewPanel.webview.postMessage({
+            type: "customComponent:importResult",
+            payload: { error: "現在開いているファイルは埋め込めません。" },
+          } satisfies ExtensionToWebviewMessage);
+          break;
+        }
+
+        try {
+          const content = new TextDecoder().decode(await vscode.workspace.fs.readFile(selectedUri));
+          const mocDoc = parseMocFile(content);
+
+          if (mocDoc.metadata.layout !== "absolute") {
+            webviewPanel.webview.postMessage({
+              type: "customComponent:importResult",
+              payload: { error: "フローモードの .moc ファイルは埋め込めません。自由配置モードのファイルを選択してください。" },
+            } satisfies ExtensionToWebviewMessage);
+            break;
+          }
+
+          const craftState = mocDoc.editorData?.craftState;
+          if (!craftState) {
+            webviewPanel.webview.postMessage({
+              type: "customComponent:importResult",
+              payload: { error: "エディタデータが見つかりませんでした。" },
+            } satisfies ExtensionToWebviewMessage);
+            break;
+          }
+
+          const fileName = path.basename(selectedUri.fsPath, ".moc");
+          const entry: CustomComponentEntry = {
+            id: crypto.randomUUID(),
+            name: fileName,
+            path: selectedUri.fsPath,
+            craftState: JSON.stringify(craftState),
+            layoutMode: mocDoc.metadata.layout,
+            importedAt: Date.now(),
+          };
+
+          const entries = this.context.workspaceState.get<CustomComponentEntry[]>("customComponents", []);
+          entries.push(entry);
+          await this.context.workspaceState.update("customComponents", entries);
+
+          webviewPanel.webview.postMessage({
+            type: "customComponent:importResult",
+            payload: entry,
+          } satisfies ExtensionToWebviewMessage);
+        } catch (err) {
+          webviewPanel.webview.postMessage({
+            type: "customComponent:importResult",
+            payload: { error: `読み込みに失敗しました: ${err instanceof Error ? err.message : String(err)}` },
+          } satisfies ExtensionToWebviewMessage);
+        }
+        break;
+      }
+
+      case "customComponent:reload": {
+        const { id } = message.payload;
+        const entries = this.context.workspaceState.get<CustomComponentEntry[]>("customComponents", []);
+        const idx = entries.findIndex((e) => e.id === id);
+        if (idx === -1) {
+          webviewPanel.webview.postMessage({
+            type: "customComponent:reloadResult",
+            payload: { id, entry: null },
+          } satisfies ExtensionToWebviewMessage);
+          break;
+        }
+
+        try {
+          const fileUri = vscode.Uri.file(entries[idx].path);
+          const content = new TextDecoder().decode(await vscode.workspace.fs.readFile(fileUri));
+          const mocDoc = parseMocFile(content);
+          const craftState = mocDoc.editorData?.craftState;
+          if (craftState) {
+            entries[idx] = { ...entries[idx], craftState: JSON.stringify(craftState) };
+            await this.context.workspaceState.update("customComponents", entries);
+          }
+          webviewPanel.webview.postMessage({
+            type: "customComponent:reloadResult",
+            payload: { id, entry: entries[idx] },
+          } satisfies ExtensionToWebviewMessage);
+        } catch {
+          webviewPanel.webview.postMessage({
+            type: "customComponent:reloadResult",
+            payload: { id, entry: null },
+          } satisfies ExtensionToWebviewMessage);
+        }
+        break;
+      }
+
+      case "customComponent:remove": {
+        const { id } = message.payload;
+        const entries = this.context.workspaceState.get<CustomComponentEntry[]>("customComponents", []);
+        const filtered = entries.filter((e) => e.id !== id);
+        await this.context.workspaceState.update("customComponents", filtered);
+        webviewPanel.webview.postMessage({
+          type: "customComponent:removeResult",
+          payload: { id },
+        } satisfies ExtensionToWebviewMessage);
+        break;
+      }
+
+      case "customComponent:updatePath": {
+        const { id } = message.payload;
+        const entries = this.context.workspaceState.get<CustomComponentEntry[]>("customComponents", []);
+        const idx = entries.findIndex((e) => e.id === id);
+        if (idx === -1) {
+          webviewPanel.webview.postMessage({
+            type: "customComponent:updatePathResult",
+            payload: { id, entry: null },
+          } satisfies ExtensionToWebviewMessage);
+          break;
+        }
+
+        const result = await vscode.window.showOpenDialog({
+          canSelectFiles: true,
+          canSelectFolders: false,
+          canSelectMany: false,
+          filters: { "Moc Files": ["moc"] },
+        });
+        if (!result || !result[0]) break;
+
+        try {
+          const selectedUri = result[0];
+          const content = new TextDecoder().decode(await vscode.workspace.fs.readFile(selectedUri));
+          const mocDoc = parseMocFile(content);
+
+          if (mocDoc.metadata.layout !== "absolute") {
+            webviewPanel.webview.postMessage({
+              type: "customComponent:updatePathResult",
+              payload: { id, entry: null },
+            } satisfies ExtensionToWebviewMessage);
+            vscode.window.showErrorMessage("フローモードの .moc ファイルは使用できません。");
+            break;
+          }
+
+          const craftState = mocDoc.editorData?.craftState;
+          if (!craftState) {
+            webviewPanel.webview.postMessage({
+              type: "customComponent:updatePathResult",
+              payload: { id, entry: null },
+            } satisfies ExtensionToWebviewMessage);
+            break;
+          }
+
+          const fileName = path.basename(selectedUri.fsPath, ".moc");
+          entries[idx] = {
+            ...entries[idx],
+            name: fileName,
+            path: selectedUri.fsPath,
+            craftState: JSON.stringify(craftState),
+            layoutMode: mocDoc.metadata.layout,
+          };
+          await this.context.workspaceState.update("customComponents", entries);
+
+          webviewPanel.webview.postMessage({
+            type: "customComponent:updatePathResult",
+            payload: { id, entry: entries[idx] },
+          } satisfies ExtensionToWebviewMessage);
+        } catch {
+          webviewPanel.webview.postMessage({
+            type: "customComponent:updatePathResult",
+            payload: { id, entry: null },
+          } satisfies ExtensionToWebviewMessage);
+        }
+        break;
+      }
     }
   }
 

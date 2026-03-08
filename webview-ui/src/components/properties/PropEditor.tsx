@@ -327,7 +327,7 @@ const FLOW_KEYS = new Set([
 ]);
 
 /** 自由配置専用プロパティ — layoutMode === "absolute" のみ表示 */
-const ABSOLUTE_KEYS = new Set(["top", "left"]);
+const ABSOLUTE_KEYS = new Set(["top", "left", "zIndex"]);
 
 /** 共通/フロー/自由配置 以外はコンポーネント固有として扱う */
 const LAYOUT_ALL_KEYS = new Set([...COMMON_KEYS, ...FLOW_KEYS, ...ABSOLUTE_KEYS]);
@@ -344,6 +344,7 @@ const FLOW_DEFAULTS: Record<string, unknown> = {
 const ABSOLUTE_DEFAULTS: Record<string, unknown> = {
   top: "0px",
   left: "0px",
+  zIndex: 0,
 };
 
 /**

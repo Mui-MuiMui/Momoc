@@ -5,6 +5,16 @@
  * src/shared/types.ts の同名型と同一内容を保つこと（デュアル定義）。
  */
 
+/** カスタムコンポーネントのエントリ（src/shared/types.ts と同一） */
+export interface CustomComponentEntry {
+  id: string;
+  name: string;
+  path: string;
+  craftState: string;
+  layoutMode: string;
+  importedAt: number;
+}
+
 // SelectionContext (src/shared/types.ts と同一)
 export interface SelectionContext {
   componentType: string;
@@ -30,7 +40,12 @@ export type ExtensionToWebviewMessage =
   | { type: "resolve:imageUri:result"; payload: { src: string; uri: string } }
   | { type: "browse:mocFile:result"; payload: { relativePath: string; targetProp?: string } }
   | { type: "browse:imageFile:result"; payload: { relativePath: string; targetProp?: string } }
-  | { type: "resolve:mocFile:result"; payload: { path: string; exists: boolean } };
+  | { type: "resolve:mocFile:result"; payload: { path: string; exists: boolean } }
+  | { type: "customComponent:importResult"; payload: CustomComponentEntry | { error: string } }
+  | { type: "customComponent:all"; payload: CustomComponentEntry[] }
+  | { type: "customComponent:reloadResult"; payload: { id: string; entry: CustomComponentEntry | null } }
+  | { type: "customComponent:removeResult"; payload: { id: string } }
+  | { type: "customComponent:updatePathResult"; payload: { id: string; entry: CustomComponentEntry | null } };
 
 /** Webview → Extension */
 export type WebviewToExtensionMessage =
@@ -46,4 +61,9 @@ export type WebviewToExtensionMessage =
   | { type: "resolve:imageUri"; payload: { src: string } }
   | { type: "browse:mocFile"; payload: { currentPath?: string; targetProp?: string } }
   | { type: "browse:imageFile"; payload: { currentPath?: string; targetProp?: string } }
-  | { type: "resolve:mocFile"; payload: { path: string } };
+  | { type: "resolve:mocFile"; payload: { path: string } }
+  | { type: "customComponent:import" }
+  | { type: "customComponent:reload"; payload: { id: string } }
+  | { type: "customComponent:remove"; payload: { id: string } }
+  | { type: "customComponent:getAll" }
+  | { type: "customComponent:updatePath"; payload: { id: string } };

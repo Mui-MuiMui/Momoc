@@ -1,4 +1,4 @@
-import type { SelectionContext, ThemeMode } from "./types.js";
+import type { SelectionContext, ThemeMode, CustomComponentEntry } from "./types.js";
 
 export type ExtToWebMessage =
   | { type: "doc:load"; payload: { content: string; fileName: string } }
@@ -14,7 +14,12 @@ export type ExtToWebMessage =
   | { type: "capture:start" }
   | { type: "resolve:imageUri:result"; payload: { src: string; uri: string } }
   | { type: "resolve:mocFile:result"; payload: { path: string; exists: boolean } }
-  | { type: "browse:mocFile:result"; payload: { relativePath: string; targetProp?: string } };
+  | { type: "browse:mocFile:result"; payload: { relativePath: string; targetProp?: string } }
+  | { type: "customComponent:importResult"; payload: CustomComponentEntry | { error: string } }
+  | { type: "customComponent:all"; payload: CustomComponentEntry[] }
+  | { type: "customComponent:reloadResult"; payload: { id: string; entry: CustomComponentEntry | null } }
+  | { type: "customComponent:removeResult"; payload: { id: string } }
+  | { type: "customComponent:updatePathResult"; payload: { id: string; entry: CustomComponentEntry | null } };
 
 export type WebToExtMessage =
   | { type: "doc:save"; payload: { content: string } }
@@ -35,4 +40,9 @@ export type WebToExtMessage =
   | { type: "capture:error"; payload: { error: string } }
   | { type: "resolve:imageUri"; payload: { src: string } }
   | { type: "resolve:mocFile"; payload: { path: string } }
-  | { type: "browse:mocFile"; payload: { currentPath?: string; targetProp?: string } };
+  | { type: "browse:mocFile"; payload: { currentPath?: string; targetProp?: string } }
+  | { type: "customComponent:import" }
+  | { type: "customComponent:reload"; payload: { id: string } }
+  | { type: "customComponent:remove"; payload: { id: string } }
+  | { type: "customComponent:getAll" }
+  | { type: "customComponent:updatePath"; payload: { id: string } };

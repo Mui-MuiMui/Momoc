@@ -31,6 +31,7 @@ export const RenderNode = React.memo(function RenderNode({
     noResize,
     nodeTop,
     nodeLeft,
+    nodeZIndex,
   } = useNode((node) => ({
     isActive: node.events.selected,
     isHover: node.events.hovered,
@@ -41,6 +42,7 @@ export const RenderNode = React.memo(function RenderNode({
     noResize: !!(node.data.custom as Record<string, unknown>)?.noResize,
     nodeTop: (node.data.props as Record<string, unknown>)?.top as string | undefined,
     nodeLeft: (node.data.props as Record<string, unknown>)?.left as string | undefined,
+    nodeZIndex: (node.data.props as Record<string, unknown>)?.zIndex as number | undefined,
   }));
 
   const layoutMode = useEditorStore((s) => s.layoutMode);
@@ -94,12 +96,14 @@ export const RenderNode = React.memo(function RenderNode({
       dom.style.position = "absolute";
       dom.style.top = nodeTop || "0px";
       dom.style.left = nodeLeft || "0px";
+      dom.style.zIndex = nodeZIndex != null ? String(nodeZIndex) : "";
     } else {
       dom.style.position = "";
       dom.style.top = "";
       dom.style.left = "";
+      dom.style.zIndex = "";
     }
-  }, [dom, layoutMode, nodeTop, nodeLeft]);
+  }, [dom, layoutMode, nodeTop, nodeLeft, nodeZIndex]);
 
   // Drag-to-move in absolute mode (active node only)
   useEffect(() => {

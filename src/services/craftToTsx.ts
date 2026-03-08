@@ -42,6 +42,11 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["className"],
     isContainer: true,
   },
+  CraftGroup: {
+    tag: "div",
+    propsMap: ["className"],
+    isContainer: true,
+  },
   CraftDiv: {
     tag: "div",
     propsMap: ["className"],
@@ -449,6 +454,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftContainer: {
     display: "flex", flexDirection: "column", gap: "4", gridCols: 3, contextMenuMocPath: "", linkedMocPath: "",
   },
+  CraftGroup: { className: "", width: "200px", height: "200px" },
   CraftDiv: { contextMenuMocPath: "" },
   // Phase 1
   CraftAccordion: { items: "Item 1,Item 2,Item 3", type: "single", linkedMocPaths: "" },
@@ -1025,6 +1031,9 @@ export function craftStateToTsx(
     if (resolvedName === "CraftFreeCanvas") {
       containerClass = "relative";
     }
+    if (resolvedName === "CraftGroup") {
+      containerClass = "relative";
+    }
 
     // Merge className
     const userClassName = (node.props?.className as string) || "";
@@ -1534,6 +1543,7 @@ function buildStyleAttr(props: Record<string, unknown>, extraStyles?: Record<str
   const objectFit = props?.objectFit as string | undefined;
   const top = props?.top as string | undefined;
   const left = props?.left as string | undefined;
+  const zIndex = props?.zIndex as number | undefined;
   const parts: string[] = [];
   if (extraStyles) {
     for (const [k, v] of Object.entries(extraStyles)) parts.push(`${k}: "${v}"`);
@@ -1544,6 +1554,7 @@ function buildStyleAttr(props: Record<string, unknown>, extraStyles?: Record<str
   if (top || left) parts.push(`position: "absolute"`);
   if (top) parts.push(`top: "${top}"`);
   if (left) parts.push(`left: "${left}"`);
+  if (zIndex) parts.push(`zIndex: ${zIndex}`);
   if (parts.length === 0) return "";
   return ` style={{ ${parts.join(", ")} }}`;
 }

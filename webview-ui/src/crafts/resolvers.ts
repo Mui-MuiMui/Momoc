@@ -4,6 +4,7 @@ import { CraftPlaceholderImage } from "./html/CraftPlaceholderImage";
 import { CraftImage } from "./html/CraftImage";
 import { CraftContainer } from "./layout/CraftContainer";
 import { CraftFreeCanvas } from "./layout/CraftFreeCanvas";
+import { CraftGroup } from "./layout/CraftGroup";
 import { CraftButton } from "./shadcn/CraftButton";
 import { CraftInput } from "./shadcn/CraftInput";
 import { CraftCard } from "./shadcn/CraftCard";
@@ -56,6 +57,7 @@ export const resolvers = {
   CraftImage,
   CraftContainer,
   CraftFreeCanvas,
+  CraftGroup,
   CraftButton,
   CraftInput,
   CraftCard,
@@ -144,6 +146,15 @@ export const paletteItems: PaletteItem[] = [
     label: "Free Canvas",
     category: "layout",
     icon: "Move",
+    defaultProps: {},
+    isCanvas: true,
+    enabled: true,
+  },
+  {
+    resolverKey: "CraftGroup",
+    label: "Group",
+    category: "layout",
+    icon: "Group",
     defaultProps: {},
     isCanvas: true,
     enabled: true,
