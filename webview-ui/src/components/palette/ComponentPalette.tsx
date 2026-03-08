@@ -137,66 +137,80 @@ export function ComponentPalette() {
           </div>
         ) : (
           // カテゴリ順表示
-          categories.map((cat) => {
-            const catItems = filteredItems.filter((i) => i.category === cat.key);
-            if (catItems.length === 0) return null;
-
-            return (
-              <div key={cat.key} className="mb-1">
-                <button
-                  type="button"
-                  onClick={() => toggleCategory(cat.key)}
-                  className="flex w-full items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--vscode-sideBarSectionHeader-foreground,#bbb)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
-                >
-                  <span className={`transition-transform ${expandedCategories[cat.key] ? "rotate-90" : ""}`}>
-                    ▶
-                  </span>
-                  {cat.label}
-                </button>
-
-                {expandedCategories[cat.key] && (
-                  cat.key === "shadcn" ? (
-                    // shadcn は中カテゴリでグループ化
-                    <div className="ml-2">
-                      {SUB_CATEGORIES.map((sub) => {
-                        const subItems = catItems.filter((i) => i.subCategory === sub);
-                        if (subItems.length === 0) return null;
-                        const subKey = `shadcn:${sub}`;
-                        const subLabel = t(`palette.sub.${sub}`);
-                        return (
-                          <div key={sub} className="mb-0.5">
-                            <button
-                              type="button"
-                              onClick={() => toggleSubCategory(subKey)}
-                              className="flex w-full items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-[var(--vscode-foreground,#aaa)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
-                            >
-                              <span className={`text-[9px] transition-transform ${expandedSubCategories[subKey] ? "rotate-90" : ""}`}>
-                                ▶
-                              </span>
-                              {subLabel}
-                            </button>
-                            {expandedSubCategories[subKey] && (
-                              <div className="grid grid-cols-2 gap-1 px-1 py-1">
-                                {subItems.map((item) => (
-                                  <PaletteItemCard key={item.resolverKey} item={item} connectors={connectors} />
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-1 px-1 py-1">
-                      {catItems.map((item) => (
-                        <PaletteItemCard key={item.resolverKey} item={item} connectors={connectors} />
-                      ))}
-                    </div>
-                  )
-                )}
-              </div>
+          (() => {
+            const visibleCats = categories.filter(
+              (cat) => filteredItems.filter((i) => i.category === cat.key).length > 0,
             );
-          })
+            return visibleCats.map((cat, catIdx) => {
+              const catItems = filteredItems.filter((i) => i.category === cat.key);
+
+              return (
+                <div key={cat.key} className={catIdx > 0 ? "mt-3" : ""}>
+                  {catIdx > 0 && (
+                    <hr className="mb-2 border-[var(--vscode-panel-border,#333)]" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(cat.key)}
+                    className="flex w-full items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--vscode-sideBarSectionHeader-foreground,#bbb)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+                  >
+                    <span className={`transition-transform ${expandedCategories[cat.key] ? "rotate-90" : ""}`}>
+                      ▶
+                    </span>
+                    {cat.label}
+                  </button>
+
+                  {expandedCategories[cat.key] && (
+                    cat.key === "shadcn" ? (
+                      // shadcn は中カテゴリでグループ化
+                      <div className="ml-2">
+                        {(() => {
+                          const visibleSubs = SUB_CATEGORIES.filter(
+                            (sub) => catItems.filter((i) => i.subCategory === sub).length > 0,
+                          );
+                          return visibleSubs.map((sub, subIdx) => {
+                            const subItems = catItems.filter((i) => i.subCategory === sub);
+                            const subKey = `shadcn:${sub}`;
+                            const subLabel = t(`palette.sub.${sub}`);
+                            return (
+                              <div key={sub} className={subIdx > 0 ? "mt-2" : ""}>
+                                {subIdx > 0 && (
+                                  <hr className="mb-1.5 border-[var(--vscode-panel-border,#2a2a2a)]" />
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSubCategory(subKey)}
+                                  className="flex w-full items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-[var(--vscode-foreground,#aaa)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+                                >
+                                  <span className={`text-[9px] transition-transform ${expandedSubCategories[subKey] ? "rotate-90" : ""}`}>
+                                    ▶
+                                  </span>
+                                  {subLabel}
+                                </button>
+                                {expandedSubCategories[subKey] && (
+                                  <div className="grid grid-cols-2 gap-1 px-1 py-1">
+                                    {subItems.map((item) => (
+                                      <PaletteItemCard key={item.resolverKey} item={item} connectors={connectors} />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-1 px-1 py-1">
+                        {catItems.map((item) => (
+                          <PaletteItemCard key={item.resolverKey} item={item} connectors={connectors} />
+                        ))}
+                      </div>
+                    )
+                  )}
+                </div>
+              );
+            });
+          })()
         )}
       </div>
     </div>
