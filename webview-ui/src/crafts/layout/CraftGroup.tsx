@@ -41,7 +41,7 @@ CraftGroup.craft = {
   rules: {
     canDrag: () => true,
     canDrop: () => true,
-    canMoveIn: () => true,
+    canMoveIn: () => false,
     canMoveOut: () => true,
   },
 };
