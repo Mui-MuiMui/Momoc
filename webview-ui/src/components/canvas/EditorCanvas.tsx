@@ -36,28 +36,35 @@ function AbsoluteDropPositioner({
 }: {
   canvasRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const lastMousePos = useRef({ x: 0, y: 0 });
+  // ドロップ瞬間（mouseup）の座標をキャンバス相対で保存
+  // mouseup 時点でキャンバス rect を計算して保存することで、
+  // Craft.js の後処理でキャンバスが動いても正確な座標を維持する
+  const lastDropCanvasPos = useRef({ x: 0, y: 0 });
   const prevNodeIdsRef = useRef<Set<string>>(new Set());
   const zoom = useEditorStore((s) => s.zoom);
   const layoutMode = useEditorStore((s) => s.layoutMode);
   const { nodes, actions } = useEditor((state) => ({ nodes: state.nodes }));
 
-  // マウス座標を常時追跡
+  // mouseup 時点でキャンバス相対座標を即座に計算・保存
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      lastMousePos.current = { x: e.clientX, y: e.clientY };
+    const onMouseUp = (e: MouseEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      lastDropCanvasPos.current = {
+        x: Math.max(0, Math.round((e.clientX - rect.left) / zoom)),
+        y: Math.max(0, Math.round((e.clientY - rect.top) / zoom)),
+      };
     };
-    document.addEventListener("mousemove", onMove);
-    return () => document.removeEventListener("mousemove", onMove);
-  }, []);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => document.removeEventListener("mouseup", onMouseUp);
+  }, [canvasRef, zoom]);
 
   // 新規ノードを検出してドロップ座標を設定
   useEffect(() => {
     const currentIds = new Set(Object.keys(nodes));
 
     if (layoutMode === "absolute" && prevNodeIdsRef.current.size > 0) {
-      const canvas = canvasRef.current;
-
       for (const newId of currentIds) {
         if (prevNodeIdsRef.current.has(newId)) continue;
 
@@ -69,13 +76,7 @@ function AbsoluteDropPositioner({
         const nodeProps = node.data.props as Record<string, unknown>;
         if (nodeProps.top !== undefined || nodeProps.left !== undefined) continue;
 
-        if (!canvas) continue;
-
-        // getBoundingClientRect() は zoom 後の視覚座標を返すため zoom で割り戻す
-        const rect = canvas.getBoundingClientRect();
-        const x = Math.max(0, Math.round((lastMousePos.current.x - rect.left) / zoom));
-        const y = Math.max(0, Math.round((lastMousePos.current.y - rect.top) / zoom));
-
+        const { x, y } = lastDropCanvasPos.current;
         actions.setProp(newId, (props: Record<string, unknown>) => {
           props.top = `${y}px`;
           props.left = `${x}px`;
@@ -84,7 +85,7 @@ function AbsoluteDropPositioner({
     }
 
     prevNodeIdsRef.current = currentIds;
-  }, [nodes, layoutMode, zoom, actions, canvasRef]);
+  }, [nodes, layoutMode, actions]);
 
   return null;
 }
