@@ -312,39 +312,6 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["orientation", "variant", "size", "className"],
     isContainer: false,
   },
-  // Phase 4: Overlay components (legacy standalone - render as Button for backward compat)
-  CraftDialog: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["variant", "className"],
-    textProp: "triggerText",
-    isContainer: false,
-  },
-  CraftAlertDialog: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["className"],
-    textProp: "triggerText",
-    isContainer: false,
-  },
-  CraftSheet: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["className"],
-    textProp: "triggerText",
-    isContainer: false,
-  },
-  CraftDrawer: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["className"],
-    textProp: "triggerText",
-    isContainer: false,
-  },
   CraftDropdownMenu: {
     tag: "div",
     propsMap: [],
@@ -353,14 +320,6 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
   CraftContextMenu: {
     tag: "div",
     propsMap: ["className"],
-    isContainer: false,
-  },
-  CraftPopover: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["className"],
-    textProp: "triggerText",
     isContainer: false,
   },
   CraftHoverCard: {
@@ -412,14 +371,6 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     isContainer: false,
   },
   CraftTooltip: {
-    tag: "Button",
-    importFrom: "@/components/ui/button",
-    importName: "Button",
-    propsMap: ["className"],
-    textProp: "triggerText",
-    isContainer: false,
-  },
-  CraftSonner: {
     tag: "Button",
     importFrom: "@/components/ui/button",
     importName: "Button",
@@ -529,21 +480,14 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { slideMeta: '{"keys":[0,1,2],"nextKey":3,"labels":{"0":"Slide 1","1":"Slide 2","2":"Slide 3"}}', loop: false, showArrows: true },
   CraftButtonGroup: { orientation: "horizontal", variant: "outline", size: "default", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover", hoverCardMocPath: "", hoverCardSide: "bottom", hoverCardTrigger: "hover", contextMenuMocPath: "" },
-  // Phase 4 (legacy standalone)
-  CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
-  CraftAlertDialog: { triggerText: "Open Alert", linkedMocPath: "" },
-  CraftSheet: { triggerText: "Open Sheet", side: "right", linkedMocPath: "" },
-  CraftDrawer: { triggerText: "Open Drawer", linkedMocPath: "" },
   CraftDropdownMenu: { triggerText: "Open Menu", menuData: DEFAULT_DROPDOWN_DATA_STR },
   CraftContextMenu: { menuData: DEFAULT_CONTEXTMENU_DATA_STR },
-  CraftPopover: { triggerText: "Open Popover", linkedMocPath: "" },
   CraftHoverCard: { triggerText: "Hover me", linkedMocPath: "", cardBorderRadius: "rounded-md" },
   CraftNavigationMenu: {},
   CraftMenubar: { menuData: DEFAULT_MENUBAR_DATA_STR },
   CraftCommand: { placeholder: "Type a command or search...", items: "Calendar,Search,Settings", linkedMocPath: "" },
   CraftCombobox: { placeholder: "Select an option...", items: "Apple,Banana,Cherry", linkedMocPath: "", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover", contentWidth: "" },
   CraftTooltip: { triggerText: "Hover", text: "Tooltip text" },
-  CraftSonner: { triggerText: "Show Toast", text: "Event has been created." },
   CraftTypography: { variant: "h1", text: "Heading 1", items: "List item 1,List item 2,List item 3" },
   CraftSidebar: {
     sidebarData: JSON.stringify({

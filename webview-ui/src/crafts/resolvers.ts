@@ -39,19 +39,13 @@ import { CraftResizable, ResizablePanelSlot } from "./shadcn/CraftResizable";
 import { CraftCarousel, SlideContentSlot } from "./shadcn/CraftCarousel";
 import { CraftButtonGroup, DEFAULT_BUTTON_DATA } from "./shadcn/CraftButtonGroup";
 // Phase 4: Overlay components
-import { CraftDialog } from "./shadcn/CraftDialog";
-import { CraftAlertDialog } from "./shadcn/CraftAlertDialog";
-import { CraftSheet } from "./shadcn/CraftSheet";
-import { CraftDrawer } from "./shadcn/CraftDrawer";
 import { CraftDropdownMenu, DEFAULT_DROPDOWN_DATA } from "./shadcn/CraftDropdownMenu";
 import { CraftContextMenu, DEFAULT_CONTEXTMENU_DATA } from "./shadcn/CraftContextMenu";
-import { CraftPopover } from "./shadcn/CraftPopover";
 import { CraftHoverCard } from "./shadcn/CraftHoverCard";
 import { CraftNavigationMenu, NavMenuSlot } from "./shadcn/CraftNavigationMenu";
 import { CraftMenubar, DEFAULT_MENUBAR_DATA } from "./shadcn/CraftMenubar";
 import { CraftCommand } from "./shadcn/CraftCommand";
 import { CraftTooltip } from "./shadcn/CraftTooltip";
-import { CraftSonner } from "./shadcn/CraftSonner";
 import { CraftTypography } from "./shadcn/CraftTypography";
 import { CraftSidebar, SidebarHeaderSlot, SidebarFooterSlot, SidebarInsetSlot, DEFAULT_SIDEBAR_DATA } from "./shadcn/CraftSidebar";
 
@@ -103,20 +97,14 @@ export const resolvers = {
   SlideContentSlot,
   CraftButtonGroup,
   // Phase 4
-  CraftDialog,
-  CraftAlertDialog,
-  CraftSheet,
-  CraftDrawer,
   CraftDropdownMenu,
   CraftContextMenu,
-  CraftPopover,
   CraftHoverCard,
   CraftNavigationMenu,
   NavMenuSlot,
   CraftMenubar,
   CraftCommand,
   CraftTooltip,
-  CraftSonner,
   CraftTypography,
   CraftSidebar,
   SidebarHeaderSlot,
