@@ -3,7 +3,8 @@ import { COMPONENT_SCHEMAS, SLOT_COMPONENT_NAMES } from "../shared/componentSche
 
 export function serializeMocFile(doc: MocDocument): string {
   const usedComponents = extractUsedComponents(doc.editorData?.craftState);
-  const metadataBlock = serializeMetadata(doc.metadata, usedComponents);
+  const usesIcons = doc.imports.includes("lucide-react");
+  const metadataBlock = serializeMetadata(doc.metadata, usedComponents, usesIcons);
   const parts = [metadataBlock];
 
   if (doc.imports.trim()) {
@@ -35,7 +36,7 @@ function extractUsedComponents(craftState: Record<string, unknown> | undefined):
   return [...names].sort();
 }
 
-function serializeMetadata(metadata: MocMetadata, usedComponents: string[]): string {
+function serializeMetadata(metadata: MocMetadata, usedComponents: string[], usesIcons: boolean): string {
   const lines: string[] = ["/**"];
 
   // Data structure description prompt for AI agents
@@ -53,6 +54,9 @@ function serializeMetadata(metadata: MocMetadata, usedComponents: string[]): str
   lines.push(" *   CSS: Tailwind CSS v4（ユーティリティファーストCSS）");
   lines.push(" *   UIコンポーネント: shadcn/ui（Radix UI + Tailwind CSSベース）");
   lines.push(" *   importパス「@/components/ui/*」はshadcn/uiコンポーネントです。");
+  if (usesIcons) {
+    lines.push(" *   アイコン: lucide-react（importパス「lucide-react」）");
+  }
   lines.push(" *   導入先にTailwind CSSやshadcn/uiがない場合は、");
   lines.push(" *   導入先の技術スタックで同等の見た目・レイアウトを再現してください。");
   lines.push(" *");
