@@ -5,16 +5,40 @@ import { paletteItems, resolvers, type ResolverKey } from "../../crafts/resolver
 import { Search } from "lucide-react";
 import * as Icons from "lucide-react";
 
+type SortMode = "category" | "alpha-asc" | "alpha-desc";
+
+const SORT_MODE_KEY = "momoc.palette.sortMode";
+
+function loadSortMode(): SortMode {
+  try {
+    const saved = localStorage.getItem(SORT_MODE_KEY);
+    if (saved === "category" || saved === "alpha-asc" || saved === "alpha-desc") return saved;
+  } catch {
+    // ignore
+  }
+  return "category";
+}
+
+const SUB_CATEGORIES = ["action", "display", "form", "layout", "navigation", "overlay"] as const;
+type SubCategory = (typeof SUB_CATEGORIES)[number];
+
 export function ComponentPalette() {
   const { t } = useTranslation();
   const { connectors } = useEditor();
   const [search, setSearch] = useState("");
-  const [expandedCategories, setExpandedCategories] = useState<
-    Record<string, boolean>
-  >({
+  const [sortMode, setSortMode] = useState<SortMode>(loadSortMode);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     layout: true,
     shadcn: true,
     html: true,
+  });
+  const [expandedSubCategories, setExpandedSubCategories] = useState<Record<string, boolean>>({
+    "shadcn:action": true,
+    "shadcn:display": true,
+    "shadcn:form": true,
+    "shadcn:layout": true,
+    "shadcn:navigation": true,
+    "shadcn:overlay": true,
   });
 
   const filteredItems = paletteItems.filter(
@@ -31,12 +55,57 @@ export function ComponentPalette() {
     setExpandedCategories((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const toggleSubCategory = (key: string) => {
+    setExpandedSubCategories((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleAlphaToggle = () => {
+    const next: SortMode = sortMode === "alpha-asc" ? "alpha-desc" : "alpha-asc";
+    setSortMode(next);
+    try { localStorage.setItem(SORT_MODE_KEY, next); } catch { /* ignore */ }
+  };
+
+  const handleCategoryToggle = () => {
+    setSortMode("category");
+    try { localStorage.setItem(SORT_MODE_KEY, "category"); } catch { /* ignore */ }
+  };
+
+  const isAlphaMode = sortMode === "alpha-asc" || sortMode === "alpha-desc";
+
   return (
     <div className="flex w-56 flex-col border-r border-[var(--vscode-panel-border,#333)] bg-[var(--vscode-sideBar-background,#252526)]">
       <div className="border-b border-[var(--vscode-panel-border,#333)] p-2">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--vscode-sideBarTitle-foreground,#bbb)]">
-          {t("palette.title")}
-        </h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vscode-sideBarTitle-foreground,#bbb)]">
+            {t("palette.title")}
+          </h2>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={handleAlphaToggle}
+              title={t("palette.sortAlpha")}
+              className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                isAlphaMode
+                  ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+                  : "text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+              }`}
+            >
+              {sortMode === "alpha-desc" ? "Z–A" : "A–Z"}
+            </button>
+            <button
+              type="button"
+              onClick={handleCategoryToggle}
+              title={t("palette.sortCategory")}
+              className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                sortMode === "category"
+                  ? "bg-[var(--vscode-button-background,#0e639c)] text-[var(--vscode-button-foreground,#fff)]"
+                  : "text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+              }`}
+            >
+              ≡
+            </button>
+          </div>
+        </div>
         <div className="relative">
           <Search
             size={14}
@@ -53,45 +122,88 @@ export function ComponentPalette() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-1">
-        {categories.map((cat) => {
-          const items = filteredItems.filter((i) => i.category === cat.key);
-          if (items.length === 0) return null;
+        {isAlphaMode ? (
+          // アルファベット順フラット表示
+          <div className="grid grid-cols-2 gap-1 px-1 py-1">
+            {[...filteredItems]
+              .sort((a, b) =>
+                sortMode === "alpha-desc"
+                  ? b.label.localeCompare(a.label)
+                  : a.label.localeCompare(b.label),
+              )
+              .map((item) => (
+                <PaletteItemCard key={item.resolverKey} item={item} connectors={connectors} />
+              ))}
+          </div>
+        ) : (
+          // カテゴリ順表示
+          categories.map((cat) => {
+            const catItems = filteredItems.filter((i) => i.category === cat.key);
+            if (catItems.length === 0) return null;
 
-          return (
-            <div key={cat.key} className="mb-1">
-              <button
-                type="button"
-                onClick={() => toggleCategory(cat.key)}
-                className="flex w-full items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--vscode-sideBarSectionHeader-foreground,#bbb)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
-              >
-                <span
-                  className={`transition-transform ${expandedCategories[cat.key] ? "rotate-90" : ""}`}
+            return (
+              <div key={cat.key} className="mb-1">
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(cat.key)}
+                  className="flex w-full items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--vscode-sideBarSectionHeader-foreground,#bbb)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
                 >
-                  ▶
-                </span>
-                {cat.label}
-              </button>
+                  <span className={`transition-transform ${expandedCategories[cat.key] ? "rotate-90" : ""}`}>
+                    ▶
+                  </span>
+                  {cat.label}
+                </button>
 
-              {expandedCategories[cat.key] && (
-                <div className="grid grid-cols-2 gap-1 px-1 py-1">
-                  {items.map((item) => (
-                    <PaletteItem
-                      key={item.resolverKey}
-                      item={item}
-                      connectors={connectors}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {expandedCategories[cat.key] && (
+                  cat.key === "shadcn" ? (
+                    // shadcn は中カテゴリでグループ化
+                    <div className="ml-2">
+                      {SUB_CATEGORIES.map((sub) => {
+                        const subItems = catItems.filter((i) => i.subCategory === sub);
+                        if (subItems.length === 0) return null;
+                        const subKey = `shadcn:${sub}`;
+                        const subLabel = t(`palette.sub.${sub}`);
+                        return (
+                          <div key={sub} className="mb-0.5">
+                            <button
+                              type="button"
+                              onClick={() => toggleSubCategory(subKey)}
+                              className="flex w-full items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-[var(--vscode-foreground,#aaa)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
+                            >
+                              <span className={`text-[9px] transition-transform ${expandedSubCategories[subKey] ? "rotate-90" : ""}`}>
+                                ▶
+                              </span>
+                              {subLabel}
+                            </button>
+                            {expandedSubCategories[subKey] && (
+                              <div className="grid grid-cols-2 gap-1 px-1 py-1">
+                                {subItems.map((item) => (
+                                  <PaletteItemCard key={item.resolverKey} item={item} connectors={connectors} />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-1 px-1 py-1">
+                      {catItems.map((item) => (
+                        <PaletteItemCard key={item.resolverKey} item={item} connectors={connectors} />
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
 }
 
-function PaletteItem({
+function PaletteItemCard({
   item,
   connectors,
 }: {
@@ -99,7 +211,7 @@ function PaletteItem({
   connectors: ReturnType<typeof useEditor>["connectors"];
 }) {
   const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ size?: number }>>)[item.icon];
-  const Component = resolvers[item.resolverKey];
+  const Component = resolvers[item.resolverKey as ResolverKey];
 
   return (
     <div
