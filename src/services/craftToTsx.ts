@@ -312,11 +312,6 @@ const COMPONENT_MAP: Record<string, ComponentMapping> = {
     propsMap: ["orientation", "variant", "size", "className"],
     isContainer: false,
   },
-  CraftForm: {
-    tag: "form",
-    propsMap: ["className"],
-    isContainer: false,
-  },
   // Phase 4: Overlay components (legacy standalone - render as Button for backward compat)
   CraftDialog: {
     tag: "Button",
@@ -534,7 +529,6 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
   CraftResizable: { panelMeta: '{"direction":"horizontal","nextKey":2,"panels":[{"key":0,"size":50},{"key":1,"size":50}]}', withHandle: true },
   CraftCarousel: { slideMeta: '{"keys":[0,1,2],"nextKey":3,"labels":{"0":"Slide 1","1":"Slide 2","2":"Slide 3"}}', loop: false, showArrows: true },
   CraftButtonGroup: { orientation: "horizontal", variant: "outline", size: "default", tooltipText: "", tooltipSide: "", tooltipTrigger: "hover", hoverCardMocPath: "", hoverCardSide: "bottom", hoverCardTrigger: "hover", contextMenuMocPath: "" },
-  CraftForm: {},
   // Phase 4 (legacy standalone)
   CraftDialog: { triggerText: "Open Dialog", variant: "default", linkedMocPath: "" },
   CraftAlertDialog: { triggerText: "Open Alert", linkedMocPath: "" },

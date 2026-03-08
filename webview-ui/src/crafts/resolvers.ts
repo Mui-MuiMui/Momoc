@@ -38,7 +38,6 @@ import { CraftDatePicker } from "./shadcn/CraftDatePicker";
 import { CraftResizable, ResizablePanelSlot } from "./shadcn/CraftResizable";
 import { CraftCarousel, SlideContentSlot } from "./shadcn/CraftCarousel";
 import { CraftButtonGroup, DEFAULT_BUTTON_DATA } from "./shadcn/CraftButtonGroup";
-import { CraftForm } from "./shadcn/CraftForm";
 // Phase 4: Overlay components
 import { CraftDialog } from "./shadcn/CraftDialog";
 import { CraftAlertDialog } from "./shadcn/CraftAlertDialog";
@@ -103,7 +102,6 @@ export const resolvers = {
   CraftCarousel,
   SlideContentSlot,
   CraftButtonGroup,
-  CraftForm,
   // Phase 4
   CraftDialog,
   CraftAlertDialog,
@@ -458,14 +456,6 @@ export const paletteItems: PaletteItem[] = [
     icon: "RectangleHorizontal",
     defaultProps: { buttonData: JSON.stringify(DEFAULT_BUTTON_DATA) },
     enabled: true,
-  },
-  {
-    resolverKey: "CraftForm",
-    label: "Form",
-    category: "shadcn",
-    icon: "FileInput",
-    defaultProps: {},
-    enabled: false,
   },
   // Phase 4: Overlay components (standalone kept in palette)
   {
