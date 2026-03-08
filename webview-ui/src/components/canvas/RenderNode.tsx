@@ -89,7 +89,9 @@ export const RenderNode = React.memo(function RenderNode({
 
     dom.style.outlineOffset = "-1px";
     dom.style.position = dom.style.position || "relative";
-    dom.style.cursor = "pointer";
+    // CraftGroup 内の子ノードはすべての操作を無効化
+    dom.style.pointerEvents = parentIsGroup ? "none" : "";
+    dom.style.cursor = parentIsGroup ? "default" : "pointer";
 
     if (isCanvas) {
       if (!dom.style.minHeight || dom.style.minHeight === "0px") {
@@ -99,7 +101,7 @@ export const RenderNode = React.memo(function RenderNode({
         dom.style.minWidth = "40px";
       }
     }
-  }, [dom, isActive, isHover, isCanvas]);
+  }, [dom, isActive, isHover, isCanvas, parentIsGroup]);
 
   // Apply absolute positioning when layoutMode === "absolute" OR when inside CraftGroup
   useEffect(() => {
