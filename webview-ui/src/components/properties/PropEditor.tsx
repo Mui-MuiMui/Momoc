@@ -21,8 +21,6 @@ const PROP_OPTIONS: Record<string, string[]> = {
   type: ["text", "email", "password", "number", "tel", "url", "search"],
   display: ["flex", "grid"],
   flexDirection: ["row", "column"],
-  justifyContent: ["start", "center", "end", "between", "around", "evenly"],
-  alignItems: ["start", "center", "end", "stretch", "baseline"],
   orientation: ["horizontal", "vertical"],
   objectFit: ["cover", "contain", "fill", "none", "scale-down"],
   overlayType: ["none", "dialog", "alert-dialog", "sheet", "drawer", "popover", "dropdown-menu"],
