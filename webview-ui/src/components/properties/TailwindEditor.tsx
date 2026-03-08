@@ -27,6 +27,13 @@ const SHADOW_SCALE = ["2xs", "xs", "sm", "md", "lg", "xl", "2xl"] as const;
 const SHADOW_PRESET = [...SHADOW_SCALE, "none"] as const;
 const ALL_SHADOW_CLASSES = [...SHADOW_SCALE.map((s) => `shadow-${s}`), "shadow-none", "shadow"];
 
+const DROP_SHADOW_SCALE = ["xs", "sm", "md", "lg", "xl", "2xl"] as const;
+const DROP_SHADOW_PRESET = [...DROP_SHADOW_SCALE, "none"] as const;
+const ALL_DROP_SHADOW_CLASSES = [
+  ...DROP_SHADOW_SCALE.map((s) => `drop-shadow-${s}`),
+  "drop-shadow-none",
+];
+
 const PADDING_DIRS = [
   { label: "All", prefix: "p" },
   { label: "X", prefix: "px" },
@@ -134,8 +141,8 @@ const P: Record<string, Record<string, string>> = {
   rose:    { "50":"#fff1f2","100":"#ffe4e6","200":"#fecdd3","300":"#fda4af","400":"#fb7185","500":"#f43f5e","600":"#e11d48","700":"#be123c","800":"#9f1239","900":"#881337","950":"#4c0519" },
 };
 
-/** Regex to match palette color classes: text-red-500, hover:bg-blue-200, border-green-300, etc. */
-const PALETTE_CLASS_RE = /^((?:hover:)?(?:text|bg|border))-(\w+)-(\d{2,3})$/;
+/** Regex to match palette color classes: text-red-500, hover:bg-blue-200, border-green-300, drop-shadow-blue-500, etc. */
+const PALETTE_CLASS_RE = /^((?:hover:)?(?:text|bg|border|drop-shadow))-(\w+)-(\d{2,3})$/;
 
 function parsePaletteClass(cls: string): { prefix: string; family: string; shade: string } | null {
   const m = cls.match(PALETTE_CLASS_RE);
@@ -163,6 +170,8 @@ export function TailwindEditor() {
   const [marginDir, setMarginDir] = useState(0);
   const [fontSizeMode, setFontSizeMode] = useState<"preset" | "slider">("preset");
   const [shadowMode, setShadowMode] = useState<"preset" | "slider">("preset");
+  const [dropShadowMode, setDropShadowMode] = useState<"preset" | "slider">("preset");
+  const [dropShadowColorFamily, setDropShadowColorFamily] = useState<string>("gray");
   const [textPaletteFamily, setTextPaletteFamily] = useState<string>("blue");
   const [bgPaletteFamily, setBgPaletteFamily] = useState<string>("blue");
   const [hoverBgPaletteFamily, setHoverBgPaletteFamily] = useState<string>("blue");
@@ -286,12 +295,20 @@ export function TailwindEditor() {
     return -1;
   };
 
+  const getDropShadowIndex = (): number => {
+    for (let i = 0; i < DROP_SHADOW_SCALE.length; i++) {
+      if (activeSet.has(`drop-shadow-${DROP_SHADOW_SCALE[i]}`)) return i;
+    }
+    return -1;
+  };
+
   const currentPaddingPrefix = PADDING_DIRS[paddingDir].prefix;
   const currentMarginPrefix = MARGIN_DIRS[marginDir].prefix;
   const currentPaddingIdx = getSpacingValue(currentPaddingPrefix);
   const currentMarginIdx = getSpacingValue(currentMarginPrefix);
   const currentFontSizeIdx = getFontSizeIndex();
   const currentShadowIdx = getShadowIndex();
+  const currentDropShadowIdx = getDropShadowIndex();
 
   // Detect active palette color for a given effective prefix (e.g. "text", "hover:bg")
   const findPaletteColor = (effectivePrefix: string) => {
@@ -304,9 +321,9 @@ export function TailwindEditor() {
 
   // Apply a color: clears palette and theme colors for the given effective prefix
   const applyColor = (effectivePrefix: string, colorCls: string) => {
-    const basePrefix = effectivePrefix.replace("hover:", "") as "text" | "bg" | "border";
+    const basePrefix = effectivePrefix.replace("hover:", "") as "text" | "bg" | "border" | "drop-shadow";
     const themeGroup = THEME_COLOR_OPTIONS.map((c) => `${effectivePrefix}-${c}`);
-    const baseThemeGroup = basePrefix === "text" ? themeTextGroup : basePrefix === "bg" ? themeBgGroup : themeBorderGroup;
+    const baseThemeGroup = basePrefix === "text" ? themeTextGroup : basePrefix === "bg" ? themeBgGroup : basePrefix === "border" ? themeBorderGroup : [];
     const filtered = classes.filter((c) => {
       if (themeGroup.includes(c)) return false;
       // Also clear base theme colors only when effectivePrefix has no hover
@@ -704,6 +721,68 @@ export function TailwindEditor() {
             </div>
           )}
         </TailwindSection>
+
+        <TailwindSection title="Drop Shadow">
+          <div className="mb-1 flex gap-1">
+            <ModeToggle label="Preset" active={dropShadowMode === "preset"} onClick={() => setDropShadowMode("preset")} />
+            <ModeToggle label="Slider" active={dropShadowMode === "slider"} onClick={() => setDropShadowMode("slider")} />
+          </div>
+          {dropShadowMode === "preset" ? (
+            <div className="flex flex-wrap gap-1">
+              {DROP_SHADOW_PRESET.map((s) => {
+                const cls = `drop-shadow-${s}`;
+                return (
+                  <ClassButton
+                    key={s}
+                    label={s}
+                    active={activeSet.has(cls)}
+                    onClick={() => {
+                      const filtered = classes.filter((c) => !ALL_DROP_SHADOW_CLASSES.includes(c));
+                      if (activeSet.has(cls)) {
+                        updateClassName(filtered.join(" "));
+                      } else {
+                        updateClassName([...filtered, cls].join(" "));
+                      }
+                    }}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={-1}
+                max={DROP_SHADOW_SCALE.length - 1}
+                value={currentDropShadowIdx}
+                onChange={(e) => {
+                  const idx = Number(e.target.value);
+                  const filtered = classes.filter((c) => !ALL_DROP_SHADOW_CLASSES.includes(c));
+                  if (idx < 0) {
+                    updateClassName(filtered.join(" "));
+                  } else {
+                    updateClassName([...filtered, `drop-shadow-${DROP_SHADOW_SCALE[idx]}`].join(" "));
+                  }
+                }}
+                className="flex-1 accent-[var(--vscode-button-background,#0e639c)]"
+              />
+              <span className="w-16 text-right text-[10px] text-[var(--vscode-foreground,#ccc)]">
+                {currentDropShadowIdx >= 0 ? `drop-shadow-${DROP_SHADOW_SCALE[currentDropShadowIdx]}` : "—"}
+              </span>
+            </div>
+          )}
+        </TailwindSection>
+
+        <ColorSection
+          title="Drop Shadow Color"
+          prefix="drop-shadow"
+          activeSet={activeSet}
+          paletteFamily={dropShadowColorFamily}
+          onFamilyChange={setDropShadowColorFamily}
+          findPaletteColor={findPaletteColor}
+          onApply={applyColor}
+          showThemeColors={false}
+        />
       </TailwindCategory>
     </div>
   );
@@ -721,9 +800,10 @@ function ColorSection({
   onApply,
   initialMode = "normal",
   showToggle = true,
+  showThemeColors = true,
 }: {
   title: string;
-  prefix: "text" | "bg" | "border";
+  prefix: "text" | "bg" | "border" | "drop-shadow";
   activeSet: Set<string>;
   paletteFamily: string;
   onFamilyChange: (f: string) => void;
@@ -731,6 +811,7 @@ function ColorSection({
   onApply: (effectivePrefix: string, colorCls: string) => void;
   initialMode?: "normal" | "hover";
   showToggle?: boolean;
+  showThemeColors?: boolean;
 }) {
   const [mode, setMode] = useState<"normal" | "hover">(initialMode);
   const effectivePrefix = mode === "hover" ? `hover:${prefix}` : prefix;
@@ -756,11 +837,13 @@ function ColorSection({
         </div>
       )}
       {/* Theme colors */}
-      <div className="mb-1.5 flex flex-wrap gap-1">
-        {THEME_COLOR_OPTIONS.map((c) => (
-          <ClassButton key={c} label={c} active={isThemeActive(c)} onClick={() => onApply(effectivePrefix, `${effectivePrefix}-${c}`)} />
-        ))}
-      </div>
+      {showThemeColors && (
+        <div className="mb-1.5 flex flex-wrap gap-1">
+          {THEME_COLOR_OPTIONS.map((c) => (
+            <ClassButton key={c} label={c} active={isThemeActive(c)} onClick={() => onApply(effectivePrefix, `${effectivePrefix}-${c}`)} />
+          ))}
+        </div>
+      )}
       {/* Palette family selector */}
       <div className="mb-1 flex items-center gap-1">
         <div className="flex flex-wrap gap-1">
