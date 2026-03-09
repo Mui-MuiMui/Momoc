@@ -1,3 +1,4 @@
+import { brotliCompressSync } from "zlib";
 import type { MocDocument, MocMetadata, MocEditorData } from "../shared/types.js";
 import { COMPONENT_SCHEMAS, SLOT_COMPONENT_NAMES } from "../shared/componentSchemas.js";
 import { MOC_VERSION } from "../shared/constants.js";
@@ -72,6 +73,11 @@ function serializeMetadata(metadata: MocMetadata, usedComponents: string[], uses
   lines.push(" *   1. TSXコード（構造・レイアウトの主軸 読み手理解用）");
   lines.push(" *   2. craftState（GUIエディタの詳細プロパティ参照用）");
   lines.push(" *");
+  lines.push(" * エディタデータ（末尾ブロック）:");
+  lines.push(" *   Brotli圧縮+Base64エンコードされたGUIエディタの内部状態です。");
+  lines.push(" *   AIエージェントはこのデータを直接読み取る必要はありません。");
+  lines.push(" *   ページ構造の理解にはTSXコードと@moc-componentスキーマを使用してください。");
+  lines.push(" *");
   lines.push(" * メタデータ:");
   lines.push(" *   @moc-version  - ドキュメント形式バージョン（必須）");
   lines.push(" *   @moc-intent   - このページの目的・意図（任意、人間が記述）");
@@ -115,13 +121,10 @@ function serializeMetadata(metadata: MocMetadata, usedComponents: string[], uses
 }
 
 function serializeEditorData(data: MocEditorData): string {
-  const json = JSON.stringify(data, null, 2);
-  // Escape template literal special chars: ` → \`, ${ → \${
-  const escaped = json
-    .replace(/`/g, "\\`")
-    .replace(/\$\{/g, "\\${");
-
-  return `const __mocEditorData = \`\n${escaped}\n\`;`;
+  const json = JSON.stringify(data);
+  const compressed = brotliCompressSync(Buffer.from(json));
+  const base64 = compressed.toString("base64");
+  return `const __mocEditorData = \`brotli:${base64}\`;`;
 }
 
 export function updateMetadataField(

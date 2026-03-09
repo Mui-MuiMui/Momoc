@@ -19,7 +19,7 @@ export function EditorLoader({
   lastCraftStateRef,
 }: EditorLoaderProps) {
   const { actions, query } = useEditor();
-  const { documentContent, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode } = useEditorStore();
+  const { documentContent, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading } = useEditorStore();
   const lastDeserializedRef = useRef<string>("");
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
@@ -27,7 +27,10 @@ export function EditorLoader({
   queryRef.current = query;
 
   useEffect(() => {
-    if (!documentContent) return;
+    if (!documentContent) {
+      setFileLoading(false);
+      return;
+    }
 
     // Skip if we already deserialized this exact content
     if (documentContent === lastDeserializedRef.current) return;
@@ -104,14 +107,16 @@ export function EditorLoader({
           }
         }
         loadingRef.current = false;
+        setFileLoading(false);
       });
     } catch {
       // Not valid JSON - new or empty file, use default editor state
       loadingRef.current = false;
+      setFileLoading(false);
     }
     // Only re-run when documentContent changes (actions is accessed via ref)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode]);
+  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading]);
 
   return null;
 }

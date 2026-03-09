@@ -19,6 +19,7 @@ export default function App() {
   const { i18n } = useTranslation();
   const { setDocumentContent, setFileName, setThemeMode, setIsDirty, setLayoutMode } =
     useEditorStore();
+  const isFileLoading = useEditorStore((s) => s.isFileLoading);
 
   // --- Save system ---
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -202,6 +203,11 @@ export default function App() {
         lastSavedRef={lastSavedRef}
         lastCraftStateRef={lastCraftStateRef}
       />
+      {isFileLoading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[var(--vscode-editor-background,#1e1e1e)]">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--vscode-foreground,#ccc)] border-t-transparent" />
+        </div>
+      )}
       <div className="flex h-screen flex-col overflow-hidden bg-[var(--vscode-editor-background,#1e1e1e)] text-[var(--vscode-foreground,#ccc)]">
         <Toolbar />
         <div className="flex flex-1 overflow-hidden">

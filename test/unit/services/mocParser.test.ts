@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { brotliCompressSync } from "zlib";
 import { parseMocFile, extractComponentName } from "../../../src/services/mocParser.js";
 
 const sampleMoc = `/**
@@ -115,7 +116,7 @@ describe("mocParser", () => {
 `;
       const doc = parseMocFile(content);
 
-      expect(doc.metadata.version).toBe("1.1.0");
+      expect(doc.metadata.version).toBe("1.2.0");
       expect(doc.metadata.memos).toHaveLength(0);
       expect(doc.tsxSource).toContain("export default function Test()");
     });
@@ -268,6 +269,58 @@ describe("mocParser", () => {
     it("should return undefined componentSchemas when no @moc-component tags present", () => {
       const doc = parseMocFile(sampleMoc);
       expect(doc.metadata.componentSchemas).toBeUndefined();
+    });
+  });
+
+  describe("Brotli compressed editor data (v1.2.0)", () => {
+    it("should parse Brotli compressed editor data", () => {
+      const editorData = {
+        craftState: {
+          ROOT: {
+            type: { resolvedName: "CraftContainer" },
+            props: { className: "flex" },
+            nodes: [],
+            linkedNodes: {},
+            parent: null,
+          },
+        },
+        memos: [],
+        viewport: { mode: "desktop", width: 1280, height: 800 },
+      };
+      const json = JSON.stringify(editorData);
+      const compressed = brotliCompressSync(Buffer.from(json));
+      const base64 = compressed.toString("base64");
+
+      const content = [
+        "/**",
+        " * @moc-version 1.2.0",
+        " * @moc-intent Brotli test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+        "",
+        `const __mocEditorData = \`brotli:${base64}\`;`,
+        "",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(doc.editorData).toBeDefined();
+      expect(doc.editorData!.craftState.ROOT).toBeDefined();
+      const root = doc.editorData!.craftState.ROOT as { props: Record<string, unknown> };
+      expect(root.props.className).toBe("flex");
+      expect(doc.editorData!.viewport).toEqual({ mode: "desktop", width: 1280, height: 800 });
+    });
+
+    it("should still parse legacy raw JSON editor data (backward compat)", () => {
+      const doc = parseMocFile(sampleMocWithEditorData);
+
+      expect(doc.editorData).toBeDefined();
+      expect(doc.editorData!.craftState.ROOT).toBeDefined();
+      expect(doc.editorData!.memos).toHaveLength(1);
     });
   });
 

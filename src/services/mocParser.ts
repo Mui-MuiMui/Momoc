@@ -1,3 +1,4 @@
+import { brotliDecompressSync } from "zlib";
 import type { MocDocument, MocMetadata, MocMemo, MocEditorData } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
@@ -96,11 +97,19 @@ function parseEditorData(content: string): MocEditorData | undefined {
   if (!match) return undefined;
 
   try {
-    // Unescape template literal special chars: \` → `, \${ → ${
-    const raw = match[1]
+    const raw = match[1].trim();
+    if (raw.startsWith("brotli:")) {
+      // v1.2.0: Brotli + Base64
+      const base64 = raw.slice("brotli:".length);
+      const buf = Buffer.from(base64, "base64");
+      const json = brotliDecompressSync(buf).toString();
+      return JSON.parse(json) as MocEditorData;
+    }
+    // v1.0.0-1.1.0: 生JSON（後方互換）
+    const unescaped = raw
       .replace(/\\`/g, "`")
       .replace(/\\\$/g, "$");
-    return JSON.parse(raw) as MocEditorData;
+    return JSON.parse(unescaped) as MocEditorData;
   } catch {
     return undefined;
   }

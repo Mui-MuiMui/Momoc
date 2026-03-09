@@ -24,7 +24,7 @@ describe("mocSerializer", () => {
 
       const content = serializeMocFile(doc);
 
-      expect(content).toContain("@moc-version 1.1.0");
+      expect(content).toContain("@moc-version 1.2.0");
       expect(content).toContain("@moc-intent Test component");
       expect(content).toContain("@moc-theme light");
       expect(content).toContain("@moc-layout flow");
@@ -67,16 +67,14 @@ describe("mocSerializer", () => {
 
       const content = serializeMocFile(doc);
 
-      // Should use template literal format
-      expect(content).toContain("const __mocEditorData = `");
-      expect(content).toContain('"craftState"');
-      expect(content).toContain('"ROOT"');
-      // Should NOT use base64 format
-      expect(content).not.toContain("@moc-editor-data");
-      expect(content).not.toContain("DATA:");
+      // Should use Brotli compressed format
+      expect(content).toContain("const __mocEditorData = `brotli:");
+      // Raw JSON should NOT appear (it's compressed)
+      expect(content).not.toContain('"craftState"');
+      expect(content).not.toContain('"ROOT"');
     });
 
-    it("should escape backticks and template expressions in editor data", () => {
+    it("should handle backticks and template expressions in editor data via Brotli compression", () => {
       const doc: MocDocument = {
         metadata: {
           version: "1.0.0",
@@ -105,10 +103,14 @@ describe("mocSerializer", () => {
 
       const content = serializeMocFile(doc);
 
-      // Backtick should be escaped
-      expect(content).toContain("\\`");
-      // Template expression should be escaped
-      expect(content).toContain("\\${");
+      // Should be Brotli compressed (no escaping needed)
+      expect(content).toContain("const __mocEditorData = `brotli:");
+
+      // Round-trip: parse back and verify special characters are preserved
+      const reparsed = parseMocFile(content);
+      expect(reparsed.editorData).toBeDefined();
+      const root = reparsed.editorData!.craftState.ROOT as { props: Record<string, unknown> };
+      expect(root.props.className).toBe("test with ` backtick and ${expr}");
     });
 
     it("should round-trip: parse → serialize → parse", () => {
@@ -133,7 +135,7 @@ export default function RoundTrip() {
       const reparsed = parseMocFile(serialized);
 
       // serialize 時に常に MOC_VERSION へ更新されるため、元ファイルのバージョンとは異なる場合がある
-      expect(reparsed.metadata.version).toBe("1.1.0");
+      expect(reparsed.metadata.version).toBe("1.2.0");
       expect(reparsed.metadata.intent).toBe(parsed.metadata.intent);
       expect(reparsed.metadata.theme).toBe(parsed.metadata.theme);
       expect(reparsed.metadata.layout).toBe(parsed.metadata.layout);
@@ -349,7 +351,7 @@ const __mocEditorData = \`
       };
 
       const content = serializeMocFile(doc);
-      expect(content).toContain("@moc-version 1.1.0");
+      expect(content).toContain("@moc-version 1.2.0");
     });
 
     it("should output @moc-component as valid JSON", () => {
