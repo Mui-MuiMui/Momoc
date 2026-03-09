@@ -5,7 +5,7 @@ import * as Icons from "lucide-react";
 interface CraftIconProps {
   icon: string;
   iconSize: string;
-  pointerEvents: boolean;
+  clickThrough: boolean;
   width: string;
   height: string;
   className: string;
@@ -14,7 +14,7 @@ interface CraftIconProps {
 export const CraftIcon: UserComponent<CraftIconProps> = ({
   icon = "Heart",
   iconSize = "6",
-  pointerEvents = true,
+  clickThrough = true,
   width = "auto",
   height = "auto",
   className = "",
@@ -50,7 +50,7 @@ CraftIcon.craft = {
   props: {
     icon: "Heart",
     iconSize: "6",
-    pointerEvents: true,
+    clickThrough: true,
     width: "auto",
     height: "auto",
     className: "",

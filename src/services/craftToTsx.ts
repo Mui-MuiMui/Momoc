@@ -517,7 +517,7 @@ const DEFAULT_PROPS: Record<string, Record<string, unknown>> = {
     collapsible: "icon",
     sidebarWidth: "240px",
   },
-  CraftIcon: { icon: "Heart", iconSize: "6", pointerEvents: true },
+  CraftIcon: { icon: "Heart", iconSize: "6", clickThrough: true },
 };
 
 export function craftStateToTsx(
@@ -1392,15 +1392,15 @@ export function craftStateToTsx(
     if (resolvedName === "CraftIcon") {
       const icon = (node.props?.icon as string) || "Heart";
       const iconSize = (node.props?.iconSize as string) || "6";
-      const pointerEvents = node.props?.pointerEvents;
-      // pointerEvents が false / "false" / 未設定でない限りクリック可能（デフォルト true）
-      // Craft.js シリアライズで型が変わる可能性があるため、truthy でないかつ undefined でもない場合に透過
-      const isPointerEventsNone = pointerEvents !== undefined && pointerEvents !== true && pointerEvents !== "true";
+      const clickThrough = node.props?.clickThrough;
+      // clickThrough がデフォルト true → pointer-events: none を出力
+      // ユーザーが false に変更した場合のみクリック可能にする
+      const isClickThrough = clickThrough !== false && clickThrough !== "false";
       let iconStyleAttr = styleAttr;
-      if (isPointerEventsNone) {
+      if (isClickThrough) {
         if (iconStyleAttr) {
-          // 既存 style={{ ... }} の閉じ括弧の前に追加
-          iconStyleAttr = iconStyleAttr.replace(/\s*}\s*}}$/, `, pointerEvents: "none" }}`);
+          // 既存 style={{ ... }} の末尾 }} の前に追加
+          iconStyleAttr = iconStyleAttr.replace(/\s*}}$/, `, pointerEvents: "none" }}`);
         } else {
           iconStyleAttr = ` style={{ pointerEvents: "none" }}`;
         }
