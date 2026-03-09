@@ -351,6 +351,11 @@ const ABSOLUTE_DEFAULTS: Record<string, unknown> = {
  * コンポーネント固有の非表示プロパティ。
  * 共通グループ・コンポーネントグループの両方から除外される。
  */
+/** プロパティキーの表示ラベル上書き */
+const PROP_DISPLAY_LABELS: Record<string, string> = {
+  clickThrough: "クリック透過",
+};
+
 const COMPONENT_EXCLUDED_PROPS: Record<string, Set<string>> = {
   // AspectRatio: keepAspectRatio は RenderNode 内部用、ユーザーには非表示
   AspectRatio: new Set(["keepAspectRatio"]),
@@ -1591,7 +1596,7 @@ export function PropEditor() {
     return (
       <div key={key} className="flex flex-col gap-1">
         <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
-          {key}
+          {PROP_DISPLAY_LABELS[key] ?? key}
         </label>
         {typeof value === "boolean" ? (
           <label className="flex items-center gap-2 text-xs text-[var(--vscode-foreground,#ccc)]">
@@ -1601,7 +1606,7 @@ export function PropEditor() {
               onChange={(e) => handlePropChange(key, e.target.checked)}
               className="h-4 w-4"
             />
-            {value ? "true" : "false"}
+            {value ? "ON" : "OFF"}
           </label>
         ) : options ? (
           <select
