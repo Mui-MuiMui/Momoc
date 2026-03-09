@@ -9,132 +9,74 @@
 
 
 # Momoc
-GUI Frontend Web UI Builder for VSCode  
+Visual Web UI Builder for VSCode  
   
 [English](#momocenglish)
 
 ## 概要
-VSCode上でGUI操作でWebのモック画面を作成する拡張機能です。  
-現在コア機能開発中でありまともに動作はしない場合があります。  
-また、コア機能開発中やアルファバージョンの開発中は破壊的な変更を加える可能性が非常に高いためご注意ください。  
-  
-> ※注 ご利用の際は、必ずプロジェクトをバックアップするか、実験的な環境でお試しください。
+- このアプリケーションはVSCode上でGUI操作でWebのモック画面を作成する拡張機能です
+- Webで実現可能な範囲のデザインを簡易的に作成し、ユーザー(顧客等)との合意形成を行うためのツールです
 
+## ユースケース
+- 会議中にイメージを作成(変更)し、ユーザーへイメージ伝達し合意形成を得る
+- コンポーネント単位で画面設計を行い統合したものを仕様書へ反映する
+- このアプリで作成したデータ(.moc形式)をAIに添付し本番環境への実装を行う
 
-### コンセプト
-- VSCode上でGUI操作によるモックアップの作成
-- 出力された(単一もしくは連携される)ファイルと簡単なAIへの指示だけで本番環境への実装
+など
 
-> 出力されるファイル内に構造データと人間の意図を含ませることにより、AIが実装時に迷わず高度な再現を行うことを目的としています。
+## 機能
+- shadcn/ui風のコンポーネントを配置しWebUIのデザイン
+- コンポーネント作成モードで絶対座標配置でのコンポーネント作成
+- ポップオーバー、ダイアログなどで表示する小画面等の作成、イメージ確認
+- Webプレビューによる実際のブラウザでの見た目確認、簡易的な動作確認
 
 - [.mocファイル仕様](https://github.com/Mui-MuiMui/moc-spec) (Momocの開発に合わせて変更する可能性があります。)
 - [ファイル仕様の概念(思想)](https://github.com/Mui-MuiMui/AINDF) (.mocの元となる考え方、思想です。)
 
-```mermaid
-graph TD
-    subgraph "1. 人間（意図と設計）"
-        A["Momoc GUI"] --> B["ビジュアル設計"]
-        B --> C["@moc-memo<br/>(AIへの指示付箋)"]
-    end
+## 簡易ロードマップ
 
-    subgraph "2. 橋渡し (構造化データ)"
-        C --> D{".moc ファイル"}
-        D --> D1["TSX (JSX)<br/>構造スケッチ"]
-        D --> D2["craftState<br/>(SSOT:単一真実源)"]
-        D --> D3["AI指示メモ<br/>(コンテキスト)"]
-    end
+- MVP作成
+- shadcn/uiのコンポーネントを追加(v0.5.xx相当)(ある程度完了、現在ブラッシュアップ中)
+- プロパティ要素の拡充(作業時:v0.6.xx相当予定)(完了後アルファからベータバージョンへ昇格)
+   この項目では既存のTailwindCSSのclassを手打ちで使えるようにする(したい)
+   現在は部分的に対応
+- ~~アイコン(SVG)配置機能の追加(作業時:v0.7.xx相当予定だったが既に追加済み)~~
+- UIの整理(作業時:v0.8.xx相当予定)
+- リリース(v1.0.x予定)
 
-    subgraph "3. AIエージェント (実装)"
-        D --> E["LLM / AIエージェント<br/>(Gemini/Cursor/Ckaude Code等)"]
-        E --> F["最終実装コード<br/>(ロジック・詳細スタイル)"]
-    end
 
-    %% スタイル設定
-    style D fill:#f9f,stroke:#333,stroke-width:4px
-    style F fill:#9f9,stroke:#333,stroke-width:2px
-```
-
-## 実装状況
-[COMPONENT_STATUS](doc/COMPONENT_STATUS.md)  
-こちらのチェックリストを使って導入進捗を管理しています。  
-
-```
-MVP作成 [v0.0.4をリリース済] 
-↓
-shadcn/uiのコンポーネントを追加 [現在対応中 (完了時でv0.5.xx相当。作業時にバージョンアップするつもりが上げ忘れて現在v0.0.xxを刻んでます。終わったらv0.5.0にします。)]
-↓
-プロパティ要素の拡充(作業時:v0.6.xx相当予定)(完了後アルファからベータバージョンへ昇格)
-↓
-アイコン(SVG)配置機能の追加(作業時:v0.7.xx相当予定)
-↓
-UIの整理(作業時:v0.8.xx相当予定)
-↓
-リリース(v1.0.x予定)
-
-```
 
 ---
 # Momoc(English)
-Visual Frontend Web UI Builder for VSCode  
-  
+Visual Web UI Builder for VSCode
+
 [日本語](#momoc)
 
 ## Overview
-Momoc is a VSCode extension for creating web mockups via GUI.  
-The project is currently in core development; some features may not function as expected.  
-Please be aware that breaking changes are highly likely during core development and alpha stages.  
-  
-> Note: When using this extension, please ensure you back up your project or use an experimental environment.
+- Momoc is a VSCode extension for creating web mockup screens via GUI on VSCode.
+- It is a tool for quickly creating designs within the scope achievable on the web, and building consensus with users (clients, etc.).
 
-## Concept
-- Create mockups directly within VSCode using a GUI.
-- Implement production-ready code using the output file and simple AI instructions.
-- By embedding structural data and human intent within the file, Momoc aims to allow AI to perform high-fidelity implementations without confusion.
+## Use Cases
+- Create (or modify) mockups during meetings to convey ideas and gain consensus with users.
+- Design screens at the component level, integrate them, and reflect the results in specifications.
+- Attach data created with this app (.moc format) to AI and implement it in a production environment.
+
+## Features
+- Design Web UIs by placing shadcn/ui-style components
+- Create components with absolute positioning in component creation mode
+- Create and preview small screens displayed via popovers, dialogs, etc.
+- Check actual appearance in the browser via web preview, with basic interaction testing
+
 - [.moc File Specification](https://github.com/Mui-MuiMui/moc-spec) (Subject to change alongside Momoc development.)
 - [Core Philosophy & Concepts](https://github.com/Mui-MuiMui/AINDF) (The underlying philosophy behind the .moc format.)
 
----
-
-```mermaid
-graph TD
-    subgraph "1. Human (Intent & Design)"
-        A["Momoc GUI"] --> B["Visual Design"]
-        B --> C["@moc-memo<br/>(AI Instructions)"]
-    end
-
-    subgraph "2. The Bridge (Structured Data)"
-        C --> D{".moc File"}
-        D --> D1["TSX (JSX)<br/>Structural Sketch"]
-        D --> D2["craftState<br/>(SSOT)"]
-        D --> D3["AI Instruction Memos<br/>(Context)"]
-    end
-
-    subgraph "3. AI Agent (Implementation)"
-        D --> E["LLM / AI Agent<br/>(Gemini/Cursor/Claude Code, etc.)"]
-        E --> F["Final Implementation Code<br/>(Logic & Refined Styles)"]
-    end
-
-    %% Styles
-    style D fill:#f9f,stroke:#333,stroke-width:4px
-    style F fill:#9f9,stroke:#333,stroke-width:2px
-```
-
-
 ## Roadmap
-[COMPONENT_STATUS](doc/COMPONENT_STATUS.md)
 
-We use this checklist to manage implementation progress.
-
-```
-Build MVP [v0.0.4 Released]
-↓
-Add shadcn/ui Components [In Progress (Expected v0.5.xx when complete. Intended to bump versions during work but forgot, currently on v0.0.xx. Will jump to v0.5.0 when done.)]
-↓
-Expand Property Options (Expected v0.6.xx) (Promotion from alpha to beta upon completion)
-↓
-Add Icon (SVG) Placement Feature (Expected v0.7.xx)
-↓
-UI/UX Polish (Expected v0.8.xx)
-↓
-Release (v1.0.x planned)
-```
+- Build MVP
+- Add shadcn/ui components (around v0.5.xx) (mostly complete, currently polishing)
+- Expand property options (expected around v0.6.xx) (promotion from alpha to beta upon completion)
+  Enable manual input of existing TailwindCSS classes (planned)
+  Currently partially supported
+- ~~Add icon (SVG) placement feature (was expected around v0.7.xx, but already added)~~
+- UI/UX polish (expected around v0.8.xx)
+- Release (v1.0.x planned)
