@@ -146,6 +146,8 @@ export interface PaletteItem {
   isCanvas?: boolean;
   /** false にするとパレットから非表示になる。省略時は表示（デフォルト true） */
   enabled?: boolean;
+  /** true にするとコンポーネントモード（absolute）でのみ表示される */
+  absoluteOnly?: boolean;
 }
 
 export const paletteItems: PaletteItem[] = [
@@ -176,6 +178,7 @@ export const paletteItems: PaletteItem[] = [
     defaultProps: {},
     isCanvas: true,
     enabled: true,
+    absoluteOnly: true,
   },
   // HTML
   {

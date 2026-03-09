@@ -335,8 +335,11 @@ export function ComponentPalette() {
     return () => document.removeEventListener("pointerdown", onPointerDown);
   }, [contextMenu]);
 
+  const layoutMode = useEditorStore((s) => s.layoutMode);
   const filteredItems = paletteItems.filter(
-    (item) => item.enabled !== false && item.label.toLowerCase().includes(search.toLowerCase()),
+    (item) => item.enabled !== false
+      && (!item.absoluteOnly || layoutMode === "absolute")
+      && item.label.toLowerCase().includes(search.toLowerCase()),
   );
 
   const categories = [
