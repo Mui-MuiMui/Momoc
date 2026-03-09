@@ -115,38 +115,31 @@ function parseEditorData(content: string): MocEditorData | undefined {
   }
 }
 
+const IMPORTS_START = "/* @moc-imports-start */";
+const IMPORTS_END = "/* @moc-imports-end */";
+const TSX_START = "/* @moc-tsx-start */";
+const TSX_END = "/* @moc-tsx-end */";
+
 function splitContent(content: string): {
   imports: string;
   tsxSource: string;
 } {
   // Remove metadata comment block and editor-data block
-  let withoutComment = content.replace(MOC_COMMENT_REGEX, "");
-  withoutComment = withoutComment.replace(EDITOR_DATA_REGEX, "");
-  withoutComment = withoutComment.trim();
+  let cleaned = content.replace(MOC_COMMENT_REGEX, "");
+  cleaned = cleaned.replace(EDITOR_DATA_REGEX, "");
 
-  const lines = withoutComment.split("\n");
-  const importLines: string[] = [];
-  let importEnd = 0;
+  const importsStart = cleaned.indexOf(IMPORTS_START);
+  const importsEnd = cleaned.indexOf(IMPORTS_END);
+  const tsxStart = cleaned.indexOf(TSX_START);
+  const tsxEnd = cleaned.indexOf(TSX_END);
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (
-      line.startsWith("import ") ||
-      line.startsWith("import{") ||
-      (importLines.length > 0 && !line.startsWith("export ") && !line.match(/^(function|const|let|var|class)\s/))
-    ) {
-      importLines.push(lines[i]);
-      importEnd = i + 1;
-    } else if (line === "" && importLines.length > 0) {
-      importLines.push(lines[i]);
-      importEnd = i + 1;
-    } else if (importLines.length > 0 || line !== "") {
-      break;
-    }
-  }
+  const imports = (importsStart !== -1 && importsEnd !== -1)
+    ? cleaned.slice(importsStart + IMPORTS_START.length, importsEnd).trim()
+    : "";
 
-  const imports = importLines.join("\n").trim();
-  const tsxSource = lines.slice(importEnd).join("\n").trim();
+  const tsxSource = (tsxStart !== -1 && tsxEnd !== -1)
+    ? cleaned.slice(tsxStart + TSX_START.length, tsxEnd).trim()
+    : cleaned.trim(); // フォールバック: マーカーなし → 全体をtsxSourceとして返す
 
   return { imports, tsxSource };
 }

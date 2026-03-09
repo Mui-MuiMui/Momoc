@@ -10,11 +10,11 @@ export function serializeMocFile(doc: MocDocument): string {
   const parts = [metadataBlock];
 
   if (doc.imports.trim()) {
-    parts.push(doc.imports.trim());
+    parts.push(`/* @moc-imports-start */\n${doc.imports.trim()}\n/* @moc-imports-end */`);
   }
 
   if (doc.tsxSource.trim()) {
-    parts.push(doc.tsxSource.trim());
+    parts.push(`/* @moc-tsx-start */\n${doc.tsxSource.trim()}\n/* @moc-tsx-end */`);
   }
 
   let result = parts.join("\n\n") + "\n";

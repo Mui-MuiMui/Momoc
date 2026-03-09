@@ -12,9 +12,13 @@ const sampleMoc = `/**
  * @moc-memo #loginButton "Submit button for login action"
  * @moc-memo #emailInput "Email validation required"
  */
+
+/* @moc-imports-start */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+/* @moc-imports-end */
 
+/* @moc-tsx-start */
 export default function LoginForm() {
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -23,6 +27,7 @@ export default function LoginForm() {
     </div>
   );
 }
+/* @moc-tsx-end */
 `;
 
 const sampleMocWithEditorData = `/**
@@ -33,9 +38,11 @@ const sampleMocWithEditorData = `/**
  * @moc-viewport tablet
  */
 
+/* @moc-tsx-start */
 export default function TestPage() {
   return <div />;
 }
+/* @moc-tsx-end */
 
 const __mocEditorData = \`
 {
@@ -107,6 +114,57 @@ describe("mocParser", () => {
       expect(doc.tsxSource).toContain("export default function LoginForm()");
       expect(doc.tsxSource).toContain("<Button");
       expect(doc.tsxSource).toContain("<Input");
+    });
+
+    it("should parse multi-line imports with delimiters", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.0",
+        " * @moc-intent Multi-line import test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "/* @moc-imports-start */",
+        "import {",
+        "  Button,",
+        "  ButtonGroup,",
+        "} from \"@/components/ui/button\";",
+        "import { Input } from \"@/components/ui/input\";",
+        "/* @moc-imports-end */",
+        "",
+        "/* @moc-tsx-start */",
+        "export default function Test() { return <div />; }",
+        "/* @moc-tsx-end */",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(doc.imports).toContain("ButtonGroup,");
+      expect(doc.imports).toContain("} from \"@/components/ui/button\"");
+      expect(doc.imports).toContain("import { Input }");
+      expect(doc.tsxSource).toContain("export default function Test()");
+      expect(doc.tsxSource).not.toContain("import");
+    });
+
+    it("should parse v1.0.0/v1.1.0 files without delimiter markers", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.0.0",
+        " * @moc-intent Old format test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function OldFormat() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(doc.imports).toBe("");
+      expect(doc.tsxSource).toContain("export default function OldFormat()");
     });
 
     it("should handle content without metadata", () => {
