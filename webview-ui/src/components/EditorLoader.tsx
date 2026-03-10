@@ -110,7 +110,14 @@ export function EditorLoader({
           }
         }
         loadingRef.current = false;
-        setFileLoading(false);
+
+        // Wait for browser to finish rendering all components before hiding spinner
+        const hideSpinner = () => setFileLoading(false);
+        if (typeof requestIdleCallback === "function") {
+          requestIdleCallback(hideSpinner);
+        } else {
+          setTimeout(hideSpinner, 300);
+        }
       });
     } catch {
       // Not valid JSON - new or empty file, use default editor state
