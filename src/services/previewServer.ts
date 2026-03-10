@@ -772,7 +772,7 @@ export function Badge(props: any) {
   };
   const cls = cn("inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors", v[variant] || v.default, className);
   const hasKbd = typeof children === "string" && children.includes("<kbd>");
-  return <span className={cls} style={{ whiteSpace: "pre-line", ...rest }} {...(hasKbd ? { dangerouslySetInnerHTML: { __html: children } } : { children })} />;
+  return <span className={cls} style={{ whiteSpace: "pre-line", ...style }} {...(hasKbd ? { dangerouslySetInnerHTML: { __html: children } } : { children })} />;
 }`,
 
   separator: `import { cn } from "@/components/ui/_cn";
@@ -892,7 +892,7 @@ export function Alert(props: any) {
 
   "aspect-ratio": `import { cn } from "@/components/ui/_cn";
 export function AspectRatio(props: any) {
-  const { className = "", ratio = 16/9, width, height, children, style: _style, ...rest } = props;
+  const { className = "", ratio = 16/9, width, height, children, style: parentStyle, ...rest } = props;
   const widthControlled = width && width !== "auto";
   const heightControlled = !widthControlled && height && height !== "auto";
   const style = widthControlled
@@ -900,17 +900,17 @@ export function AspectRatio(props: any) {
     : heightControlled
     ? { height, width: \`calc(\${height} * \${ratio})\`, alignSelf: "flex-start" }
     : { aspectRatio: ratio, alignSelf: "flex-start" };
-  return <div className={cn("relative", !widthControlled && !heightControlled && "w-full", className)} style={style} {...rest}>{children}</div>;
+  return <div className={cn("relative", !widthControlled && !heightControlled && "w-full", className)} style={{ ...style, ...parentStyle }} {...rest}>{children}</div>;
 }`,
 
   avatar: `import { cn } from "@/components/ui/_cn";
 const SIZE_CLASSES: Record<string, string> = { sm: "h-8 w-8", default: "h-10 w-10", lg: "h-16 w-16" };
 export function Avatar(props: any) {
-  const { className = "", src, fallback = "AB", size = "default", style: _style, ...rest } = props;
+  const { className = "", src, fallback = "AB", size = "default", style, ...rest } = props;
   const sizeClass = SIZE_CLASSES[size] ?? SIZE_CLASSES.default;
   const cls = cn("relative flex shrink-0 rounded-full", sizeClass, className);
   return (
-    <span className={cls} {...rest}>
+    <span className={cls} style={style} {...rest}>
       {src ? (
         <img src={src} alt={fallback} className="aspect-square h-full w-full overflow-hidden rounded-full" />
       ) : (
@@ -1046,7 +1046,7 @@ export function DatePicker(props) {
     width = "auto",
     height = "auto",
     className = "",
-    style: _style,
+    style: parentStyle,
     calendarBorderClass = "",
     calendarShadowClass = "",
     todayBgClass = "",
@@ -1119,7 +1119,7 @@ export function DatePicker(props) {
     el.style.left = left + "px";
   }, [calPos]);
   return (
-    <div ref={wrapperRef} className={cn(className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined }} {...rest}>
+    <div ref={wrapperRef} className={cn(className)} style={{ width: width !== "auto" ? width : undefined, height: height !== "auto" ? height : undefined, ...parentStyle }} {...rest}>
       <div className={cn("flex w-full rounded-md border border-input overflow-hidden", height !== "auto" ? "h-full" : "h-9", disabled && "opacity-50 cursor-not-allowed")}>
         <input type="text" value={inputValue} readOnly={!editable} placeholder={placeholder} disabled={disabled}
           onChange={(e) => editable && setInputValue(e.target.value)}
@@ -1913,9 +1913,9 @@ import { createPortal } from "react-dom";
 const Ctx = createContext<any>(null);
 export function DropdownMenu(props: any) {
   const [open, setOpen] = useState(false);
-  const { style: _style, ...rest } = props;
+  const { style, ...rest } = props;
   const triggerRef = useRef<HTMLElement | null>(null);
-  return <Ctx.Provider value={{ open, setOpen, triggerRef }}><div className="inline-block" {...rest}>{props.children}</div></Ctx.Provider>;
+  return <Ctx.Provider value={{ open, setOpen, triggerRef }}><div className="inline-block" style={style} {...rest}>{props.children}</div></Ctx.Provider>;
 }
 export function DropdownMenuTrigger(props: any) {
   const ctx = useContext(Ctx);
@@ -2078,7 +2078,7 @@ export function DataTable(props) {
     className = "", headerBgClass = "", hoverRowClass = "", selectedRowClass = "",
     headerTextClass = "", headerHoverTextClass = "", headerBorderClass = "", tableBorderClass = "",
     sortIconClass = "", filterIconClass = "",
-    style: _style, width, height, ...rest
+    style: parentStyle, width, height, ...rest
   } = props;
   const cols = parseColDefs(columns);
   const pageSizeNum = Math.max(1, Number(pageSize) || 10);
@@ -2115,7 +2115,7 @@ export function DataTable(props) {
   const totalPages = Math.max(1, Math.ceil(totalRows / pageSizeNum));
   const displayRows = pageable ? rows.slice((page - 1) * pageSizeNum, page * pageSizeNum) : rows;
   const visibleCols = cols.filter(c => !hiddenCols.has(c.id ?? c.accessorKey ?? c.key));
-  const containerStyle = {};
+  const containerStyle = { ...parentStyle };
   if (width && width !== "auto") containerStyle.width = /^\\d+(\\.\\d+)?$/.test(String(width)) ? String(width) + "px" : String(width);
   if (height && height !== "auto") containerStyle.height = /^\\d+(\\.\\d+)?$/.test(String(height)) ? String(height) + "px" : String(height);
   const headerSt = stickyHeader ? { position: "sticky", top: 0, zIndex: 2 } : {};
