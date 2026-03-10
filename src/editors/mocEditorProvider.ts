@@ -125,7 +125,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         return;
       }
 
-      await this.handleWebviewMessage(message, document, webviewPanel);
+      await this.handleWebviewMessage(message, document, webviewPanel, pendingSaveContents);
     });
 
     const changeConfigSubscription =
@@ -277,6 +277,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     message: WebviewToExtensionMessage,
     document: vscode.TextDocument,
     webviewPanel: vscode.WebviewPanel,
+    pendingSaveContents: Set<string>,
   ): Promise<void> {
     switch (message.type) {
       case "doc:save": {
