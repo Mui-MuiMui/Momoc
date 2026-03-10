@@ -82,7 +82,8 @@ export function EditorLoader({
         // No selection or query not ready
       }
 
-      // Suppress onNodesChange saves during deserialize
+      // Show spinner and suppress onNodesChange saves during deserialize
+      setFileLoading(true);
       loadingRef.current = true;
       actionsRef.current.deserialize(craftStateStr);
       setMemos(memos);
