@@ -12,6 +12,7 @@ import { parseMocFile } from "../services/mocParser.js";
 import { serializeMocFile } from "../services/mocSerializer.js";
 import { craftStateToTsx } from "../services/craftToTsx.js";
 import type { MocDocument, MocEditorData, ExtensionToWebviewMessage, WebviewToExtensionMessage, CustomComponentEntry } from "../shared/types.js";
+import { isWebToExtMessage } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
 export class MocEditorProvider implements vscode.CustomTextEditorProvider {
@@ -97,7 +98,11 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       });
 
     webviewPanel.webview.onDidReceiveMessage(async (rawMessage) => {
-      const message = rawMessage as WebviewToExtensionMessage;
+      if (!isWebToExtMessage(rawMessage)) {
+        console.warn("[Momoc] Unknown or invalid message from webview:", rawMessage);
+        return;
+      }
+      const message = rawMessage;
 
       // When the webview React app is ready, send initial data
       if (message.type === "editor:ready") {
