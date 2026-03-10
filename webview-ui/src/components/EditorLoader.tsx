@@ -20,7 +20,13 @@ export function EditorLoader({
   lastCraftStateRef,
 }: EditorLoaderProps) {
   const { actions, query } = useEditor();
-  const { documentContent, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading } = useEditorStore();
+  const documentContent = useEditorStore((s) => s.documentContent);
+  const setMemos = useEditorStore((s) => s.setMemos);
+  const setViewportMode = useEditorStore((s) => s.setViewportMode);
+  const setCustomViewportSize = useEditorStore((s) => s.setCustomViewportSize);
+  const setIntent = useEditorStore((s) => s.setIntent);
+  const setLayoutMode = useEditorStore((s) => s.setLayoutMode);
+  const setFileLoading = useEditorStore((s) => s.setFileLoading);
   const historyLimit = useEditorStore((s) => s.historyLimit);
   useHistoryLimit(historyLimit);
   const lastDeserializedRef = useRef<string>("");
@@ -31,7 +37,8 @@ export function EditorLoader({
 
   useEffect(() => {
     if (!documentContent) {
-      setFileLoading(false);
+      // Don't dismiss spinner here — wait for doc:load message.
+      // Empty/new files are handled in App.tsx when doc:load arrives with empty content.
       return;
     }
 
@@ -82,7 +89,8 @@ export function EditorLoader({
         // No selection or query not ready
       }
 
-      // Suppress onNodesChange saves during deserialize
+      // Show spinner and suppress onNodesChange saves during deserialize
+      setFileLoading(true);
       loadingRef.current = true;
       actionsRef.current.deserialize(craftStateStr);
       setMemos(memos);
@@ -110,7 +118,20 @@ export function EditorLoader({
           }
         }
         loadingRef.current = false;
-        setFileLoading(false);
+
+        // Wait for React to finish rendering all components before hiding spinner.
+        // deserialize() updates Craft.js state synchronously, but React renders
+        // child components over multiple frames. Nest rAF calls to let the
+        // browser paint incrementally before removing the overlay.
+        let remaining = 5;
+        const waitForRender = () => {
+          if (--remaining > 0) {
+            requestAnimationFrame(waitForRender);
+          } else {
+            setFileLoading(false);
+          }
+        };
+        requestAnimationFrame(waitForRender);
       });
     } catch {
       // Not valid JSON - new or empty file, use default editor state

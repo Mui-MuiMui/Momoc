@@ -107,3 +107,84 @@ export type WebviewToExtensionMessage =
   | { type: "browse:mocFile"; payload: { currentPath?: string; targetProp?: string } }
   | { type: "browse:imageFile"; payload: { currentPath?: string; targetProp?: string } }
   | { type: "resolve:mocFile"; payload: { path: string } };
+
+// ---------------------------------------------------------------------------
+// ランタイムバリデーション
+// ---------------------------------------------------------------------------
+
+/** payloadなし ExtensionToWebview type */
+const EXT_TO_WEB_NO_PAYLOAD: ReadonlySet<string> = new Set([
+  "command:toggleTheme",
+  "command:switchLayoutMode",
+  "capture:start",
+]);
+
+/** payloadあり ExtensionToWebview type */
+const EXT_TO_WEB_WITH_PAYLOAD: ReadonlySet<string> = new Set([
+  "doc:load",
+  "doc:externalChange",
+  "theme:set",
+  "i18n:locale",
+  "build:error",
+  "build:result",
+  "resolve:imageUri:result",
+  "browse:mocFile:result",
+  "browse:imageFile:result",
+  "resolve:mocFile:result",
+  "customComponent:importResult",
+  "customComponent:all",
+  "customComponent:reloadResult",
+  "customComponent:removeResult",
+  "customComponent:updatePathResult",
+  "settings:update",
+]);
+
+/** payloadなし WebviewToExtension type */
+const WEB_TO_EXT_NO_PAYLOAD: ReadonlySet<string> = new Set([
+  "editor:ready",
+  "command:openBrowserPreview",
+  "command:exportImage",
+  "customComponent:import",
+  "customComponent:getAll",
+]);
+
+/** payloadあり WebviewToExtension type */
+const WEB_TO_EXT_WITH_PAYLOAD: ReadonlySet<string> = new Set([
+  "doc:save",
+  "doc:requestBuild",
+  "shadcn:install",
+  "selection:change",
+  "capture:complete",
+  "capture:error",
+  "resolve:imageUri",
+  "browse:mocFile",
+  "browse:imageFile",
+  "resolve:mocFile",
+  "customComponent:reload",
+  "customComponent:remove",
+  "customComponent:updatePath",
+]);
+
+/** ExtensionToWebviewMessage のランタイムバリデーション */
+export function isExtToWebMessage(msg: unknown): msg is ExtensionToWebviewMessage {
+  if (typeof msg !== "object" || msg === null) return false;
+  const { type } = msg as { type?: unknown };
+  if (typeof type !== "string") return false;
+  if (EXT_TO_WEB_NO_PAYLOAD.has(type)) return true;
+  if (EXT_TO_WEB_WITH_PAYLOAD.has(type)) {
+    return typeof (msg as { payload?: unknown }).payload === "object" && (msg as { payload?: unknown }).payload !== null;
+  }
+  return false;
+}
+
+/** WebviewToExtensionMessage のランタイムバリデーション */
+export function isWebToExtMessage(msg: unknown): msg is WebviewToExtensionMessage {
+  if (typeof msg !== "object" || msg === null) return false;
+  const { type } = msg as { type?: unknown };
+  if (typeof type !== "string") return false;
+  if (WEB_TO_EXT_NO_PAYLOAD.has(type)) return true;
+  if (WEB_TO_EXT_WITH_PAYLOAD.has(type)) {
+    return typeof (msg as { payload?: unknown }).payload === "object" && (msg as { payload?: unknown }).payload !== null;
+  }
+  return false;
+}

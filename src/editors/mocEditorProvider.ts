@@ -12,6 +12,7 @@ import { parseMocFile } from "../services/mocParser.js";
 import { serializeMocFile } from "../services/mocSerializer.js";
 import { craftStateToTsx } from "../services/craftToTsx.js";
 import type { MocDocument, MocEditorData, ExtensionToWebviewMessage, WebviewToExtensionMessage, CustomComponentEntry } from "../shared/types.js";
+import { isWebToExtMessage } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
 export class MocEditorProvider implements vscode.CustomTextEditorProvider {
@@ -77,15 +78,15 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       }
     });
 
-    // Track content we last applied to detect save echoes
-    let lastAppliedContent = "";
+    // Track contents we have applied to detect save echoes (multiple saves may overlap)
+    const pendingSaveContents = new Set<string>();
 
     const changeDocumentSubscription =
       vscode.workspace.onDidChangeTextDocument((e) => {
         if (e.document.uri.toString() !== document.uri.toString()) return;
         if (e.contentChanges.length === 0) return;           // Non-content events
         const currentText = document.getText();
-        if (currentText === lastAppliedContent) return;       // Echo from our own save
+        if (pendingSaveContents.delete(currentText)) return;    // Echo from our own save
         // Genuine external change – re-parse and send webview-compatible JSON
         const webviewJson = this.fileToWebviewJson(currentText);
         if (webviewJson) {
@@ -97,13 +98,11 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       });
 
     webviewPanel.webview.onDidReceiveMessage(async (rawMessage) => {
-      const message = rawMessage as WebviewToExtensionMessage;
-
-      if (message.type === "doc:save") {
-        if (message.payload?.content) {
-          lastAppliedContent = this.webviewJsonToFile(message.payload.content, document.fileName);
-        }
+      if (!isWebToExtMessage(rawMessage)) {
+        console.warn("[Momoc] Unknown or invalid message from webview:", rawMessage);
+        return;
       }
+      const message = rawMessage;
 
       // When the webview React app is ready, send initial data
       if (message.type === "editor:ready") {
@@ -131,7 +130,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
         return;
       }
 
-      await this.handleWebviewMessage(message, document, webviewPanel);
+      await this.handleWebviewMessage(message, document, webviewPanel, pendingSaveContents);
     });
 
     const changeConfigSubscription =
@@ -283,6 +282,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     message: WebviewToExtensionMessage,
     document: vscode.TextDocument,
     webviewPanel: vscode.WebviewPanel,
+    pendingSaveContents: Set<string>,
   ): Promise<void> {
     switch (message.type) {
       case "doc:save": {
@@ -295,6 +295,9 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           // Convert webview JSON → .moc TSX format
           const mocContent = this.webviewJsonToFile(message.payload.content, document.fileName);
 
+          // Register content before async applyEdit so concurrent saves are all tracked
+          pendingSaveContents.add(mocContent);
+
           const edit = new vscode.WorkspaceEdit();
           const fullRange = new vscode.Range(
             0,
@@ -306,6 +309,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           const success = await vscode.workspace.applyEdit(edit);
           if (!success) {
             console.error("[Momoc] WorkspaceEdit.applyEdit returned false");
+            pendingSaveContents.delete(mocContent);
           }
         } catch (err) {
           console.error("[Momoc] doc:save error:", err);

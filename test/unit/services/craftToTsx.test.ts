@@ -66,6 +66,123 @@ describe("craftStateToTsx - zIndex", () => {
   });
 });
 
+describe("craftStateToTsx - 境界値テスト", () => {
+  it("null → 空divが返る", () => {
+    const { tsxSource } = craftStateToTsx(null as never, "TestPage");
+    expect(tsxSource).toContain("export default function TestPage()");
+    expect(tsxSource).toContain("return <div />");
+  });
+
+  it("undefined → 空divが返る", () => {
+    const { tsxSource } = craftStateToTsx(undefined as never, "TestPage");
+    expect(tsxSource).toContain("export default function TestPage()");
+    expect(tsxSource).toContain("return <div />");
+  });
+
+  it("空オブジェクト（ROOTなし） → 空divが返る", () => {
+    const { tsxSource } = craftStateToTsx({} as never, "TestPage");
+    expect(tsxSource).toContain("export default function TestPage()");
+    expect(tsxSource).toContain("return <div />");
+  });
+
+  it("空コンポーネント名 → 空文字列のまま関数名に使われる", () => {
+    const { tsxSource } = craftStateToTsx({ ROOT: {
+      type: { resolvedName: "CraftContainer" },
+      props: {},
+      nodes: [],
+      linkedNodes: {},
+      parent: null,
+    }} as never, "");
+    expect(tsxSource).toContain("export default function ()");
+  });
+
+  it("未知のコンポーネント → Unknown コメント出力", () => {
+    const craftState = {
+      ROOT: {
+        type: { resolvedName: "CraftContainer" },
+        props: { className: "" },
+        nodes: ["node1"],
+        linkedNodes: {},
+        parent: null,
+        isCanvas: true,
+      },
+      node1: {
+        type: { resolvedName: "UnknownComponent" },
+        props: {},
+        nodes: [],
+        linkedNodes: {},
+        parent: "ROOT",
+      },
+    };
+
+    const { tsxSource } = craftStateToTsx(craftState as never, "TestPage");
+    expect(tsxSource).toContain("{/* Unknown: UnknownComponent */}");
+  });
+
+  it("存在しないノード参照 → クラッシュせず空出力", () => {
+    const craftState = {
+      ROOT: {
+        type: { resolvedName: "CraftContainer" },
+        props: { className: "" },
+        nodes: ["nonexistent_id"],
+        linkedNodes: {},
+        parent: null,
+        isCanvas: true,
+      },
+    };
+
+    // クラッシュしないことを確認
+    const { tsxSource } = craftStateToTsx(craftState as never, "TestPage");
+    expect(tsxSource).toContain("export default function TestPage()");
+  });
+
+  it("深いネスト（20段）→ スタックオーバーフローせずに出力", () => {
+    const craftState: Record<string, unknown> = {};
+    const depth = 20;
+
+    for (let i = 0; i <= depth; i++) {
+      const id = i === 0 ? "ROOT" : `node${i}`;
+      const childId = i < depth ? `node${i + 1}` : undefined;
+      craftState[id] = {
+        type: { resolvedName: "CraftContainer" },
+        props: { className: "" },
+        nodes: childId ? [childId] : [],
+        linkedNodes: {},
+        parent: i === 0 ? null : i === 1 ? "ROOT" : `node${i - 1}`,
+        isCanvas: true,
+      };
+    }
+
+    const { tsxSource } = craftStateToTsx(craftState as never, "TestPage");
+    expect(tsxSource).toContain("export default function TestPage()");
+    // 最も内側の div も出力されている
+    expect(tsxSource).toContain("<div");
+  });
+
+  it("空の props → デフォルト出力", () => {
+    const craftState = {
+      ROOT: {
+        type: { resolvedName: "CraftContainer" },
+        props: {},
+        nodes: ["node1"],
+        linkedNodes: {},
+        parent: null,
+        isCanvas: true,
+      },
+      node1: {
+        type: { resolvedName: "CraftButton" },
+        props: {},
+        nodes: [],
+        linkedNodes: {},
+        parent: "ROOT",
+      },
+    };
+
+    const { tsxSource } = craftStateToTsx(craftState as never, "TestPage");
+    expect(tsxSource).toContain("<Button");
+  });
+});
+
 describe("craftStateToTsx - CraftGroup", () => {
   it("CraftGroup が position: relative 付きの div として出力される", () => {
     const craftState = {

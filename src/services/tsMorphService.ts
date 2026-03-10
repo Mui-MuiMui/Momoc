@@ -7,15 +7,24 @@ import {
   type JsxOpeningElement,
 } from "ts-morph";
 
-function createProject(): Project {
-  return new Project({
-    useInMemoryFileSystem: true,
-    compilerOptions: {
-      jsx: 2, // React
-      target: 99, // ESNext
-      module: 99,
-    },
-  });
+let cachedProject: Project | null = null;
+
+function getProject(): Project {
+  if (!cachedProject) {
+    cachedProject = new Project({
+      useInMemoryFileSystem: true,
+      compilerOptions: {
+        jsx: 2, // React
+        target: 99, // ESNext
+        module: 99,
+      },
+    });
+  }
+  return cachedProject;
+}
+
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve));
 }
 
 export interface JsxNodeInfo {
@@ -26,18 +35,27 @@ export interface JsxNodeInfo {
   endLine: number;
 }
 
-export function parseJsxTree(content: string): JsxNodeInfo[] {
+export async function parseJsxTree(content: string): Promise<JsxNodeInfo[]> {
   if (!content.trim()) return [];
 
-  const project = createProject();
+  const project = getProject();
   const sourceFile = project.createSourceFile("temp.tsx", content);
+
+  await yieldToEventLoop();
+
   const defaultExport = findDefaultExportFunction(sourceFile);
-  if (!defaultExport) return [];
+  if (!defaultExport) {
+    sourceFile.delete();
+    return [];
+  }
 
   const returnStatement = defaultExport.getDescendantsOfKind(
     SyntaxKind.ReturnStatement,
   )[0];
-  if (!returnStatement) return [];
+  if (!returnStatement) {
+    sourceFile.delete();
+    return [];
+  }
 
   const rootJsx =
     returnStatement.getFirstDescendantByKind(SyntaxKind.JsxElement) ||
@@ -45,9 +63,14 @@ export function parseJsxTree(content: string): JsxNodeInfo[] {
       SyntaxKind.JsxSelfClosingElement,
     );
 
-  if (!rootJsx) return [];
+  if (!rootJsx) {
+    sourceFile.delete();
+    return [];
+  }
 
-  return [extractJsxNodeInfo(rootJsx)];
+  const result = [extractJsxNodeInfo(rootJsx)];
+  sourceFile.delete();
+  return result;
 }
 
 function extractJsxNodeInfo(
@@ -118,14 +141,16 @@ function extractAttrsFromNode(
 
 const CRAFT_ID_ATTR = "data-craft-id";
 
-export function updateJsxProp(
+export async function updateJsxProp(
   content: string,
   craftId: string,
   propName: string,
   propValue: string,
-): string {
-  const project = createProject();
+): Promise<string> {
+  const project = getProject();
   const sourceFile = project.createSourceFile("update.tsx", content);
+
+  await yieldToEventLoop();
 
   const allJsx = [
     ...sourceFile.getDescendantsOfKind(SyntaxKind.JsxElement),
@@ -164,15 +189,24 @@ export function updateJsxProp(
     break;
   }
 
-  return sourceFile.getFullText();
+  const result = sourceFile.getFullText();
+  sourceFile.delete();
+  return result;
 }
 
-export function getComponentName(content: string): string | null {
+export async function getComponentName(
+  content: string,
+): Promise<string | null> {
   if (!content.trim()) return null;
-  const project = createProject();
+  const project = getProject();
   const sourceFile = project.createSourceFile("name.tsx", content);
+
+  await yieldToEventLoop();
+
   const fn = findDefaultExportFunction(sourceFile);
-  return fn?.getName() || null;
+  const name = fn?.getName() || null;
+  sourceFile.delete();
+  return name;
 }
 
 function findDefaultExportFunction(sourceFile: SourceFile) {
@@ -184,3 +218,4 @@ function findDefaultExportFunction(sourceFile: SourceFile) {
   }
   return null;
 }
+

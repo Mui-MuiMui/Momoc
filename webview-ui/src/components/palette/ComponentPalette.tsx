@@ -557,7 +557,7 @@ export function ComponentPalette() {
                           return visibleSubs.map((sub, subIdx) => {
                             const subItems = catItems.filter((i) => i.subCategory === sub);
                             const subKey = `${cat.key}:${sub}`;
-                            const subLabel = t(`palette.sub.${sub}`);
+                            const subLabel = t(`palette.sub.${sub}` as keyof typeof import("../../i18n/en.json"));
                             return (
                               <div key={sub} className={subIdx > 0 ? "mt-2" : ""}>
                                 {subIdx > 0 && (

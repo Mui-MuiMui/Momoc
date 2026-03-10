@@ -392,5 +392,187 @@ describe("mocParser", () => {
       const name = extractComponentName("const x = 1;");
       expect(name).toBeNull();
     });
+
+    it("should return null for arrow function export", () => {
+      const name = extractComponentName("export default () => <div />;");
+      expect(name).toBeNull();
+    });
+
+    it("should handle extra whitespace in export declaration", () => {
+      const name = extractComponentName("export  default  function  Name() { return <div />; }");
+      expect(name).toBe("Name");
+    });
+  });
+
+  describe("境界値テスト - 空・不正入力", () => {
+    it("空文字列でデフォルトメタデータが返る", () => {
+      const doc = parseMocFile("");
+
+      expect(doc.metadata.version).toBe("1.2.0");
+      expect(doc.metadata.theme).toBe("light");
+      expect(doc.metadata.layout).toBe("flow");
+      expect(doc.metadata.viewport).toBe("desktop");
+      expect(doc.metadata.intent).toBe("");
+      expect(doc.metadata.memos).toHaveLength(0);
+    });
+
+    it("空白のみの入力でクラッシュしない", () => {
+      const doc = parseMocFile("   \n\n  ");
+
+      expect(doc.metadata.version).toBe("1.2.0");
+      expect(doc.metadata.memos).toHaveLength(0);
+      expect(doc.tsxSource).toBe("");
+    });
+  });
+
+  describe("境界値テスト - 壊れたメタデータ", () => {
+    it("メタデータブロックが閉じられていない場合デフォルトが返る", () => {
+      const content = "/**\n * @moc-version 1.0.0\n * @moc-intent Unclosed";
+      const doc = parseMocFile(content);
+
+      // MOC_COMMENT_REGEX は `*/` まで必要なのでマッチしない
+      expect(doc.metadata.version).toBe("1.2.0");
+      expect(doc.metadata.intent).toBe("");
+    });
+
+    it("重複タグは後勝ち", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.0.0",
+        " * @moc-intent First intent",
+        " * @moc-intent Second intent",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.metadata.intent).toBe("Second intent");
+    });
+
+    it("空値タグ（@moc-intent の後に値なし）", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.0.0",
+        " * @moc-intent",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      // 空文字列としてパースされるか、デフォルト
+      expect(doc.metadata.intent).toBe("");
+    });
+  });
+
+  describe("境界値テスト - 壊れたエディタデータ", () => {
+    it("不正なBase64のBrotliデータ → editorData が undefined", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+        "",
+        "const __mocEditorData = `brotli:not-valid-base64!!!`;",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.editorData).toBeUndefined();
+    });
+
+    it("brotli: プレフィックスのみ（データなし） → undefined", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+        "",
+        "const __mocEditorData = `brotli:`;",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.editorData).toBeUndefined();
+    });
+
+    it("不正なJSON文字列 → undefined", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+        "",
+        "const __mocEditorData = `{invalid json content}`;",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.editorData).toBeUndefined();
+    });
+  });
+
+  describe("境界値テスト - コンテンツ分割の境界", () => {
+    it("開始マーカーのみ、終了マーカーなし → フォールバック", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "/* @moc-tsx-start */",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      // tsx-end がないので tsxStart/tsxEnd 両方が見つからずフォールバックに入る
+      // フォールバック: cleaned.trim() 全体
+      expect(doc.tsxSource).toContain("export default function Test()");
+    });
+
+    it("空のインポートセクション（マーカー間が空）", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.0",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " */",
+        "",
+        "/* @moc-imports-start */",
+        "/* @moc-imports-end */",
+        "",
+        "/* @moc-tsx-start */",
+        "export default function Test() { return <div />; }",
+        "/* @moc-tsx-end */",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.imports).toBe("");
+      expect(doc.tsxSource).toContain("export default function Test()");
+    });
   });
 });
