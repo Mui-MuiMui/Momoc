@@ -20,7 +20,13 @@ export function EditorLoader({
   lastCraftStateRef,
 }: EditorLoaderProps) {
   const { actions, query } = useEditor();
-  const { documentContent, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading } = useEditorStore();
+  const documentContent = useEditorStore((s) => s.documentContent);
+  const setMemos = useEditorStore((s) => s.setMemos);
+  const setViewportMode = useEditorStore((s) => s.setViewportMode);
+  const setCustomViewportSize = useEditorStore((s) => s.setCustomViewportSize);
+  const setIntent = useEditorStore((s) => s.setIntent);
+  const setLayoutMode = useEditorStore((s) => s.setLayoutMode);
+  const setFileLoading = useEditorStore((s) => s.setFileLoading);
   const historyLimit = useEditorStore((s) => s.historyLimit);
   useHistoryLimit(historyLimit);
   const lastDeserializedRef = useRef<string>("");

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type RefObject } from "react";
+import { useState, useRef, useEffect, useCallback, memo, type RefObject } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { StickyNote, Plus, X, ChevronDown, ChevronRight, Link2, Unlink, GripVertical } from "lucide-react";
@@ -20,7 +20,8 @@ function getColorScheme(color: MemoColor) {
 /** Fixed "Add memo" button - render outside scroll container */
 export function MemoAddButton() {
   const { t } = useTranslation();
-  const { memos, addMemo } = useEditorStore();
+  const memos = useEditorStore((s) => s.memos);
+  const addMemo = useEditorStore((s) => s.addMemo);
 
   const handleAddMemo = () => {
     const newMemo: Memo = {
@@ -54,22 +55,36 @@ export function MemoStickers({
 }: {
   scrollContentRef: RefObject<HTMLDivElement | null>;
 }) {
-  const { memos, updateMemo, removeMemo } = useEditorStore();
+  const memos = useEditorStore((s) => s.memos);
+  const updateMemo = useEditorStore((s) => s.updateMemo);
+  const removeMemo = useEditorStore((s) => s.removeMemo);
+
+  const handleUpdate = useCallback(
+    (id: string, updates: Partial<Memo>) => updateMemo(id, updates),
+    [updateMemo],
+  );
+
+  const handleRemove = useCallback(
+    (id: string) => removeMemo(id),
+    [removeMemo],
+  );
 
   return (
     <>
       {memos.map((memo) => (
-        <MemoSticker
+        <MemoStickerMemo
           key={memo.id}
           memo={memo}
           scrollContentRef={scrollContentRef}
-          onUpdate={(updates) => updateMemo(memo.id, updates)}
-          onRemove={() => removeMemo(memo.id)}
+          onUpdate={handleUpdate}
+          onRemove={handleRemove}
         />
       ))}
     </>
   );
 }
+
+const MemoStickerMemo = memo(MemoSticker);
 
 function MemoSticker({
   memo,
@@ -79,8 +94,8 @@ function MemoSticker({
 }: {
   memo: Memo;
   scrollContentRef: RefObject<HTMLDivElement | null>;
-  onUpdate: (updates: Partial<Memo>) => void;
-  onRemove: () => void;
+  onUpdate: (id: string, updates: Partial<Memo>) => void;
+  onRemove: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const { query } = useEditor();
@@ -148,8 +163,8 @@ function MemoSticker({
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-    onUpdate({ x: positionRef.current.x, y: positionRef.current.y });
-  }, [onUpdate]);
+    onUpdate(memo.id, { x: positionRef.current.x, y: positionRef.current.y });
+  }, [memo.id, onUpdate]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -162,16 +177,16 @@ function MemoSticker({
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   const toggleCollapse = () => {
-    onUpdate({ collapsed: !memo.collapsed });
+    onUpdate(memo.id, { collapsed: !memo.collapsed });
   };
 
   const handleLinkNode = () => {
     if (memo.targetNodeId) {
       // Unlink
-      onUpdate({ targetNodeId: undefined });
+      onUpdate(memo.id, { targetNodeId: undefined });
     } else if (selectedNodeId) {
       // Link to currently selected node
-      onUpdate({ targetNodeId: selectedNodeId });
+      onUpdate(memo.id, { targetNodeId: selectedNodeId });
     }
   };
 
@@ -203,7 +218,7 @@ function MemoSticker({
         <input
           type="text"
           value={memo.title}
-          onChange={(e) => onUpdate({ title: e.target.value })}
+          onChange={(e) => onUpdate(memo.id, { title: e.target.value })}
           placeholder={t("memo.titlePlaceholder")}
           className={`flex-1 bg-transparent text-xs font-semibold ${colors.headerText} placeholder:${colors.headerText}/60 outline-none`}
         />
@@ -240,7 +255,7 @@ function MemoSticker({
                   key={c.name}
                   type="button"
                   onClick={() => {
-                    onUpdate({ color: c.name });
+                    onUpdate(memo.id, { color: c.name });
                     setShowColorPicker(false);
                   }}
                   className={`rounded-full ${c.bg} ${memo.color === c.name ? "ring-2 ring-gray-600" : ""}`}
@@ -253,7 +268,7 @@ function MemoSticker({
 
         <button
           type="button"
-          onClick={onRemove}
+          onClick={() => onRemove(memo.id)}
           className={`shrink-0 ${colors.headerText} hover:text-red-600`}
         >
           <X size={12} />
@@ -273,7 +288,7 @@ function MemoSticker({
         <div className={`border-t ${colors.border}`}>
           <textarea
             value={memo.body}
-            onChange={(e) => onUpdate({ body: e.target.value })}
+            onChange={(e) => onUpdate(memo.id, { body: e.target.value })}
             placeholder={t("memo.placeholder")}
             className={`w-full resize-none bg-transparent p-2 text-xs ${colors.text} ${colors.placeholder} focus:outline-none`}
             rows={3}

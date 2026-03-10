@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
@@ -26,20 +26,18 @@ export function Toolbar() {
     canUndo: query.history.canUndo(),
     canRedo: query.history.canRedo(),
   }));
-  const {
-    layoutMode,
-    setLayoutMode,
-    themeMode,
-    setThemeMode,
-    viewportMode,
-    setViewportMode,
-    customViewportWidth,
-    customViewportHeight,
-    setCustomViewportSize,
-    isDirty,
-    intent,
-    setIntent,
-  } = useEditorStore();
+  const layoutMode = useEditorStore((s) => s.layoutMode);
+  const setLayoutMode = useEditorStore((s) => s.setLayoutMode);
+  const themeMode = useEditorStore((s) => s.themeMode);
+  const setThemeMode = useEditorStore((s) => s.setThemeMode);
+  const viewportMode = useEditorStore((s) => s.viewportMode);
+  const setViewportMode = useEditorStore((s) => s.setViewportMode);
+  const customViewportWidth = useEditorStore((s) => s.customViewportWidth);
+  const customViewportHeight = useEditorStore((s) => s.customViewportHeight);
+  const setCustomViewportSize = useEditorStore((s) => s.setCustomViewportSize);
+  const isDirty = useEditorStore((s) => s.isDirty);
+  const intent = useEditorStore((s) => s.intent);
+  const setIntent = useEditorStore((s) => s.setIntent);
   const [pendingLayout, setPendingLayout] = useState<"flow" | "absolute" | null>(null);
   const [showCustomSize, setShowCustomSize] = useState(false);
   const [customW, setCustomW] = useState(String(customViewportWidth));
@@ -272,11 +270,11 @@ export function Toolbar() {
   );
 }
 
-function Divider() {
+const Divider = memo(function Divider() {
   return <div className="mx-2 h-5 w-px bg-[var(--vscode-panel-border,#444)]" />;
-}
+});
 
-function ToolbarButton({
+const ToolbarButton = memo(function ToolbarButton({
   onClick,
   disabled,
   active,
@@ -306,4 +304,4 @@ function ToolbarButton({
       {children}
     </button>
   );
-}
+});
