@@ -208,7 +208,7 @@ export default function App() {
         lastCraftStateRef={lastCraftStateRef}
       />
       {isFileLoading && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[var(--vscode-editor-background,#1e1e1e)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--vscode-editor-background,#1e1e1e)]">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--vscode-foreground,#ccc)] border-t-transparent" />
         </div>
       )}
