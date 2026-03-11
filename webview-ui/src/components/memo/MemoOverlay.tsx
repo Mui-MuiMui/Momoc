@@ -105,9 +105,10 @@ function MemoSticker({
   const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState({ x: memo.x, y: memo.y });
   const [currentWidth, setCurrentWidth] = useState(memo.width || 256);
+  const [currentHeight, setCurrentHeight] = useState(memo.height);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
-  const resizeStartRef = useRef({ mouseX: 0, startWidth: 256 });
+  const resizeStartRef = useRef({ mouseX: 0, mouseY: 0, startWidth: 256, startHeight: 0 });
 
   const colors = getColorScheme(memo.color);
 
@@ -181,28 +182,45 @@ function MemoSticker({
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // --- Resize handlers ---
+  const MEMO_MIN_WIDTH = 200;
+  const MEMO_MIN_HEIGHT = 80;
+
+  const memoElRef = useRef<HTMLDivElement>(null);
+
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // Measure actual rendered height as start value
+    const actualHeight = memoElRef.current?.offsetHeight || currentHeight || 120;
     setIsResizing(true);
-    resizeStartRef.current = { mouseX: e.clientX, startWidth: currentWidth };
+    resizeStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      startWidth: currentWidth,
+      startHeight: actualHeight,
+    };
+    // Lock height once resize starts (switch from auto to explicit)
+    setCurrentHeight(actualHeight);
   };
 
   const handleResizeMouseMove = useCallback(
     (e: MouseEvent) => {
-      const delta = e.clientX - resizeStartRef.current.mouseX;
-      const newWidth = Math.max(160, resizeStartRef.current.startWidth + delta);
-      setCurrentWidth(newWidth);
+      const dx = e.clientX - resizeStartRef.current.mouseX;
+      const dy = e.clientY - resizeStartRef.current.mouseY;
+      setCurrentWidth(Math.max(MEMO_MIN_WIDTH, resizeStartRef.current.startWidth + dx));
+      setCurrentHeight(Math.max(MEMO_MIN_HEIGHT, resizeStartRef.current.startHeight + dy));
     },
     [],
   );
 
   const currentWidthRef = useRef(currentWidth);
   currentWidthRef.current = currentWidth;
+  const currentHeightRef = useRef(currentHeight);
+  currentHeightRef.current = currentHeight;
 
   const handleResizeMouseUp = useCallback(() => {
     setIsResizing(false);
-    onUpdate(memo.id, { width: currentWidthRef.current });
+    onUpdate(memo.id, { width: currentWidthRef.current, height: currentHeightRef.current });
   }, [memo.id, onUpdate]);
 
   useEffect(() => {
@@ -231,9 +249,10 @@ function MemoSticker({
 
   return (
     <div
-      className={`absolute z-40 rounded shadow-lg ${colors.bg} ${isDragging || isResizing ? "select-none" : ""}`}
+      ref={memoElRef}
+      className={`absolute z-40 flex flex-col rounded shadow-lg ${colors.bg} ${isDragging || isResizing ? "select-none" : ""}`}
       data-memo-id={memo.id}
-      style={{ left: position.x, top: position.y, width: currentWidth }}
+      style={{ left: position.x, top: position.y, width: currentWidth, ...(currentHeight != null ? { height: currentHeight } : {}) }}
       onMouseEnter={() => setHoveredMemoId(memo.id)}
       onMouseLeave={() => setHoveredMemoId(null)}
     >
@@ -327,13 +346,13 @@ function MemoSticker({
 
       {/* Body - collapsible */}
       {!memo.collapsed && (
-        <div className={`border-t ${colors.border}`}>
+        <div className={`flex-1 overflow-hidden border-t ${colors.border}`}>
           <textarea
             value={memo.body}
             onChange={(e) => onUpdate(memo.id, { body: e.target.value })}
             placeholder={t("memo.placeholder")}
-            className={`w-full resize-none bg-transparent p-2 text-xs ${colors.text} ${colors.placeholder} focus:outline-none`}
-            rows={3}
+            className={`h-full w-full resize-none bg-transparent p-2 text-xs ${colors.text} ${colors.placeholder} focus:outline-none`}
+            rows={currentHeight != null ? undefined : 3}
           />
         </div>
       )}

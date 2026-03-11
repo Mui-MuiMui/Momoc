@@ -16,6 +16,7 @@ export interface Memo {
   x: number;
   y: number;
   width?: number;
+  height?: number;
   /** Craft.js node ID this memo is associated with (for AI context) */
   targetNodeId?: string;
 }

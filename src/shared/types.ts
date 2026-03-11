@@ -47,6 +47,7 @@ export interface MocEditorMemo {
   x: number;
   y: number;
   width?: number;
+  height?: number;
   targetNodeId?: string;
 }
 
