@@ -91,7 +91,9 @@ export async function captureScreenshot(
       height: viewport.height,
     });
 
-    await page.goto(url, { waitUntil: "networkidle0", timeout: 15000 });
+    // SSE接続が常時開いているため networkidle0 は到達不可能。
+    // domcontentloaded で初期ロード完了を待ち、スタイル適用は waitForFunction で待機する。
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 15000 });
 
     // Tailwind CSS Browser JIT はスタイルを非同期生成するため待機
     await page.waitForFunction(
