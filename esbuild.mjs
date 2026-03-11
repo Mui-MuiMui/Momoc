@@ -11,7 +11,7 @@ const buildOptions = {
   format: "cjs",
   platform: "node",
   outfile: "out/extension.js",
-  external: ["vscode", "ts-morph", "puppeteer-core"],
+  external: ["vscode", "ts-morph"],
   // esbuild-wasm の Node.js 版 (lib/main.js) はバンドルを検出して例外を投げる。
   // alias でブラウザ版 (lib/browser.js) を指定してバンドルに含める。
   // browser.js は wasmModule + worker:false に対応しており、Node.js 24 でも動作する。
