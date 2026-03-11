@@ -47,8 +47,6 @@ export function MemoConnectorLines({
   const computeLines = useCallback(() => {
     const content = scrollContentRef.current;
     if (!content) return;
-    const scrollEl = content.parentElement;
-    if (!scrollEl) return;
     const contentRect = content.getBoundingClientRect();
 
     const linkedMemos = memos.filter((m) => m.targetNodeId);
@@ -80,20 +78,26 @@ export function MemoConnectorLines({
       if (!nodeDom) continue;
 
       const nodeRect = nodeDom.getBoundingClientRect();
-      const memoWidth = m.width || 256;
-      // Memo sticker element height - approximate based on collapsed state
-      const memoStickerEl = content.querySelector(`[data-memo-id="${m.id}"]`);
-      const memoHeight = memoStickerEl ? memoStickerEl.getBoundingClientRect().height / 1 : 60;
 
-      // Memo anchor: center of memo (in scrollContent coordinates)
-      const mx = m.x + memoWidth / 2;
-      const my = m.y + memoHeight / 2;
+      // Memo anchor: use actual DOM element for accurate position
+      const memoStickerEl = content.querySelector(`[data-memo-id="${m.id}"]`);
+      let mx: number;
+      let my: number;
+      if (memoStickerEl) {
+        const memoRect = memoStickerEl.getBoundingClientRect();
+        mx = memoRect.left - contentRect.left + memoRect.width / 2;
+        my = memoRect.top - contentRect.top + memoRect.height / 2;
+      } else {
+        // Fallback: approximate from stored position (won't be scroll-accurate)
+        const memoWidth = m.width || 256;
+        mx = m.x + memoWidth / 2;
+        my = m.y + 30;
+      }
 
       // Node anchor: center of node (convert from screen to scrollContent coordinates)
-      const nx = (nodeRect.left - contentRect.left + scrollEl.scrollLeft) / 1;
-      const ny = (nodeRect.top - contentRect.top + scrollEl.scrollTop) / 1;
-      const ncx = nx + nodeRect.width / 2;
-      const ncy = ny + nodeRect.height / 2;
+      // SVG is absolute inside scrollContent, so screen-to-SVG = screen - contentRect
+      const ncx = nodeRect.left - contentRect.left + nodeRect.width / 2;
+      const ncy = nodeRect.top - contentRect.top + nodeRect.height / 2;
 
       newLines.push({
         memoId: m.id,
