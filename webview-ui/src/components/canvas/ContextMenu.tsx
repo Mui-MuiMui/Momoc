@@ -286,6 +286,35 @@ export function ContextMenu() {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
+      // Arrow keys: move selected nodes by 1px in absolute mode
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        const currentLayoutMode = useEditorStore.getState().layoutMode;
+        if (currentLayoutMode === "absolute") {
+          e.preventDefault();
+          const dx = e.key === "ArrowLeft" ? -1 : e.key === "ArrowRight" ? 1 : 0;
+          const dy = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
+          const ids = selectedIdsRef.current;
+          for (const nodeId of ids) {
+            try {
+              const nodeHelper = queryRef.current.node(nodeId);
+              const node = nodeHelper.get();
+              if (!node?.dom) continue;
+              const currentTop = parseInt(node.dom.style.top || "0", 10);
+              const currentLeft = parseInt(node.dom.style.left || "0", 10);
+              node.dom.style.top = `${currentTop + dy}px`;
+              node.dom.style.left = `${currentLeft + dx}px`;
+              actionsRef.current.setProp(nodeId, (props: Record<string, unknown>) => {
+                props.top = `${currentTop + dy}px`;
+                props.left = `${currentLeft + dx}px`;
+              });
+            } catch {
+              // Node may not exist
+            }
+          }
+        }
+        return;
+      }
+
       if (e.key === "Delete" || e.key === "Backspace") {
         e.preventDefault();
         deleteSelected();
