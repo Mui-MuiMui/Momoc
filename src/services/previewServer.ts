@@ -280,7 +280,7 @@ export async function startPreviewServer(
           usedHashes.add(hash);
           importLines.push(`import ${componentName} from "@moc-linked/${hash}";`);
         }
-        return `<${componentName} />`;
+        return `<div style={{ width: "100%", overflow: "auto", minWidth: 0 }}><${componentName} /></div>`;
       },
     );
 
