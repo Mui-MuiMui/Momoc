@@ -35,6 +35,8 @@ export default function App() {
       version: 1,
       craftState,
       memos: s.memos,
+      memosVisible: s.memosVisible,
+      memoLineMode: s.memoLineMode,
       viewport: {
         mode: s.viewportMode,
         width: s.customViewportWidth,
@@ -115,6 +117,18 @@ export default function App() {
     prevIntentRef.current = intent;
     scheduleSave();
   }, [intent, scheduleSave]);
+
+  // Watch memo settings changes and trigger save
+  const memosVisible = useEditorStore((s) => s.memosVisible);
+  const memoLineMode = useEditorStore((s) => s.memoLineMode);
+  const memoSettingsKey = `${memosVisible}:${memoLineMode}`;
+  const prevMemoSettingsRef = useRef(memoSettingsKey);
+  useEffect(() => {
+    if (loadingRef.current) return;
+    if (prevMemoSettingsRef.current === memoSettingsKey) return;
+    prevMemoSettingsRef.current = memoSettingsKey;
+    scheduleSave();
+  }, [memoSettingsKey, scheduleSave]);
 
   // Watch canvas size changes and trigger save
   const viewportMode = useEditorStore((s) => s.viewportMode);

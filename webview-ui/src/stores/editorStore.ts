@@ -5,6 +5,8 @@ export type ThemeMode = "light" | "dark";
 export type ViewportMode = "desktop" | "tablet" | "mobile" | "custom";
 export type MemoColor = "yellow" | "blue" | "green" | "pink" | "purple" | "orange";
 
+export type MemoLineMode = "all" | "hover";
+
 export interface Memo {
   id: string;
   title: string;
@@ -13,6 +15,7 @@ export interface Memo {
   collapsed: boolean;
   x: number;
   y: number;
+  width?: number;
   /** Craft.js node ID this memo is associated with (for AI context) */
   targetNodeId?: string;
 }
@@ -28,6 +31,9 @@ interface EditorState {
   isDirty: boolean;
   selectedNodeId: string | null;
   memos: Memo[];
+  memosVisible: boolean;
+  memoLineMode: MemoLineMode;
+  hoveredMemoId: string | null;
   zoom: number;
   intent: string;
   isPaletteOpen: boolean;
@@ -47,6 +53,10 @@ interface EditorState {
   addMemo: (memo: Memo) => void;
   updateMemo: (id: string, updates: Partial<Memo>) => void;
   removeMemo: (id: string) => void;
+  toggleMemosVisible: () => void;
+  setMemosVisible: (visible: boolean) => void;
+  setMemoLineMode: (mode: MemoLineMode) => void;
+  setHoveredMemoId: (id: string | null) => void;
   setZoom: (zoom: number) => void;
   setIntent: (intent: string) => void;
   togglePalette: () => void;
@@ -66,6 +76,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   isDirty: false,
   selectedNodeId: null,
   memos: [],
+  memosVisible: true,
+  memoLineMode: "hover",
+  hoveredMemoId: null,
   zoom: 1,
   intent: "",
   isPaletteOpen: true,
@@ -90,6 +103,10 @@ export const useEditorStore = create<EditorState>((set) => ({
     })),
   removeMemo: (id) =>
     set((state) => ({ memos: state.memos.filter((m) => m.id !== id) })),
+  toggleMemosVisible: () => set((state) => ({ memosVisible: !state.memosVisible })),
+  setMemosVisible: (visible) => set({ memosVisible: visible }),
+  setMemoLineMode: (mode) => set({ memoLineMode: mode }),
+  setHoveredMemoId: (id) => set({ hoveredMemoId: id }),
   setZoom: (zoom) => set({ zoom }),
   setIntent: (intent) => set({ intent }),
   togglePalette: () => set((state) => ({ isPaletteOpen: !state.isPaletteOpen })),

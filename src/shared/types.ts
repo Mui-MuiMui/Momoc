@@ -28,6 +28,8 @@ export interface MocDocument {
 export interface MocEditorData {
   craftState: Record<string, unknown>;
   memos: MocEditorMemo[];
+  memosVisible?: boolean;
+  memoLineMode?: "all" | "hover";
   viewport?: {
     mode: string;
     width: number;
@@ -44,6 +46,7 @@ export interface MocEditorMemo {
   collapsed: boolean;
   x: number;
   y: number;
+  width?: number;
   targetNodeId?: string;
 }
 

@@ -100,10 +100,14 @@ function MemoSticker({
   const { t } = useTranslation();
   const { query } = useEditor();
   const selectedNodeId = useEditorStore((s) => s.selectedNodeId);
+  const setHoveredMemoId = useEditorStore((s) => s.setHoveredMemoId);
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [position, setPosition] = useState({ x: memo.x, y: memo.y });
+  const [currentWidth, setCurrentWidth] = useState(memo.width || 256);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const resizeStartRef = useRef({ mouseX: 0, startWidth: 256 });
 
   const colors = getColorScheme(memo.color);
 
@@ -176,6 +180,41 @@ function MemoSticker({
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
+  // --- Resize handlers ---
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    resizeStartRef.current = { mouseX: e.clientX, startWidth: currentWidth };
+  };
+
+  const handleResizeMouseMove = useCallback(
+    (e: MouseEvent) => {
+      const delta = e.clientX - resizeStartRef.current.mouseX;
+      const newWidth = Math.max(160, resizeStartRef.current.startWidth + delta);
+      setCurrentWidth(newWidth);
+    },
+    [],
+  );
+
+  const currentWidthRef = useRef(currentWidth);
+  currentWidthRef.current = currentWidth;
+
+  const handleResizeMouseUp = useCallback(() => {
+    setIsResizing(false);
+    onUpdate(memo.id, { width: currentWidthRef.current });
+  }, [memo.id, onUpdate]);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    document.addEventListener("mousemove", handleResizeMouseMove);
+    document.addEventListener("mouseup", handleResizeMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleResizeMouseMove);
+      document.removeEventListener("mouseup", handleResizeMouseUp);
+    };
+  }, [isResizing, handleResizeMouseMove, handleResizeMouseUp]);
+
   const toggleCollapse = () => {
     onUpdate(memo.id, { collapsed: !memo.collapsed });
   };
@@ -192,8 +231,11 @@ function MemoSticker({
 
   return (
     <div
-      className={`absolute z-40 w-64 rounded shadow-lg ${colors.bg} ${isDragging ? "select-none" : ""}`}
-      style={{ left: position.x, top: position.y }}
+      className={`absolute z-40 rounded shadow-lg ${colors.bg} ${isDragging || isResizing ? "select-none" : ""}`}
+      data-memo-id={memo.id}
+      style={{ left: position.x, top: position.y, width: currentWidth }}
+      onMouseEnter={() => setHoveredMemoId(memo.id)}
+      onMouseLeave={() => setHoveredMemoId(null)}
     >
       {/* Header */}
       <div
@@ -295,6 +337,16 @@ function MemoSticker({
           />
         </div>
       )}
+
+      {/* Resize handle */}
+      <div
+        className={`absolute bottom-0 right-0 h-3 w-3 cursor-nwse-resize ${colors.headerText} opacity-30 hover:opacity-70`}
+        onMouseDown={handleResizeMouseDown}
+      >
+        <svg viewBox="0 0 12 12" fill="currentColor" className="h-full w-full">
+          <path d="M11 6L6 11M11 9L9 11" stroke="currentColor" strokeWidth="1.5" fill="none" />
+        </svg>
+      </div>
     </div>
   );
 }

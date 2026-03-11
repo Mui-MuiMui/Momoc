@@ -26,6 +26,8 @@ export function EditorLoader({
   const setCustomViewportSize = useEditorStore((s) => s.setCustomViewportSize);
   const setIntent = useEditorStore((s) => s.setIntent);
   const setLayoutMode = useEditorStore((s) => s.setLayoutMode);
+  const setMemosVisible = useEditorStore((s) => s.setMemosVisible);
+  const setMemoLineMode = useEditorStore((s) => s.setMemoLineMode);
   const setFileLoading = useEditorStore((s) => s.setFileLoading);
   const historyLimit = useEditorStore((s) => s.historyLimit);
   useHistoryLimit(historyLimit);
@@ -66,6 +68,12 @@ export function EditorLoader({
         if (typeof parsed.intent === "string") setIntent(parsed.intent);
         if (parsed.layoutMode === "flow" || parsed.layoutMode === "absolute") {
           setLayoutMode(parsed.layoutMode);
+        }
+        if (typeof parsed.memosVisible === "boolean") {
+          setMemosVisible(parsed.memosVisible);
+        }
+        if (parsed.memoLineMode === "all" || parsed.memoLineMode === "hover") {
+          setMemoLineMode(parsed.memoLineMode);
         }
       } else if (parsed.ROOT) {
         // Old format: raw Craft.js JSON (backward compat)
@@ -140,7 +148,7 @@ export function EditorLoader({
     }
     // Only re-run when documentContent changes (actions is accessed via ref)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading]);
+  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading, setMemosVisible, setMemoLineMode]);
 
   return null;
 }

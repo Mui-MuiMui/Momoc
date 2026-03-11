@@ -6,7 +6,8 @@ import { CraftContainer } from "../../crafts/layout/CraftContainer";
 import { CraftFreeCanvas } from "../../crafts/layout/CraftFreeCanvas";
 import { layoutModeRef } from "../../crafts/layoutModeRef";
 import { MemoAddButton, MemoStickers } from "../memo/MemoOverlay";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { MemoConnectorLines } from "../memo/MemoConnectorLines";
+import { ZoomIn, ZoomOut, Maximize2, Eye, EyeOff, Spline } from "lucide-react";
 
 const VIEWPORT_WIDTHS: Record<string, number> = {
   desktop: 1280,
@@ -96,6 +97,10 @@ export function EditorCanvas() {
   const zoom = useEditorStore((s) => s.zoom);
   const setZoom = useEditorStore((s) => s.setZoom);
   const layoutMode = useEditorStore((s) => s.layoutMode);
+  const memosVisible = useEditorStore((s) => s.memosVisible);
+  const toggleMemosVisible = useEditorStore((s) => s.toggleMemosVisible);
+  const memoLineMode = useEditorStore((s) => s.memoLineMode);
+  const setMemoLineMode = useEditorStore((s) => s.setMemoLineMode);
 
   // Craft.js canDrag ルールから参照されるモジュールレベルフラグを同期
   useEffect(() => {
@@ -287,8 +292,11 @@ export function EditorCanvas() {
             minWidth: "100%",
           }}
         >
+          {/* Connector lines - scroll with canvas, z-30 (below memos z-40) */}
+          <MemoConnectorLines scrollContentRef={scrollContentRef} />
+
           {/* Memo stickers - scroll with canvas */}
-          <MemoStickers scrollContentRef={scrollContentRef} />
+          {memosVisible && <MemoStickers scrollContentRef={scrollContentRef} />}
 
           {/* Zoom wrapper */}
           <div
@@ -339,8 +347,39 @@ export function EditorCanvas() {
 
       {/* Fixed overlays (outside scroll container) */}
       <div className="pointer-events-none absolute right-4 top-2 z-50">
-        <div className="pointer-events-auto">
-          <MemoAddButton />
+        <div className="pointer-events-auto flex items-center gap-1">
+          {/* Line mode toggle - only when memos visible */}
+          {memosVisible && (
+            <button
+              type="button"
+              onClick={() => setMemoLineMode(memoLineMode === "all" ? "hover" : "all")}
+              className={`flex items-center justify-center rounded px-1.5 py-1 text-xs hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] ${
+                memoLineMode === "all"
+                  ? "bg-yellow-500/80 text-black"
+                  : "bg-[var(--vscode-editor-background,#1e1e1e)]/80 text-[var(--vscode-foreground,#ccc)]"
+              }`}
+              title={t(memoLineMode === "all" ? "memo.lineModeAll" : "memo.lineModeHover")}
+            >
+              <Spline size={14} />
+            </button>
+          )}
+
+          {/* Memo visibility toggle */}
+          <button
+            type="button"
+            onClick={toggleMemosVisible}
+            className={`flex items-center justify-center rounded px-1.5 py-1 text-xs hover:bg-[var(--vscode-toolbar-hoverBackground,#383838)] ${
+              memosVisible
+                ? "bg-[var(--vscode-editor-background,#1e1e1e)]/80 text-[var(--vscode-foreground,#ccc)]"
+                : "bg-[var(--vscode-editor-background,#1e1e1e)]/80 text-[var(--vscode-foreground,#ccc)] opacity-50"
+            }`}
+            title={t(memosVisible ? "memo.hideAll" : "memo.showAll")}
+          >
+            {memosVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+          </button>
+
+          {/* Add memo button - only when visible */}
+          {memosVisible && <MemoAddButton />}
         </div>
       </div>
 
