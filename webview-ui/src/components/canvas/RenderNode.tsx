@@ -413,5 +413,23 @@ export const RenderNode = React.memo(function RenderNode({
     };
   }, [dom, isActive, noResize, isMultiSelected, onMouseDown]);
 
+  // 初回レンダー時に dom が null のため useEffect/useLayoutEffect では
+  // ブラウザ描画前に位置を適用できない。React.cloneElement で render 要素に
+  // 初期スタイルを注入し、最初の描画から正しい位置に表示する。
+  const needsAbsolute = layoutMode === "absolute" || parentIsGroup;
+  const initialStyle = needsAbsolute
+    ? {
+        position: "absolute" as const,
+        top: nodeTop || "0px",
+        left: nodeLeft || "0px",
+        zIndex: nodeZIndex != null ? nodeZIndex : undefined,
+      }
+    : undefined;
+
+  if (initialStyle && React.isValidElement(render)) {
+    const existingStyle = (render.props as Record<string, unknown>)?.style as Record<string, unknown> | undefined;
+    return <>{React.cloneElement(render, { style: { ...existingStyle, ...initialStyle } } as Record<string, unknown>)}</>;
+  }
+
   return <>{render}</>;
 });
