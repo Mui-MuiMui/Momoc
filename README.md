@@ -25,24 +25,41 @@ Visual Web UI Builder for VSCode
 など
 
 ## 機能
+**主な機能**
 - shadcn/ui風のコンポーネントを配置しWebUIのデザイン
 - コンポーネント作成モードで絶対座標配置でのコンポーネント作成
 - ポップオーバー、ダイアログなどで表示する小画面等の作成、イメージ確認
 - Webプレビューによる実際のブラウザでの見た目確認、簡易的な動作確認
 
+**UIコンポーネント配置イメージ**
+![SetCompornents_Demo](./doc/demo_image/Momoc_Demo_SetCompornents.gif)
+
+
+**メモ(付箋)配置イメージ**
+![SetMemos_Demo](./doc/demo_image/Momoc_Demo_SetMemos.gif)
+
+<br />
+
+**ファイル仕様**
 - [.mocファイル仕様](https://github.com/Mui-MuiMui/moc-spec) (Momocの開発に合わせて変更する可能性があります。)
 - [ファイル仕様の概念(思想)](https://github.com/Mui-MuiMui/AINDF) (.mocの元となる考え方、思想です。)
 
+AIネイティブなデータ形式を採用しています。<br/>
+そのため、説明なくファイルの状態をAIは理解することができます。<br/>
+また、付箋などに記載された意図を読み取ることでAIが実装のする際の手助けをすることができます。<br/>
+
+
+
 ## 簡易ロードマップ
 
-- MVP作成
-- shadcn/uiのコンポーネントを追加(v0.5.xx相当)(ある程度完了、現在ブラッシュアップ中)
-- プロパティ要素の拡充(作業時:v0.6.xx相当予定)(完了後アルファからベータバージョンへ昇格)
+- [x] MVP作成
+- [x] shadcn/uiのコンポーネントを追加(v0.5.6相当)
+- [ ] プロパティ要素の拡充(作業時:v0.6.xx相当予定)(完了後アルファからベータバージョンへ昇格)
    この項目では既存のTailwindCSSのclassを手打ちで使えるようにする(したい)
    現在は部分的に対応
-- ~~アイコン(SVG)配置機能の追加(作業時:v0.7.xx相当予定だったが既に追加済み)~~
-- UIの整理(作業時:v0.8.xx相当予定)
-- リリース(v1.0.x予定)
+- [ ] ~~アイコン(SVG)配置機能の追加(作業時:v0.7.xx相当予定だったが既に追加済み)~~
+- [ ] UIの整理(作業時:v0.8.xx相当予定)
+- [ ] リリース(v1.0.x予定)
 
 
 
@@ -62,21 +79,36 @@ Visual Web UI Builder for VSCode
 - Attach data created with this app (.moc format) to AI and implement it in a production environment.
 
 ## Features
+**Main Features**
 - Design Web UIs by placing shadcn/ui-style components
 - Create components with absolute positioning in component creation mode
 - Create and preview small screens displayed via popovers, dialogs, etc.
 - Check actual appearance in the browser via web preview, with basic interaction testing
 
+**UI Component Placement Demo**
+![SetCompornents_Demo](./doc/demo_image/Momoc_Demo_SetCompornents.gif)
+
+
+**Memo (Sticky Note) Placement Demo**
+![SetMemos_Demo](./doc/demo_image/Momoc_Demo_SetMemos.gif)
+
+<br />
+
+**File Specification**
 - [.moc File Specification](https://github.com/Mui-MuiMui/moc-spec) (Subject to change alongside Momoc development.)
 - [Core Philosophy & Concepts](https://github.com/Mui-MuiMui/AINDF) (The underlying philosophy behind the .moc format.)
 
+Momoc uses an AI-native data format.<br/>
+This means AI can understand the state of your files without any additional explanation.<br/>
+It also allows AI to assist with implementation by reading the intent written on sticky notes and annotations.<br/>
+
 ## Roadmap
 
-- Build MVP
-- Add shadcn/ui components (around v0.5.xx) (mostly complete, currently polishing)
-- Expand property options (expected around v0.6.xx) (promotion from alpha to beta upon completion)
-  Enable manual input of existing TailwindCSS classes (planned)
-  Currently partially supported
-- ~~Add icon (SVG) placement feature (was expected around v0.7.xx, but already added)~~
-- UI/UX polish (expected around v0.8.xx)
-- Release (v1.0.x planned)
+- [x] Build MVP
+- [x] Add shadcn/ui components (around v0.5.6)
+- [ ] Expand property options (expected around v0.6.xx) (promotion from alpha to beta upon completion)
+   Enable manual input of existing TailwindCSS classes (planned)
+   Currently partially supported
+- [ ] ~~Add icon (SVG) placement feature (was expected around v0.7.xx, but already added)~~
+- [ ] UI/UX polish (expected around v0.8.xx)
+- [ ] Release (v1.0.x planned)
