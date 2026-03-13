@@ -13,7 +13,7 @@ export default defineConfig({
   build: {
     outDir: "../dist/webview",
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: resolve(__dirname, "index.html"),
       output: {
         entryFileNames: "assets/[name].js",

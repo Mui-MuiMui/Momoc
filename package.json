@@ -2,7 +2,7 @@
   "name": "momoc",
   "displayName": "Momoc",
   "description": "Visual Web UI Builder for VSCode",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "publisher": "Mui-MuiMui",
   "license": "MIT",
   "repository": {
@@ -142,28 +142,28 @@
     "preinstall": "npx only-allow pnpm"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@eslint/js": "^10.0.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.0.0",
-    "@types/vscode": "^1.100.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "@vscode/test-electron": "^2.5.0",
-    "@vscode/vsce": "^3.0.0",
-    "concurrently": "^9.0.0",
-    "esbuild": "^0.25.0",
-    "esbuild-wasm": "^0.27.3",
-    "eslint": "^9.0.0",
-    "eslint-plugin-react": "^7.0.0",
-    "eslint-plugin-react-hooks": "^5.0.0",
+    "@types/node": "^25.0.0",
+    "@types/vscode": "^1.110.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.7.1",
+    "concurrently": "^9.2.1",
+    "esbuild": "^0.27.0",
+    "esbuild-wasm": "^0.27.4",
+    "eslint": "^10.0.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "mocha": "^11.7.5",
-    "prettier": "^3.0.0",
-    "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.0"
   },
   "dependencies": {
     "puppeteer-core": "^24.39.0",
-    "ts-morph": "^25.0.0"
+    "ts-morph": "^27.0.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": []
