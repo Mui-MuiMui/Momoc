@@ -658,6 +658,7 @@ function startAbsoluteDrag(
   getTree: () => NodeTree | null,
   zoom: number,
   actions: ReturnType<typeof useEditor>["actions"],
+  query: ReturnType<typeof useEditor>["query"],
 ) {
   startEvent.preventDefault();
 
@@ -711,7 +712,36 @@ function startAbsoluteDrag(
       rootNode.data.props.left = `${x}px`;
     }
 
+    // MutationObserver で新規 DOM 要素追加をブラウザ描画前に検知し、
+    // 即座に position/top/left を適用してフラッシュを防止する。
+    // useEffect は dom ref が null → 非null になる2回目のレンダーまで動かないため、
+    // DOM レベルで先に位置を確定させる必要がある。
+    let observer: MutationObserver | undefined;
+    try {
+      const rootDom = query.node("ROOT").get().dom;
+      if (rootDom) {
+        observer = new MutationObserver((mutations) => {
+          for (const mutation of mutations) {
+            for (const added of Array.from(mutation.addedNodes)) {
+              if (added instanceof HTMLElement) {
+                added.style.position = "absolute";
+                added.style.top = `${y}px`;
+                added.style.left = `${x}px`;
+              }
+            }
+          }
+          observer?.disconnect();
+        });
+        observer.observe(rootDom, { childList: true });
+      }
+    } catch {
+      // query 失敗時は observer なしで続行（useEffect が後から適用）
+    }
+
     actions.addNodeTree(tree, "ROOT");
+
+    // 安全のため observer をクリーンアップ
+    setTimeout(() => observer?.disconnect(), 200);
   };
 
   document.addEventListener("mousemove", onMove);
@@ -727,12 +757,12 @@ function CustomComponentCard({
   connectors: ReturnType<typeof useEditor>["connectors"];
   onContextMenu: (e: React.MouseEvent) => void;
 }) {
-  const { actions } = useEditor();
+  const { query, actions } = useEditor();
   const layoutMode = useEditorStore((s) => s.layoutMode);
   const zoom = useEditorStore((s) => s.zoom);
 
-  const stateRef = useRef({ layoutMode, zoom, actions, entry });
-  stateRef.current = { layoutMode, zoom, actions, entry };
+  const stateRef = useRef({ layoutMode, zoom, query, actions, entry });
+  stateRef.current = { layoutMode, zoom, query, actions, entry };
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -742,8 +772,8 @@ function CustomComponentCard({
       if (stateRef.current.layoutMode !== "absolute") return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      const { zoom, actions, entry } = stateRef.current;
-      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState), zoom, actions);
+      const { zoom, query, actions, entry } = stateRef.current;
+      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState), zoom, actions, query);
     };
     el.addEventListener("mousedown", onMouseDown, true);
     return () => el.removeEventListener("mousedown", onMouseDown, true);
@@ -812,6 +842,7 @@ function PaletteItemCard({
             .toNodeTree(),
         zoom,
         actions,
+        query,
       );
     };
     el.addEventListener("mousedown", onMouseDown, true);

@@ -70,14 +70,24 @@ registerGenerator("CraftCarousel", {
       const slotId = node.linkedNodes?.[`slide_${key}`];
       const slotNode = slotId ? ctx.craftState[slotId] : null;
       const slotClassName = (slotNode?.props?.className as string) || "";
+      const slotWidth = (slotNode?.props?.width as string) || "auto";
+      const slotHeight = (slotNode?.props?.height as string) || "auto";
       const slotChildren = slotNode
         ? (slotNode.nodes || []).map((childId) => ctx.renderNode(childId, indent + 5)).filter(Boolean)
         : [];
 
       if (slotChildren.length > 0) {
-        const innerCls = ["h-full w-full", slotClassName].filter(Boolean).join(" ");
+        const hasSlotWidth = slotWidth && slotWidth !== "auto";
+        const hasSlotHeight = slotHeight && slotHeight !== "auto";
+        const innerClsParts = [
+          !hasSlotHeight ? "h-full" : undefined,
+          !hasSlotWidth ? "w-full" : undefined,
+          slotClassName || undefined,
+        ].filter(Boolean);
+        const innerCls = innerClsParts.join(" ");
+        const slotStyleAttr = ctx.buildStyleAttr({ width: slotWidth, height: slotHeight });
         lines.push(`${pad}    <CarouselItem${itemClassAttr}>`);
-        lines.push(`${pad}      <div className="${ctx.escapeAttr(innerCls)}">`);
+        lines.push(`${pad}      <div${innerCls ? ` className="${ctx.escapeAttr(innerCls)}"` : ""}${slotStyleAttr}>`);
         for (const child of slotChildren) lines.push(child);
         lines.push(`${pad}      </div>`);
         lines.push(`${pad}    </CarouselItem>`);
