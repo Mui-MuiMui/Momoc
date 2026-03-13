@@ -11,6 +11,7 @@
 | [ui-panels.md](.claude/rules/ui-panels.md)                             | TailwindEditor / PropEditor の区別           |
 | [moc-data-policy.md](.claude/rules/moc-data-policy.md)                 | .mocファイルのデータポリシー                 |
 | [testing.md](.claude/rules/testing.md)                                 | ユニット/E2Eテストの構成・実行・見直し基準   |
+| [subagent-usage.md](.claude/rules/subagent-usage.md)                   | サブエージェントの使用タイミング・使い分け   |
 
 ## Agentについて
 
