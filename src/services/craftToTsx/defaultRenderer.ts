@@ -40,7 +40,7 @@ export function defaultRender(
   // Merge className
   const userClassName = (node.props?.className as string) || "";
   const combinedClassName = ctx.mergeContainerClasses(containerClass, userClassName);
-  const classNameAttr = combinedClassName ? ` className="${combinedClassName}"` : "";
+  const classNameAttr = combinedClassName ? ` className="${ctx.escapeAttr(combinedClassName)}"` : "";
 
   // Build dimension styles
   const styleAttr = ctx.buildStyleAttr(

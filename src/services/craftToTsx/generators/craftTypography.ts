@@ -42,7 +42,7 @@ registerGenerator("CraftTypography", {
 
     // Merge variant className with user className
     const mergedClass = userClassName ? `${className} ${userClassName}` : className;
-    const classNameAttr = ` className="${mergedClass}"`;
+    const classNameAttr = ` className="${ctx.escapeAttr(mergedClass)}"`;
 
     const lines: string[] = [];
     if (mocComments) {

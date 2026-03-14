@@ -26,7 +26,7 @@ registerGenerator("CraftCard", {
     const tag = "Card";
     const propsStr = ctx.buildPropsString("CraftCard", node.props, { tag, importFrom: "@/components/ui/card", importName: "Card", propsMap: ["className"], isContainer: true });
     const userClassName = (node.props?.className as string) || "";
-    const classNameAttr = userClassName ? ` className="${userClassName}"` : "";
+    const classNameAttr = userClassName ? ` className="${ctx.escapeAttr(userClassName)}"` : "";
     const styleAttr = ctx.buildStyleAttr(node.props);
 
     const title = (node.props?.title as string) || "";
