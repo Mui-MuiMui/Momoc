@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 .claude/**
+.agents/**
 src/**
 webview-ui/src/**
 webview-ui/node_modules/**
