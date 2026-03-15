@@ -48,6 +48,27 @@ AIネイティブなデータ形式を採用しています。<br/>
 そのため、説明なくファイルの状態をAIは理解することができます。<br/>
 また、付箋などに記載された意図を読み取ることでAIが実装のする際の手助けをすることができます。<br/>
 
+**対応コンポーネント**
+
+shadcn/ui:
+Accordion / Alert / AspectRatio / Avatar / Badge / Breadcrumb / Button /
+Calendar / Card / Carousel / Checkbox / Collapsible / Combobox / Command /
+ContextMenu / DataTable / DatePicker / DropdownMenu / HoverCard / Input /
+Label / Menubar / NavigationMenu / Pagination / Progress / RadioGroup /
+Resizable / ScrollArea / Select / Separator / Sidebar / Slider / Switch /
+Table / Tabs / Textarea / Toggle / ToggleGroup / Tooltip / Typography
+
+HTML / Layout:
+Container / Group / FreeCanvas / Image / PlaceholderImage / Text / Icon
+
+
+
+## 始め方
+
+1. 拡張子 `.moc` のファイルを新規作成する
+2. VSCode上でそのファイルを開く — Momocエディタが自動起動する
+3. パレットからコンポーネントをキャンバスにドラッグして配置する
+
 
 
 ## 簡易ロードマップ
@@ -99,6 +120,29 @@ Visual Web UI Builder for VSCode
 Momoc uses an AI-native data format.<br/>
 This means AI can understand the state of your files without any additional explanation.<br/>
 It also allows AI to assist with implementation by reading the intent written on sticky notes and annotations.<br/>
+
+**Supported Components**
+
+shadcn/ui:
+Accordion / Alert / AspectRatio / Avatar / Badge / Breadcrumb / Button /
+Calendar / Card / Carousel / Checkbox / Collapsible / Combobox / Command /
+ContextMenu / DataTable / DatePicker / DropdownMenu / HoverCard / Input /
+Label / Menubar / NavigationMenu / Pagination / Progress / RadioGroup /
+Resizable / ScrollArea / Select / Separator / Sidebar / Slider / Switch /
+Table / Tabs / Textarea / Toggle / ToggleGroup / Tooltip / Typography
+
+HTML / Layout:
+Container / Group / FreeCanvas / Image / PlaceholderImage / Text / Icon
+
+
+
+## Getting Started
+
+1. Create a new file with the `.moc` extension
+2. Open the file in VSCode — the Momoc editor launches automatically
+3. Drag components from the palette onto the canvas
+
+
 
 ## Roadmap
 
