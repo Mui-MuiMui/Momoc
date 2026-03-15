@@ -42,7 +42,7 @@ registerGenerator("CraftHoverCard", {
     const side = (node.props?.hoverCardSide as string) || "bottom";
     const userCls = (node.props?.className as string) || "";
     const triggerCls = ["text-sm font-medium underline underline-offset-4 cursor-pointer", userCls].filter(Boolean).join(" ");
-    const triggerSpan = `${pad}  <span className="${triggerCls}"${styleAttr}>${ctx.escapeJsx(triggerText)}</span>`;
+    const triggerSpan = `${pad}  <span className="${ctx.escapeAttr(triggerCls)}"${styleAttr}>${ctx.escapeJsx(triggerText)}</span>`;
     const contentComment = `{/* linked: ${ctx.escapeJsx(linkedMocPath)} */}`;
     const hoverCardTsx = [
       `${pad}<HoverCard>`,

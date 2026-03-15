@@ -42,14 +42,12 @@ registerGenerator("CraftRadioGroup", {
     const descStyleAttr = descriptionColor ? ` style={{ color: "${descriptionColor}" }}` : "";
 
     const userClassName = (props?.className as string) || "";
-    let classNameAttr = userClassName ? ` className="${userClassName}"` : "";
+    let classNameAttr: string;
     if (orientation === "horizontal") {
-      const existingMatch = classNameAttr.match(/className="([^"]*)"/);
-      if (existingMatch) {
-        classNameAttr = ` className="${existingMatch[1]} flex flex-row gap-4"`;
-      } else {
-        classNameAttr = ` className="flex flex-row gap-4"`;
-      }
+      const combined = userClassName ? `${userClassName} flex flex-row gap-4` : "flex flex-row gap-4";
+      classNameAttr = ` className="${ctx.escapeAttr(combined)}"`;
+    } else {
+      classNameAttr = userClassName ? ` className="${ctx.escapeAttr(userClassName)}"` : "";
     }
 
     const styleAttr = ctx.buildStyleAttr(props);

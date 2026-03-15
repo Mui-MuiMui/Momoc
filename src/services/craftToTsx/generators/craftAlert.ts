@@ -25,7 +25,7 @@ registerGenerator("CraftAlert", {
     const mapping = { tag, importFrom: "@/components/ui/alert", importName: "Alert", propsMap: ["variant", "className"], isContainer: false };
     const propsStr = ctx.buildPropsString("CraftAlert", node.props, mapping);
     const userClassName = (node.props?.className as string) || "";
-    const classNameAttr = userClassName ? ` className="${userClassName}"` : "";
+    const classNameAttr = userClassName ? ` className="${ctx.escapeAttr(userClassName)}"` : "";
     const styleAttr = ctx.buildStyleAttr(node.props);
 
     const title = (node.props?.title as string) || "";

@@ -26,7 +26,7 @@ registerGenerator("CraftAccordion", {
     const mapping = { tag, importFrom: "@/components/ui/accordion", importName: "Accordion", propsMap: ["type", "className"], isContainer: false };
     const propsStr = ctx.buildPropsString("CraftAccordion", node.props, mapping);
     const userClassName = (node.props?.className as string) || "";
-    const classNameAttr = userClassName ? ` className="${userClassName}"` : "";
+    const classNameAttr = userClassName ? ` className="${ctx.escapeAttr(userClassName)}"` : "";
     const styleAttr = ctx.buildStyleAttr(node.props);
 
     const items = ((node.props?.items as string) || "Item 1,Item 2,Item 3").split(",").map((s) => s.trim());

@@ -67,14 +67,14 @@ export function buildStyleAttr(props: Record<string, unknown>, extraStyles?: Rec
   const zIndex = props?.zIndex as number | undefined;
   const parts: string[] = [];
   if (extraStyles) {
-    for (const [k, v] of Object.entries(extraStyles)) parts.push(`${k}: "${v}"`);
+    for (const [k, v] of Object.entries(extraStyles)) parts.push(`${k}: "${escapeJsString(v)}"`);
   }
-  if (w && w !== "auto") parts.push(`width: "${w}"`);
-  if (h && h !== "auto") parts.push(`height: "${h}"`);
-  if (objectFit && objectFit !== "cover") parts.push(`objectFit: "${objectFit}"`);
+  if (w && w !== "auto") parts.push(`width: "${escapeJsString(w)}"`);
+  if (h && h !== "auto") parts.push(`height: "${escapeJsString(h)}"`);
+  if (objectFit && objectFit !== "cover") parts.push(`objectFit: "${escapeJsString(objectFit)}"`);
   if (top || left) parts.push(`position: "absolute"`);
-  if (top) parts.push(`top: "${top}"`);
-  if (left) parts.push(`left: "${left}"`);
+  if (top) parts.push(`top: "${escapeJsString(top)}"`);
+  if (left) parts.push(`left: "${escapeJsString(left)}"`);
   if (zIndex) parts.push(`zIndex: ${zIndex}`);
   if (parts.length === 0) return "";
   return ` style={{ ${parts.join(", ")} }}`;
@@ -199,7 +199,7 @@ export function wrapWithTooltip(rendered: string, props: Record<string, unknown>
   if (!tooltipText) return rendered;
 
   const tooltipSide = props?.tooltipSide as string | undefined;
-  const sideAttr = tooltipSide ? ` side="${tooltipSide}"` : "";
+  const sideAttr = tooltipSide ? ` side="${escapeAttr(tooltipSide)}"` : "";
   const triggerTag = tooltipTrigger === "focus"
     ? `<TooltipTrigger asChild trigger="focus">`
     : `<TooltipTrigger asChild>`;
@@ -246,7 +246,7 @@ export function wrapWithHoverCard(rendered: string, props: Record<string, unknow
     `${pad}  <HoverCardTrigger asChild>`,
     rendered,
     `${pad}  </HoverCardTrigger>`,
-    `${pad}  <HoverCardContent side="${side}">`,
+    `${pad}  <HoverCardContent side="${escapeAttr(side)}">`,
     `${pad}    ${contentComment}`,
     `${pad}  </HoverCardContent>`,
     `${pad}</HoverCard>`,
@@ -277,8 +277,8 @@ export function wrapWithOverlay(rendered: string, props: Record<string, unknown>
   const overlayWidth = props?.overlayWidth as string | undefined;
   const overlayHeight = props?.overlayHeight as string | undefined;
   const styleParts: string[] = [];
-  if (overlayWidth) styleParts.push(`maxWidth: "${overlayWidth}"`);
-  if (overlayHeight) styleParts.push(`maxHeight: "${overlayHeight}", overflow: "auto"`);
+  if (overlayWidth) styleParts.push(`maxWidth: "${escapeJsString(overlayWidth)}"`);
+  if (overlayHeight) styleParts.push(`maxHeight: "${escapeJsString(overlayHeight)}", overflow: "auto"`);
   const styleAttr = styleParts.length > 0 ? ` style={{ ${styleParts.join(", ")} }}` : "";
 
   const overlayClassName = props?.overlayClassName as string | undefined;
@@ -326,7 +326,7 @@ export function wrapWithOverlay(rendered: string, props: Record<string, unknown>
     }
     case "sheet": {
       const side = (props?.sheetSide as string) || "right";
-      const sideAttr = side !== "right" ? ` side="${side}"` : "";
+      const sideAttr = side !== "right" ? ` side="${escapeAttr(side)}"` : "";
       return [
         `${pad}<Sheet>`,
         `${pad}  <SheetTrigger asChild>`,

@@ -1256,7 +1256,10 @@ import { useState } from "react";
 const KBD_STYLE = "pointer-events:none;display:inline-flex;height:1.25rem;align-items:center;gap:0.25rem;border-radius:0.25rem;border:1px solid;padding-left:0.375rem;padding-right:0.375rem;font-family:monospace;font-size:0.625rem;font-weight:500;background:var(--muted,#f1f5f9);color:var(--muted-foreground,#64748b);user-select:none";
 function kbdHtml(text: string): string {
   if (!text.includes("<kbd>")) return text;
-  return text.replace(/<kbd>(.*?)<\\/kbd>/g, function(_: string, inner: string) { return '<kbd style="' + KBD_STYLE + '">' + inner + '</kbd>'; });
+  return text.replace(/<kbd>(.*?)<\\/kbd>/g, function(_: string, inner: string) {
+    const escaped = inner.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return '<kbd style="' + KBD_STYLE + '">' + escaped + '</kbd>';
+  });
 }
 export function Switch(props: any) {
   const { className = "", checked: initialChecked = false, disabled, description = "", invalid = false, size = "default", variant = "default", checkedClassName = "", uncheckedClassName = "", cardBorderColor = "", cardBgColor = "", descriptionColor = "", labelColor = "", children, ...rest } = props;

@@ -79,7 +79,7 @@ registerGenerator("CraftCommand", {
     const mocComments = ctx.buildMocComments(nodeId, pad, node.props);
     const props = node.props;
     const userClassName = (props?.className as string) || "";
-    const classNameAttr = userClassName ? ` className="${userClassName}"` : "";
+    const classNameAttr = userClassName ? ` className="${ctx.escapeAttr(userClassName)}"` : "";
     const styleAttr = ctx.buildStyleAttr(props);
 
     const placeholder = (props?.placeholder as string) || "Type a command or search...";

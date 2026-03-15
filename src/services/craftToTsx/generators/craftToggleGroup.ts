@@ -37,7 +37,7 @@ registerGenerator("CraftToggleGroup", {
     const userClassName = (props?.className as string) || "";
     const gapClass = gap ? `gap-${gap}` : "";
     const combinedCls = [gapClass, userClassName].filter(Boolean).join(" ");
-    const tgClassAttr = combinedCls ? ` className="${combinedCls}"` : "";
+    const tgClassAttr = combinedCls ? ` className="${ctx.escapeAttr(combinedCls)}"` : "";
 
     const itemStyleParts: string[] = [];
     if (cardBorderColor) itemStyleParts.push(`borderColor: "${cardBorderColor}"`);

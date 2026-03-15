@@ -54,7 +54,7 @@ registerGenerator("CraftCombobox", {
     const lines: string[] = [];
     lines.push(`${pad}<Popover${popoverClassAttr}${popoverStyleAttr}>`);
     lines.push(`${pad}  <PopoverTrigger asChild>`);
-    lines.push(`${pad}    <Button variant="outline" role="combobox" className="${buttonClassName}"${buttonStyleAttr}>`);
+    lines.push(`${pad}    <Button variant="outline" role="combobox" className="${ctx.escapeAttr(buttonClassName)}"${buttonStyleAttr}>`);
     lines.push(`${pad}      ${ctx.escapeJsx(placeholder)}`);
     lines.push(`${pad}      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />`);
     lines.push(`${pad}    </Button>`);

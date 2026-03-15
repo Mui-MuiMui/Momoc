@@ -214,7 +214,7 @@ export function craftStateToTsx(
     // Build TSX source with Fragment wrapper and @moc-node ROOT comment
     let tsxSource: string;
     if (renderedBody) {
-      const rootClassAttr = rootCombinedClass ? ` className="${rootCombinedClass}"` : "";
+      const rootClassAttr = rootCombinedClass ? ` className="${escapeAttr(rootCombinedClass)}"` : "";
       const rootMocComments = buildMocCommentsUtil("ROOT", "      ", rootNode.props, memos);
       tsxSource = `export default function ${componentName}() {\n  return (\n    <>\n${rootMocComments}\n      <div${rootClassAttr}${rootStyleAttr}>\n${renderedBody}\n      </div>\n    </>\n  );\n}`;
     } else {

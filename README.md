@@ -48,15 +48,34 @@ AIネイティブなデータ形式を採用しています。<br/>
 そのため、説明なくファイルの状態をAIは理解することができます。<br/>
 また、付箋などに記載された意図を読み取ることでAIが実装のする際の手助けをすることができます。<br/>
 
+**対応コンポーネント**
+
+shadcn/ui:
+Accordion / Alert / AspectRatio / Avatar / Badge / Breadcrumb / Button /
+Calendar / Card / Carousel / Checkbox / Collapsible / Combobox / Command /
+ContextMenu / DataTable / DatePicker / DropdownMenu / HoverCard / Input /
+Label / Menubar / NavigationMenu / Pagination / Progress / RadioGroup /
+Resizable / ScrollArea / Select / Separator / Sidebar / Slider / Switch /
+Table / Tabs / Textarea / Toggle / ToggleGroup / Tooltip / Typography
+
+HTML / Layout:
+Container / Group / FreeCanvas / Image / PlaceholderImage / Text / Icon
+
+
+
+## 始め方
+
+1. 拡張子 `.moc` のファイルを新規作成する
+2. VSCode上でそのファイルを開く — Momocエディタが自動起動する
+3. パレットからコンポーネントをキャンバスにドラッグして配置する
+
 
 
 ## 簡易ロードマップ
 
 - [x] MVP作成
 - [x] shadcn/uiのコンポーネントを追加(v0.5.6相当)
-- [ ] プロパティ要素の拡充(作業時:v0.6.xx相当予定)(完了後アルファからベータバージョンへ昇格)
-   この項目では既存のTailwindCSSのclassを手打ちで使えるようにする(したい)
-   現在は部分的に対応
+- [x] プロパティ要素の拡充(作業時:v0.6.xx相当予定)
 - [ ] ~~アイコン(SVG)配置機能の追加(作業時:v0.7.xx相当予定だったが既に追加済み)~~
 - [ ] UIの整理(作業時:v0.8.xx相当予定)
 - [ ] リリース(v1.0.x予定)
@@ -102,13 +121,34 @@ Momoc uses an AI-native data format.<br/>
 This means AI can understand the state of your files without any additional explanation.<br/>
 It also allows AI to assist with implementation by reading the intent written on sticky notes and annotations.<br/>
 
+**Supported Components**
+
+shadcn/ui:
+Accordion / Alert / AspectRatio / Avatar / Badge / Breadcrumb / Button /
+Calendar / Card / Carousel / Checkbox / Collapsible / Combobox / Command /
+ContextMenu / DataTable / DatePicker / DropdownMenu / HoverCard / Input /
+Label / Menubar / NavigationMenu / Pagination / Progress / RadioGroup /
+Resizable / ScrollArea / Select / Separator / Sidebar / Slider / Switch /
+Table / Tabs / Textarea / Toggle / ToggleGroup / Tooltip / Typography
+
+HTML / Layout:
+Container / Group / FreeCanvas / Image / PlaceholderImage / Text / Icon
+
+
+
+## Getting Started
+
+1. Create a new file with the `.moc` extension
+2. Open the file in VSCode — the Momoc editor launches automatically
+3. Drag components from the palette onto the canvas
+
+
+
 ## Roadmap
 
 - [x] Build MVP
 - [x] Add shadcn/ui components (around v0.5.6)
-- [ ] Expand property options (expected around v0.6.xx) (promotion from alpha to beta upon completion)
-   Enable manual input of existing TailwindCSS classes (planned)
-   Currently partially supported
+- [x] Expand property options (expected around v0.6.xx)
 - [ ] ~~Add icon (SVG) placement feature (was expected around v0.7.xx, but already added)~~
 - [ ] UI/UX polish (expected around v0.8.xx)
 - [ ] Release (v1.0.x planned)
