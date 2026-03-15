@@ -1,27 +1,9 @@
 import * as vscode from "vscode";
-import { getTemplates, getTemplateContent } from "../services/templateService.js";
+import { v4Template } from "../services/templates/empty.js";
 
 export async function createMocFile(
   context: vscode.ExtensionContext,
 ): Promise<void> {
-  const templates = getTemplates();
-
-  const selected = await vscode.window.showQuickPick(
-    templates.map((t) => ({
-      label: t.label,
-      description: t.description,
-      id: t.id,
-    })),
-    {
-      placeHolder: vscode.l10n.t("template.selectPlaceholder"),
-      title: vscode.l10n.t("template.selectTitle"),
-    },
-  );
-
-  if (!selected) {
-    return;
-  }
-
   const fileName = await vscode.window.showInputBox({
     prompt: "File name",
     value: "NewComponent.moc",
@@ -43,13 +25,8 @@ export async function createMocFile(
     return;
   }
 
-  const template = templates.find((t) => t.id === (selected as { id: string }).id);
-  if (!template) {
-    return;
-  }
-
   const componentName = fileName.replace(".moc", "");
-  const content = getTemplateContent(template.id, componentName);
+  const content = v4Template(componentName);
 
   const fileUri = vscode.Uri.joinPath(workspaceFolder.uri, fileName);
   await vscode.workspace.fs.writeFile(
