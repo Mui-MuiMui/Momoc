@@ -31,6 +31,54 @@ type SubCategory = (typeof SUB_CATEGORIES)[number];
 // Phase 4: craftState 展開ユーティリティ
 // ---------------------------------------------------------------------------
 
+/** 相対 .moc パスをコンポーネントのディレクトリを基準に絶対パスへ変換 */
+function resolveMocPath(componentDir: string, p: string): string {
+  if (!p) return p;
+  // 既に絶対パス (Windows: C:\... / C:/...、Unix: /...)
+  if (/^[A-Za-z]:[\\/]/.test(p) || p.startsWith("/")) return p;
+  const dirParts = componentDir.replace(/\\/g, "/").split("/");
+  const relParts = p.replace(/\\/g, "/").split("/");
+  const result = [...dirParts];
+  for (const part of relParts) {
+    if (part === "..") result.pop();
+    else if (part !== ".") result.push(part);
+  }
+  return result.join("/");
+}
+
+/** ノードの props 内の全 .moc パス属性を絶対パスに変換して返す */
+function fixNodeMocPaths(
+  props: Record<string, unknown>,
+  componentDir: string,
+): Record<string, unknown> {
+  const fixed = { ...props };
+  for (const key of ["linkedMocPath", "contextMenuMocPath", "hoverCardMocPath"]) {
+    const val = fixed[key] as string | undefined;
+    if (val) fixed[key] = resolveMocPath(componentDir, val);
+  }
+  if (fixed.linkedMocPaths) {
+    fixed.linkedMocPaths = (fixed.linkedMocPaths as string)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((p) => resolveMocPath(componentDir, p))
+      .join(",");
+  }
+  if (fixed.buttonData) {
+    try {
+      const btns = JSON.parse(fixed.buttonData as string) as Array<{ linkedMocPath?: string }>;
+      fixed.buttonData = JSON.stringify(
+        btns.map((btn) =>
+          btn.linkedMocPath
+            ? { ...btn, linkedMocPath: resolveMocPath(componentDir, btn.linkedMocPath) }
+            : btn,
+        ),
+      );
+    } catch { /* ignore */ }
+  }
+  return fixed;
+}
+
 function freshId(): string {
   return Math.random().toString(36).slice(2, 12);
 }
@@ -71,8 +119,13 @@ function cloneTreeWithFreshIds(tree: NodeTree): NodeTree {
 /** craftState JSON → NodeTree に変換し、ROOT の子ノードを CraftGroup で包む */
 function buildGroupTreeFromCraftState(
   craftStateJson: string,
+  componentFilePath?: string,
 ): NodeTree | null {
   try {
+    const componentDir = componentFilePath
+      ? componentFilePath.replace(/\\/g, "/").replace(/\/[^/]+$/, "")
+      : null;
+
     const craftState = JSON.parse(craftStateJson) as Record<
       string,
       {
@@ -164,11 +217,12 @@ function buildGroupTreeFromCraftState(
       // 座標を CraftGroup 相対に変換
       const origTop = parseInt(String(child.props?.top || "0"), 10);
       const origLeft = parseInt(String(child.props?.left || "0"), 10);
-      const adjustedProps = {
-        ...child.props,
-        top: `${origTop - minTop}px`,
-        left: `${origLeft - minLeft}px`,
-      };
+      const adjustedProps = componentDir
+        ? fixNodeMocPaths(
+            { ...child.props, top: `${origTop - minTop}px`, left: `${origLeft - minLeft}px` },
+            componentDir,
+          )
+        : { ...child.props, top: `${origTop - minTop}px`, left: `${origLeft - minLeft}px` };
 
       nodes[childId] = {
         id: childId,
@@ -213,7 +267,7 @@ function buildGroupTreeFromCraftState(
             name: nResolvedName,
             displayName: n.displayName || nResolvedName,
             isCanvas: n.isCanvas ?? false,
-            props: { ...n.props },
+            props: componentDir ? fixNodeMocPaths({ ...n.props }, componentDir) : { ...n.props },
             nodes: n.nodes || [],
             linkedNodes: n.linkedNodes || {},
             parent: parentId,
@@ -773,7 +827,7 @@ function CustomComponentCard({
       e.preventDefault();
       e.stopImmediatePropagation();
       const { zoom, query, actions, entry } = stateRef.current;
-      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState), zoom, actions, query);
+      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState, entry.path), zoom, actions, query);
     };
     el.addEventListener("mousedown", onMouseDown, true);
     return () => el.removeEventListener("mousedown", onMouseDown, true);
@@ -790,7 +844,7 @@ function CustomComponentCard({
           return;
         }
         connectors.create(ref, () => {
-          const tree = buildGroupTreeFromCraftState(entry.craftState);
+          const tree = buildGroupTreeFromCraftState(entry.craftState, entry.path);
           if (!tree) return <div />;
           return tree;
         });
