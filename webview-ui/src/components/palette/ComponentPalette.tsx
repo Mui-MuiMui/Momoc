@@ -31,37 +31,52 @@ type SubCategory = (typeof SUB_CATEGORIES)[number];
 // Phase 4: craftState 展開ユーティリティ
 // ---------------------------------------------------------------------------
 
-/** 相対 .moc パスをコンポーネントのディレクトリを基準に絶対パスへ変換 */
-function resolveMocPath(componentDir: string, p: string): string {
+/**
+ * コンポーネントdir相対の .moc パスをページdir相対に変換する。
+ * 絶対パスは一切 craftState に書き込まない（環境依存のため）。
+ */
+function rebaseMocPath(componentDir: string, pageDir: string, p: string): string {
   if (!p) return p;
-  // 既に絶対パス (Windows: C:\... / C:/...、Unix: /...)
-  if (/^[A-Za-z]:[\\/]/.test(p) || p.startsWith("/")) return p;
-  const dirParts = componentDir.replace(/\\/g, "/").split("/");
-  const relParts = p.replace(/\\/g, "/").split("/");
-  const result = [...dirParts];
-  for (const part of relParts) {
-    if (part === "..") result.pop();
-    else if (part !== ".") result.push(part);
+  const toSlash = (s: string) => s.replace(/\\/g, "/");
+  const compParts = toSlash(componentDir).split("/");
+  const pgParts = toSlash(pageDir).split("/");
+  // コンポーネントdirを基準にパスを解決（内部計算用、外部には出力しない）
+  const resolved = [...compParts];
+  for (const part of toSlash(p).split("/")) {
+    if (part === "..") resolved.pop();
+    else if (part !== ".") resolved.push(part);
   }
-  return result.join("/");
+  // ページdirとの共通プレフィックスを求める（大文字小文字を区別しない）
+  let common = 0;
+  while (
+    common < pgParts.length &&
+    common < resolved.length &&
+    pgParts[common].toLowerCase() === resolved[common].toLowerCase()
+  ) {
+    common++;
+  }
+  const ups = pgParts.length - common;
+  const rest = resolved.slice(common);
+  return [...Array(ups).fill(".."), ...rest].join("/") || ".";
 }
 
-/** ノードの props 内の全 .moc パス属性を絶対パスに変換して返す */
-function fixNodeMocPaths(
+/** ノードの props 内の全 .moc パス属性をページdir相対に変換して返す */
+function rebaseNodeMocPaths(
   props: Record<string, unknown>,
   componentDir: string,
+  pageDir: string,
 ): Record<string, unknown> {
   const fixed = { ...props };
   for (const key of ["linkedMocPath", "contextMenuMocPath", "hoverCardMocPath"]) {
     const val = fixed[key] as string | undefined;
-    if (val) fixed[key] = resolveMocPath(componentDir, val);
+    if (val) fixed[key] = rebaseMocPath(componentDir, pageDir, val);
   }
   if (fixed.linkedMocPaths) {
     fixed.linkedMocPaths = (fixed.linkedMocPaths as string)
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean)
-      .map((p) => resolveMocPath(componentDir, p))
+      .map((p) => rebaseMocPath(componentDir, pageDir, p))
       .join(",");
   }
   if (fixed.buttonData) {
@@ -70,7 +85,7 @@ function fixNodeMocPaths(
       fixed.buttonData = JSON.stringify(
         btns.map((btn) =>
           btn.linkedMocPath
-            ? { ...btn, linkedMocPath: resolveMocPath(componentDir, btn.linkedMocPath) }
+            ? { ...btn, linkedMocPath: rebaseMocPath(componentDir, pageDir, btn.linkedMocPath) }
             : btn,
         ),
       );
@@ -120,11 +135,16 @@ function cloneTreeWithFreshIds(tree: NodeTree): NodeTree {
 function buildGroupTreeFromCraftState(
   craftStateJson: string,
   componentFilePath?: string,
+  pageFilePath?: string,
 ): NodeTree | null {
   try {
-    const componentDir = componentFilePath
-      ? componentFilePath.replace(/\\/g, "/").replace(/\/[^/]+$/, "")
-      : null;
+    const getDirname = (p: string) => p.replace(/\\/g, "/").replace(/\/[^/]+$/, "");
+    const componentDir = componentFilePath ? getDirname(componentFilePath) : null;
+    const pageDir = pageFilePath ? getDirname(pageFilePath) : null;
+    const needsRebase =
+      componentDir !== null &&
+      pageDir !== null &&
+      componentDir.toLowerCase() !== pageDir.toLowerCase();
 
     const craftState = JSON.parse(craftStateJson) as Record<
       string,
@@ -217,10 +237,11 @@ function buildGroupTreeFromCraftState(
       // 座標を CraftGroup 相対に変換
       const origTop = parseInt(String(child.props?.top || "0"), 10);
       const origLeft = parseInt(String(child.props?.left || "0"), 10);
-      const adjustedProps = componentDir
-        ? fixNodeMocPaths(
+      const adjustedProps = needsRebase
+        ? rebaseNodeMocPaths(
             { ...child.props, top: `${origTop - minTop}px`, left: `${origLeft - minLeft}px` },
-            componentDir,
+            componentDir!,
+            pageDir!,
           )
         : { ...child.props, top: `${origTop - minTop}px`, left: `${origLeft - minLeft}px` };
 
@@ -267,7 +288,7 @@ function buildGroupTreeFromCraftState(
             name: nResolvedName,
             displayName: n.displayName || nResolvedName,
             isCanvas: n.isCanvas ?? false,
-            props: componentDir ? fixNodeMocPaths({ ...n.props }, componentDir) : { ...n.props },
+            props: needsRebase ? rebaseNodeMocPaths({ ...n.props }, componentDir!, pageDir!) : { ...n.props },
             nodes: n.nodes || [],
             linkedNodes: n.linkedNodes || {},
             parent: parentId,
@@ -814,9 +835,10 @@ function CustomComponentCard({
   const { query, actions } = useEditor();
   const layoutMode = useEditorStore((s) => s.layoutMode);
   const zoom = useEditorStore((s) => s.zoom);
+  const pageFilePath = useEditorStore((s) => s.fileName);
 
-  const stateRef = useRef({ layoutMode, zoom, query, actions, entry });
-  stateRef.current = { layoutMode, zoom, query, actions, entry };
+  const stateRef = useRef({ layoutMode, zoom, query, actions, entry, pageFilePath });
+  stateRef.current = { layoutMode, zoom, query, actions, entry, pageFilePath };
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -826,8 +848,8 @@ function CustomComponentCard({
       if (stateRef.current.layoutMode !== "absolute") return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      const { zoom, query, actions, entry } = stateRef.current;
-      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState, entry.path), zoom, actions, query);
+      const { zoom, query, actions, entry, pageFilePath } = stateRef.current;
+      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState, entry.path, pageFilePath), zoom, actions, query);
     };
     el.addEventListener("mousedown", onMouseDown, true);
     return () => el.removeEventListener("mousedown", onMouseDown, true);
@@ -844,7 +866,7 @@ function CustomComponentCard({
           return;
         }
         connectors.create(ref, () => {
-          const tree = buildGroupTreeFromCraftState(entry.craftState, entry.path);
+          const tree = buildGroupTreeFromCraftState(entry.craftState, entry.path, pageFilePath);
           if (!tree) return <div />;
           return tree;
         });
