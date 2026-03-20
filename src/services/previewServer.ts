@@ -239,8 +239,10 @@ export async function startPreviewServer(
     for (const [relPath, { tsx }] of parsedDocs) {
       const hash = linkedHashes.get(relPath);
       if (!hash) continue;
+      const absPath = toProcess.get(relPath);
+      const fileDir = absPath ? path.dirname(absPath) : undefined;
       try {
-        const injected = injectLinkedComponents(tsx);
+        const injected = injectLinkedComponents(tsx, fileDir);
         const linkedResult = await compileTsx(injected, workspaceRoot, [
           previewExternalPlugin(),
         ]);
@@ -257,11 +259,12 @@ export async function startPreviewServer(
    * Replace `{/* linked: PATH * /}` comment placeholders in TSX source
    * with actual import + component reference so they render in preview.
    */
-  function injectLinkedComponents(tsx: string): string {
+  function injectLinkedComponents(tsx: string, fileDir?: string): string {
     if (linkedHashes.size === 0) return tsx;
 
     const importLines: string[] = [];
     const usedHashes = new Set<string>();
+    const mocDir = path.dirname(mocFilePath);
 
     const processed = tsx.replace(
       /\{\/\* linked: (.+?) \*\/\}/g,
@@ -273,7 +276,14 @@ export async function startPreviewServer(
           .replace(/&gt;/g, ">")
           .replace(/&#123;/g, "{")
           .replace(/&#125;/g, "}");
-        const hash = linkedHashes.get(linkedPath);
+        // If processing a nested file, linkedPath is relative to fileDir.
+        // Convert to mocDir-relative path so it matches linkedHashes keys.
+        let lookupPath = linkedPath;
+        if (fileDir && !path.isAbsolute(linkedPath)) {
+          const abs = path.resolve(fileDir, linkedPath);
+          lookupPath = path.relative(mocDir, abs).replace(/\\/g, "/");
+        }
+        const hash = linkedHashes.get(lookupPath);
         if (!hash) return `{/* linked: ${rawPath} (not compiled) */}`;
         const componentName = `Linked_${hash}`;
         if (!usedHashes.has(hash)) {
