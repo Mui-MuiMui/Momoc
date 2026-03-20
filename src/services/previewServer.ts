@@ -1897,12 +1897,12 @@ export function PopoverTrigger(props: any) {
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
   const comboCtx = useContext(ComboboxCtx);
-  const [pos, setPos] = useState<{top:number;left:number;width:number;triggerTop:number} | null>(null);
+  const [pos, setPos] = useState<{top:number;left:number;triggerTop:number} | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, width: r.width, triggerTop: r.top });
+    setPos({ top: r.bottom + 4, left: r.left, triggerTop: r.top });
   }, [ctx?.open]);
   useLayoutEffect(() => {
     if (!pos || !contentRef.current) return;
@@ -1916,9 +1916,8 @@ export function PopoverContent(props: any) {
     el.style.left = left + "px";
   }, [pos]);
   if (!ctx?.open || !pos) return null;
-  const effectiveWidth = props.style?.width ?? \`\${pos.width}px\`;
   const cls = cn("fixed z-[9999] rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
 }`,
 
   "dropdown-menu": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
