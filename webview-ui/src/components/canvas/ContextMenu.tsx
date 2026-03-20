@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useEditor, type NodeTree, type Node } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
-import { Trash2, Copy, Scissors, ClipboardPaste, CopyPlus } from "lucide-react";
+import { Trash2, Copy, Scissors, ClipboardPaste, CopyPlus, RefreshCw, Replace } from "lucide-react";
 import { resolvers } from "../../crafts/resolvers";
+import { useVscodeMessage, useSendMessage } from "../../hooks/useVscodeMessage";
+import { buildGroupTreeFromCraftState, cloneTreeWithFreshIds } from "../../utils/customComponentUtils";
+import type { CustomComponentEntry } from "../../shared/messages";
 
 interface MenuPosition {
   x: number;
@@ -75,61 +78,6 @@ function deserializeTree(text: string): NodeTree | null {
   }
 }
 
-/** Generate a short random ID similar to Craft.js's internal getRandomId */
-function freshId(): string {
-  return Math.random().toString(36).slice(2, 12);
-}
-
-/**
- * Clone a NodeTree with fresh IDs so that addNodeTree doesn't overwrite
- * existing nodes. Craft.js's addNodeTree reuses the original IDs if present.
- *
- * Uses shallow cloning to preserve non-serializable references like
- * React component types (node.data.type).
- */
-function cloneTreeWithFreshIds(tree: NodeTree): NodeTree {
-  const idMap = new Map<string, string>();
-
-  for (const oldId of Object.keys(tree.nodes)) {
-    idMap.set(oldId, freshId());
-  }
-
-  const remapId = (id: string) => idMap.get(id) || id;
-
-  const newNodes: Record<string, Node> = {};
-
-  for (const [oldId, node] of Object.entries(tree.nodes)) {
-    const newId = idMap.get(oldId)!;
-
-    // Shallow clone data, preserving type reference (React component)
-    const newData = {
-      ...node.data,
-      props: { ...node.data.props },
-      custom: { ...(node.data.custom || {}) },
-      parent: node.data.parent ? remapId(node.data.parent) : node.data.parent,
-      nodes: (node.data.nodes || []).map(remapId),
-      linkedNodes: Object.fromEntries(
-        Object.entries(node.data.linkedNodes || {}).map(([k, v]) => [k, remapId(v as string)]),
-      ),
-    };
-
-    newNodes[newId] = {
-      id: newId,
-      data: newData,
-      info: { ...(node.info || {}) },
-      related: { ...(node.related || {}) },
-      events: { selected: false, dragged: false, hovered: false },
-      rules: node.rules,
-      dom: null,
-      _hydrationTimestamp: Date.now(),
-    } as unknown as Node;
-  }
-
-  return {
-    rootNodeId: idMap.get(tree.rootNodeId)!,
-    nodes: newNodes,
-  };
-}
 
 export function ContextMenu() {
   const { t } = useTranslation();
@@ -137,17 +85,24 @@ export function ContextMenu() {
   const [hasClipboard, setHasClipboard] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { actions, selected, selectedIds, query } = useEditor((state) => {
+  const { actions, selected, selectedIds, query, selectedCustomComponentId } = useEditor((state) => {
     const ids = state.events.selected
       ? Array.from(state.events.selected)
       : [];
     return {
       selected: ids[0] || null,
       selectedIds: ids,
+      selectedCustomComponentId: ids[0]
+        ? (state.nodes[ids[0]]?.data?.custom?.customComponentId as string) || null
+        : null,
     };
   });
 
   const isMultiSelected = selectedIds.length > 1;
+
+  const sendMessage = useSendMessage();
+  const pageFilePath = useEditorStore((s) => s.fileName);
+  const [pendingReplace, setPendingReplace] = useState<{ nodeId: string; componentId: string } | null>(null);
 
   // Sync Craft.js selection → editorStore so memo linking works
   const setSelectedNodeId = useEditorStore((s) => s.setSelectedNodeId);
@@ -162,10 +117,16 @@ export function ContextMenu() {
   const selectedIdsRef = useRef(selectedIds);
   const queryRef = useRef(query);
   const actionsRef = useRef(actions);
+  const selectedCustomComponentIdRef = useRef(selectedCustomComponentId);
+  const pageFilePathRef = useRef(pageFilePath);
+  const pendingReplaceRef = useRef(pendingReplace);
   selectedRef.current = selected;
   selectedIdsRef.current = selectedIds;
   queryRef.current = query;
   actionsRef.current = actions;
+  selectedCustomComponentIdRef.current = selectedCustomComponentId;
+  pageFilePathRef.current = pageFilePath;
+  pendingReplaceRef.current = pendingReplace;
 
   const deleteSelected = useCallback(() => {
     const ids = selectedIdsRef.current;
@@ -261,6 +222,75 @@ export function ContextMenu() {
     }
     setMenuPos(null);
   }, []);
+
+  // Error 1/2/5: ref に格納して stale closure を防ぎ、try-catch で保護
+  const replaceGroupInPlaceRef = useRef<(nodeId: string, entry: CustomComponentEntry) => void>(
+    () => { /* initialized below */ },
+  );
+  replaceGroupInPlaceRef.current = (nodeId: string, entry: CustomComponentEntry) => {
+    try {
+      const node = queryRef.current.node(nodeId).get();
+      if (!node) return;
+      const { top, left, className } = node.data.props as Record<string, string>;
+      const parentId = node.data.parent;
+      if (!parentId) return;
+
+      const tree = buildGroupTreeFromCraftState(entry.craftState, entry.path, pageFilePathRef.current, entry.id);
+      if (!tree) return;
+
+      const root = tree.nodes[tree.rootNodeId];
+      if (top) root.data.props.top = top;
+      if (left) root.data.props.left = left;
+      if (className) root.data.props.className = className;
+
+      actionsRef.current.delete(nodeId);
+      actionsRef.current.addNodeTree(tree, parentId);
+    } catch {
+      // Node may have been removed before replacement completed
+    }
+  };
+
+  const replaceSelected = useCallback(() => {
+    const nodeId = selectedRef.current;
+    const compId = selectedCustomComponentIdRef.current;
+    if (!nodeId || !compId) return;
+    const entry = useEditorStore.getState().customComponents.find((c) => c.id === compId);
+    if (!entry) return;
+    replaceGroupInPlaceRef.current(nodeId, entry);
+    setMenuPos(null);
+  }, []);
+
+  const reloadAndReplace = useCallback(() => {
+    const nodeId = selectedRef.current;
+    const compId = selectedCustomComponentIdRef.current;
+    if (!nodeId || !compId) return;
+    setPendingReplace({ nodeId, componentId: compId });
+    sendMessage({ type: "customComponent:reload", payload: { id: compId } });
+    setMenuPos(null);
+  }, [sendMessage]);
+
+  // Warning 6: 15秒でタイムアウトし pendingReplace をクリア
+  useEffect(() => {
+    if (!pendingReplace) return;
+    const timer = setTimeout(() => setPendingReplace(null), 15_000);
+    return () => clearTimeout(timer);
+  }, [pendingReplace]);
+
+  // Error 3: reloadResult 受信後にストアも更新する
+  useVscodeMessage(useCallback((message) => {
+    if (message.type !== "customComponent:reloadResult") return;
+    const pending = pendingReplaceRef.current;
+    if (!pending || message.payload.id !== pending.componentId) return;
+    const { entry } = message.payload;
+    setPendingReplace(null);
+    if (!entry) return;
+    // ストアを最新状態に更新
+    const updated = useEditorStore.getState().customComponents.map((c) =>
+      c.id === entry.id ? entry : c,
+    );
+    useEditorStore.getState().setCustomComponents(updated);
+    replaceGroupInPlaceRef.current(pending.nodeId, entry);
+  }, []));
 
   const handleContextMenu = useCallback(
     (e: MouseEvent) => {
@@ -389,6 +419,23 @@ export function ContextMenu() {
         onClick={duplicateSelected}
         disabled={isMultiSelected}
       />
+      {selectedCustomComponentId && (
+        <>
+          <div className="my-1 h-px bg-[var(--vscode-menu-separatorBackground,#454545)]" />
+          <MenuItem
+            icon={<Replace size={14} />}
+            label="差し替え"
+            onClick={replaceSelected}
+            disabled={isMultiSelected}
+          />
+          <MenuItem
+            icon={<RefreshCw size={14} />}
+            label="再読み込みして差し替え"
+            onClick={reloadAndReplace}
+            disabled={isMultiSelected}
+          />
+        </>
+      )}
       <div className="my-1 h-px bg-[var(--vscode-menu-separatorBackground,#454545)]" />
       <MenuItem
         icon={<Trash2 size={14} />}
