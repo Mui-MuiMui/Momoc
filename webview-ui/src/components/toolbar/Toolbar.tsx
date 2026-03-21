@@ -200,9 +200,9 @@ export function Toolbar() {
                 onKeyDown={(e) => e.key === "Enter" && applyCustomSize()}
                 className="w-20 rounded border border-[var(--vscode-input-border,#3c3c3c)] bg-[var(--vscode-input-background,#3c3c3c)] px-2 py-1 text-xs text-[var(--vscode-input-foreground,#ccc)] outline-none focus:border-[var(--vscode-focusBorder,#007fd4)]"
                 min={100}
-                placeholder="W"
+                placeholder={t("toolbar.viewportWidth")}
               />
-              <span className="text-xs text-[var(--vscode-descriptionForeground,#888)]">x</span>
+              <span className="text-xs text-[var(--vscode-descriptionForeground,#888)]">{t("toolbar.viewportSeparator")}</span>
               <input
                 type="number"
                 value={customH}
@@ -210,14 +210,14 @@ export function Toolbar() {
                 onKeyDown={(e) => e.key === "Enter" && applyCustomSize()}
                 className="w-20 rounded border border-[var(--vscode-input-border,#3c3c3c)] bg-[var(--vscode-input-background,#3c3c3c)] px-2 py-1 text-xs text-[var(--vscode-input-foreground,#ccc)] outline-none focus:border-[var(--vscode-focusBorder,#007fd4)]"
                 min={100}
-                placeholder="H"
+                placeholder={t("toolbar.viewportHeight")}
               />
               <button
                 type="button"
                 onClick={applyCustomSize}
                 className="rounded bg-[var(--vscode-button-background,#0e639c)] px-2 py-1 text-xs text-[var(--vscode-button-foreground,#fff)] hover:bg-[var(--vscode-button-hoverBackground,#1177bb)]"
               >
-                OK
+                {t("toolbar.viewportConfirm")}
               </button>
             </div>
           </div>

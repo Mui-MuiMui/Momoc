@@ -280,7 +280,7 @@ export function ComponentPalette() {
                 : "text-[var(--vscode-foreground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
             }`}
           >
-            コンポーネント
+            {t("palette.tab.standard")}
           </button>
           <button
             type="button"
@@ -291,7 +291,7 @@ export function ComponentPalette() {
                 : "text-[var(--vscode-foreground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
             }`}
           >
-            カスタム
+            {t("palette.tab.custom")}
           </button>
         </div>
 
@@ -322,7 +322,7 @@ export function ComponentPalette() {
               className="flex items-center justify-center gap-1.5 rounded border border-[var(--vscode-button-background,#0e639c)] px-2 py-1.5 text-xs text-[var(--vscode-button-background,#0e639c)] hover:bg-[var(--vscode-button-background,#0e639c)] hover:text-[var(--vscode-button-foreground,#fff)] transition-colors"
             >
               <Upload size={12} />
-              .moc をインポート
+              {t("palette.importMoc")}
             </button>
             {customComponents.length > 0 && (
               <button
@@ -335,16 +335,16 @@ export function ComponentPalette() {
                   // 15秒でタイムアウトし、未受信のIDを破棄する
                   setTimeout(() => { pendingReloadAllIdsRef.current.clear(); }, 15_000);
                 }}
-                title="全て再読み込みして差し替え"
+                title={t("palette.reloadReplaceAll")}
                 className="flex items-center justify-center gap-1.5 rounded border border-[var(--vscode-panel-border,#333)] px-2 py-1.5 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)] transition-colors"
               >
                 <RefreshCw size={12} />
-                全て再読み込みして差し替え
+                {t("palette.reloadReplaceAll")}
               </button>
             )}
             {customComponents.length === 0 ? (
               <p className="mt-4 text-center text-[10px] text-[var(--vscode-foreground,#666)]">
-                インポートした .moc がここに表示されます
+                {t("palette.emptyCustom")}
               </p>
             ) : (
               <div className="flex flex-col gap-1">
@@ -473,7 +473,7 @@ export function ComponentPalette() {
             className="flex w-full items-center gap-2 px-3 py-1 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
           >
             <RefreshCw size={12} />
-            再読み込みして差し替え
+            {t("palette.reloadReplace")}
           </button>
           <button
             type="button"
@@ -484,7 +484,7 @@ export function ComponentPalette() {
             className="flex w-full items-center gap-2 px-3 py-1 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
           >
             <Pencil size={12} />
-            パスを変更
+            {t("palette.changePath")}
           </button>
           <hr className="my-1 border-[var(--vscode-panel-border,#333)]" />
           <button
@@ -496,7 +496,7 @@ export function ComponentPalette() {
             className="flex w-full items-center gap-2 px-3 py-1 text-xs text-red-400 hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
           >
             <Trash2 size={12} />
-            削除
+            {t("palette.delete")}
           </button>
         </div>
       )}
