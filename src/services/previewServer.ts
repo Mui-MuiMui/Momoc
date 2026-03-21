@@ -253,7 +253,8 @@ export async function startPreviewServer(
           console.warn(`[Momoc] Skipping empty linked .moc: ${relPath}`);
           continue;
         }
-        const hash = crypto.createHash("md5").update(relPath).digest("hex").slice(0, 8);
+        // コンテンツベースのハッシュ: TSX内容が変われば異なるURLになりブラウザキャッシュが無効化される
+        const hash = crypto.createHash("md5").update(linkedTsx).digest("hex").slice(0, 8);
         linkedHashes.set(relPath, hash);
         parsedDocs.set(relPath, { tsx: linkedTsx });
       } catch (err) {
@@ -641,12 +642,12 @@ export async function startPreviewServer(
   const watcher = vscode.workspace.onDidSaveTextDocument(async (doc) => {
     const isLinkedFile = linkedAbsPaths.has(doc.uri.fsPath);
     if (doc.uri.fsPath === mocFilePath || isLinkedFile) {
-      const prevLinkedKeys = new Set(linkedHashes.keys());
+      const prevLinkedMap = new Map(linkedHashes); // relPath → hash (コンテンツベース)
       await compileCurrentFile();
-      // Full reload if linked set changed (import map in HTML needs update)
+      // Full reload if linked set or content changed (import map in HTML needs update)
       const linkedSetChanged =
-        prevLinkedKeys.size !== linkedHashes.size ||
-        [...linkedHashes.keys()].some((k) => !prevLinkedKeys.has(k));
+        prevLinkedMap.size !== linkedHashes.size ||
+        [...linkedHashes.entries()].some(([k, v]) => prevLinkedMap.get(k) !== v);
       sendReload(isLinkedFile || linkedSetChanged);
     }
   });
