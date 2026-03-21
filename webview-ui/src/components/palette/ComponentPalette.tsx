@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useEditor, Element, type NodeTree } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { paletteItems, resolvers, type ResolverKey } from "../../crafts/resolvers";
-import { Search, ChevronLeft, ChevronRight, Upload, RotateCcw, Pencil, Trash2, Replace, RefreshCw } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Upload, RotateCcw, Pencil, Trash2, RefreshCw } from "lucide-react";
 import * as Icons from "lucide-react";
 import { useEditorStore } from "../../stores/editorStore";
 import { useVscodeMessage, useSendMessage } from "../../hooks/useVscodeMessage";
@@ -68,10 +68,6 @@ export function ComponentPalette() {
   const pageFilePathRef = useRef(pageFilePath);
   pageFilePathRef.current = pageFilePath;
 
-  const [pendingReplaceComponentId, setPendingReplaceComponentId] = useState<string | null>(null);
-  const pendingReplaceComponentIdRef = useRef(pendingReplaceComponentId);
-  pendingReplaceComponentIdRef.current = pendingReplaceComponentId;
-
   // 一括「再読み込みして差し替え」で待機中のコンポーネントID集合
   const pendingReloadAllIdsRef = useRef<Set<string>>(new Set());
 
@@ -109,13 +105,6 @@ export function ComponentPalette() {
     }
   };
 
-  // 右クリック「再読み込みして差し替え」のタイムアウト
-  useEffect(() => {
-    if (!pendingReplaceComponentId) return;
-    const timer = setTimeout(() => setPendingReplaceComponentId(null), 15_000);
-    return () => clearTimeout(timer);
-  }, [pendingReplaceComponentId]);
-
   // 初回マウント時にカスタムコンポーネント一覧を取得
   useEffect(() => {
     sendMessage({ type: "customComponent:getAll" });
@@ -146,11 +135,6 @@ export function ComponentPalette() {
             useEditorStore.getState().setCustomComponents(updated);
             return updated;
           });
-          // 右クリック「再読み込みして差し替え」の待機中なら全インスタンスを置換
-          if (pendingReplaceComponentIdRef.current === id) {
-            setPendingReplaceComponentId(null);
-            replaceAllInstancesRef.current(id, entry);
-          }
           // 一括「再読み込みして差し替え」の待機中なら全インスタンスを置換
           if (pendingReloadAllIdsRef.current.has(id)) {
             pendingReloadAllIdsRef.current.delete(id);
@@ -478,31 +462,6 @@ export function ComponentPalette() {
           style={{ position: "fixed", left: contextMenu.x, top: contextMenu.y, zIndex: 9999 }}
           className="rounded border border-[var(--vscode-panel-border,#333)] bg-[var(--vscode-menu-background,#252526)] py-1 shadow-lg"
         >
-          <button
-            type="button"
-            onClick={() => {
-              const entry = customComponents.find((c) => c.id === contextMenu.id);
-              if (entry) replaceAllInstancesRef.current(contextMenu.id, entry);
-              setContextMenu(null);
-            }}
-            className="flex w-full items-center gap-2 px-3 py-1 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
-          >
-            <Replace size={12} />
-            差し替え
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setPendingReplaceComponentId(contextMenu.id);
-              sendMessage({ type: "customComponent:reload", payload: { id: contextMenu.id } });
-              setContextMenu(null);
-            }}
-            className="flex w-full items-center gap-2 px-3 py-1 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
-          >
-            <RefreshCw size={12} />
-            再読み込みして差し替え
-          </button>
-          <hr className="my-1 border-[var(--vscode-panel-border,#333)]" />
           <button
             type="button"
             onClick={() => {

@@ -2,10 +2,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useEditor, type NodeTree, type Node } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
-import { Trash2, Copy, Scissors, ClipboardPaste, CopyPlus, Replace } from "lucide-react";
+import { Trash2, Copy, Scissors, ClipboardPaste, CopyPlus } from "lucide-react";
 import { resolvers } from "../../crafts/resolvers";
-import { buildGroupTreeFromCraftState, cloneTreeWithFreshIds } from "../../utils/customComponentUtils";
-import type { CustomComponentEntry } from "../../shared/messages";
+import { cloneTreeWithFreshIds } from "../../utils/customComponentUtils";
 
 interface MenuPosition {
   x: number;
@@ -84,22 +83,17 @@ export function ContextMenu() {
   const [hasClipboard, setHasClipboard] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const { actions, selected, selectedIds, query, selectedCustomComponentId } = useEditor((state) => {
+  const { actions, selected, selectedIds, query } = useEditor((state) => {
     const ids = state.events.selected
       ? Array.from(state.events.selected)
       : [];
     return {
       selected: ids[0] || null,
       selectedIds: ids,
-      selectedCustomComponentId: ids[0]
-        ? (state.nodes[ids[0]]?.data?.custom?.customComponentId as string) || null
-        : null,
     };
   });
 
   const isMultiSelected = selectedIds.length > 1;
-
-  const pageFilePath = useEditorStore((s) => s.fileName);
 
   // Sync Craft.js selection → editorStore so memo linking works
   const setSelectedNodeId = useEditorStore((s) => s.setSelectedNodeId);
@@ -114,14 +108,10 @@ export function ContextMenu() {
   const selectedIdsRef = useRef(selectedIds);
   const queryRef = useRef(query);
   const actionsRef = useRef(actions);
-  const selectedCustomComponentIdRef = useRef(selectedCustomComponentId);
-  const pageFilePathRef = useRef(pageFilePath);
   selectedRef.current = selected;
   selectedIdsRef.current = selectedIds;
   queryRef.current = query;
   actionsRef.current = actions;
-  selectedCustomComponentIdRef.current = selectedCustomComponentId;
-  pageFilePathRef.current = pageFilePath;
 
   const deleteSelected = useCallback(() => {
     const ids = selectedIdsRef.current;
@@ -215,43 +205,6 @@ export function ContextMenu() {
     } catch {
       // ignore
     }
-    setMenuPos(null);
-  }, []);
-
-  // Error 1/2/5: ref に格納して stale closure を防ぎ、try-catch で保護
-  const replaceGroupInPlaceRef = useRef<(nodeId: string, entry: CustomComponentEntry) => void>(
-    () => { /* initialized below */ },
-  );
-  replaceGroupInPlaceRef.current = (nodeId: string, entry: CustomComponentEntry) => {
-    try {
-      const node = queryRef.current.node(nodeId).get();
-      if (!node) return;
-      const { top, left, className } = node.data.props as Record<string, string>;
-      const parentId = node.data.parent;
-      if (!parentId) return;
-
-      const tree = buildGroupTreeFromCraftState(entry.craftState, entry.path, pageFilePathRef.current, entry.id);
-      if (!tree) return;
-
-      const root = tree.nodes[tree.rootNodeId];
-      if (top) root.data.props.top = top;
-      if (left) root.data.props.left = left;
-      if (className) root.data.props.className = className;
-
-      actionsRef.current.delete(nodeId);
-      actionsRef.current.addNodeTree(tree, parentId);
-    } catch {
-      // Node may have been removed before replacement completed
-    }
-  };
-
-  const replaceSelected = useCallback(() => {
-    const nodeId = selectedRef.current;
-    const compId = selectedCustomComponentIdRef.current;
-    if (!nodeId || !compId) return;
-    const entry = useEditorStore.getState().customComponents.find((c) => c.id === compId);
-    if (!entry) return;
-    replaceGroupInPlaceRef.current(nodeId, entry);
     setMenuPos(null);
   }, []);
 
@@ -382,17 +335,6 @@ export function ContextMenu() {
         onClick={duplicateSelected}
         disabled={isMultiSelected}
       />
-      {selectedCustomComponentId && (
-        <>
-          <div className="my-1 h-px bg-[var(--vscode-menu-separatorBackground,#454545)]" />
-          <MenuItem
-            icon={<Replace size={14} />}
-            label="差し替え"
-            onClick={replaceSelected}
-            disabled={isMultiSelected}
-          />
-        </>
-      )}
       <div className="my-1 h-px bg-[var(--vscode-menu-separatorBackground,#454545)]" />
       <MenuItem
         icon={<Trash2 size={14} />}

@@ -11,6 +11,8 @@ interface PreviewSession {
   url: string;
   mocFilePath: string;
   dispose: () => void;
+  /** スナップショットゲッターを更新する（既存セッション再利用時） */
+  updateSnapshotMap: (getter: () => Record<string, string>) => void;
 }
 
 const activeSessions = new Map<string, PreviewSession>();
@@ -33,14 +35,17 @@ export async function startPreviewServer(
   mocFilePath: string,
   workspaceRoot: string,
   theme: "light" | "dark",
+  getSnapshotMap: () => Record<string, string> = () => ({}),
 ): Promise<{ url: string; dispose: () => void }> {
-  // If a session already exists for this file, return it
+  // If a session already exists for this file, update snapshot map and return it
   const existing = activeSessions.get(mocFilePath);
   if (existing) {
+    existing.updateSnapshotMap(getSnapshotMap);
     return { url: existing.url, dispose: existing.dispose };
   }
 
   // State
+  let currentGetSnapshotMap = getSnapshotMap;
   let currentTheme = theme;
   let cachedComponentJs = "";
   let cachedError = "";
@@ -168,6 +173,8 @@ export async function startPreviewServer(
     const visited = new Set<string>();
     const queue: [string, string][] = collectLinkedPaths(craftState, mocDir);
 
+    const snapshotMap = currentGetSnapshotMap();
+
     while (queue.length > 0) {
       const [relPath, absPath] = queue.shift()!;
       if (visited.has(absPath)) continue;
@@ -175,11 +182,16 @@ export async function startPreviewServer(
       toProcess.set(relPath, absPath);
 
       try {
-        const content = new TextDecoder().decode(
-          await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
-        );
-        const doc = parseMocFile(content);
-        const cs = doc.editorData?.craftState as Record<string, unknown> | undefined;
+        let cs: Record<string, unknown> | undefined;
+        if (snapshotMap[absPath]) {
+          cs = JSON.parse(snapshotMap[absPath]) as Record<string, unknown>;
+        } else {
+          const content = new TextDecoder().decode(
+            await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+          );
+          const doc = parseMocFile(content);
+          cs = doc.editorData?.craftState as Record<string, unknown> | undefined;
+        }
         if (cs) {
           for (const pair of collectLinkedPaths(cs, path.dirname(absPath))) {
             if (!visited.has(pair[1])) queue.push(pair);
@@ -198,28 +210,39 @@ export async function startPreviewServer(
     for (const [relPath, absPath] of toProcess) {
       try {
         linkedAbsPaths.add(absPath);
-        const linkedContent = new TextDecoder().decode(
-          await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
-        );
-        const linkedDoc = parseMocFile(linkedContent);
-        // Re-generate TSX from craftState (SSOT) so linked .moc always reflects
-        // the latest renderContextMenu / renderMenubar output, not stale stored TSX.
         let linkedTsx: string;
-        const linkedCraftState = linkedDoc.editorData?.craftState as Record<string, Record<string, unknown>> | undefined;
-        if (linkedCraftState) {
-          const linkedComponentName = extractComponentName(linkedDoc.tsxSource) || "LinkedComponent";
-          const linkedMemos = linkedDoc.editorData?.memos;
-          const linkedGenerated = craftStateToTsx(linkedCraftState, linkedComponentName, linkedMemos);
+        if (snapshotMap[absPath]) {
+          // スナップショット優先: ディスク読み込みをスキップ
+          const linkedCraftState = JSON.parse(snapshotMap[absPath]) as Record<string, Record<string, unknown>>;
+          const linkedComponentName = path.basename(absPath, ".moc") || "LinkedComponent";
+          const linkedGenerated = craftStateToTsx(linkedCraftState, linkedComponentName, undefined);
           const linkedTsxSource = linkedGenerated.tsxSource.replace(/\bmin-h-screen\b/g, "");
           linkedTsx = linkedGenerated.imports
             ? `${linkedGenerated.imports}\n${linkedTsxSource}`
             : linkedTsxSource;
         } else {
-          // Fallback: use stored TSX if no craftState available
-          const linkedTsxSource = linkedDoc.tsxSource.replace(/\bmin-h-screen\b/g, "");
-          linkedTsx = linkedDoc.imports
-            ? `${linkedDoc.imports}\n${linkedTsxSource}`
-            : linkedTsxSource;
+          const linkedContent = new TextDecoder().decode(
+            await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+          );
+          const linkedDoc = parseMocFile(linkedContent);
+          // Re-generate TSX from craftState (SSOT) so linked .moc always reflects
+          // the latest renderContextMenu / renderMenubar output, not stale stored TSX.
+          const linkedCraftState = linkedDoc.editorData?.craftState as Record<string, Record<string, unknown>> | undefined;
+          if (linkedCraftState) {
+            const linkedComponentName = extractComponentName(linkedDoc.tsxSource) || "LinkedComponent";
+            const linkedMemos = linkedDoc.editorData?.memos;
+            const linkedGenerated = craftStateToTsx(linkedCraftState, linkedComponentName, linkedMemos);
+            const linkedTsxSource = linkedGenerated.tsxSource.replace(/\bmin-h-screen\b/g, "");
+            linkedTsx = linkedGenerated.imports
+              ? `${linkedGenerated.imports}\n${linkedTsxSource}`
+              : linkedTsxSource;
+          } else {
+            // Fallback: use stored TSX if no craftState available
+            const linkedTsxSource = linkedDoc.tsxSource.replace(/\bmin-h-screen\b/g, "");
+            linkedTsx = linkedDoc.imports
+              ? `${linkedDoc.imports}\n${linkedTsxSource}`
+              : linkedTsxSource;
+          }
         }
         // Skip empty .moc files entirely (no hash registration = no import map entry)
         if (!linkedTsx.trim()) {
@@ -639,6 +662,7 @@ export async function startPreviewServer(
     url: serverUrl,
     mocFilePath,
     dispose,
+    updateSnapshotMap: (getter) => { currentGetSnapshotMap = getter; },
   };
   activeSessions.set(mocFilePath, session);
 

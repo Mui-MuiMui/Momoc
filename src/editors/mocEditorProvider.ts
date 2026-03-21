@@ -15,6 +15,80 @@ import type { MocDocument, MocEditorData, ExtensionToWebviewMessage, WebviewToEx
 import { isWebToExtMessage } from "../shared/types.js";
 import { DEFAULT_METADATA, MOC_VERSION } from "../shared/constants.js";
 
+/**
+ * コンポーネントの craftState から linkedMocPath 先の craftState をスナップショットとして収集する。
+ * キー: 絶対パス, 値: craftState JSON 文字列
+ */
+async function collectLinkedSnapshots(
+  componentPath: string,
+  craftState: Record<string, unknown>,
+): Promise<Record<string, string>> {
+  const bDir = path.dirname(componentPath);
+  const snapshots: Record<string, string> = {};
+
+  for (const node of Object.values(craftState)) {
+    const props = (node as { props?: Record<string, unknown> })?.props ?? {};
+
+    // 単一パスのプロパティ
+    for (const key of ["linkedMocPath", "contextMenuMocPath", "hoverCardMocPath"]) {
+      const relPath = props[key];
+      if (typeof relPath === "string" && relPath) {
+        const absPath = path.resolve(bDir, relPath);
+        try {
+          const content = new TextDecoder().decode(
+            await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+          );
+          const doc = parseMocFile(content);
+          if (doc.editorData?.craftState) {
+            snapshots[absPath] = JSON.stringify(doc.editorData.craftState);
+          }
+        } catch { /* ファイル不在はスキップ */ }
+      }
+    }
+
+    // linkedMocPaths（カンマ区切り）
+    const multiPaths = props["linkedMocPaths"];
+    if (typeof multiPaths === "string" && multiPaths) {
+      for (const relPath of multiPaths.split(",").map((s) => s.trim()).filter(Boolean)) {
+        const absPath = path.resolve(bDir, relPath);
+        try {
+          const content = new TextDecoder().decode(
+            await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+          );
+          const doc = parseMocFile(content);
+          if (doc.editorData?.craftState) {
+            snapshots[absPath] = JSON.stringify(doc.editorData.craftState);
+          }
+        } catch { /* ファイル不在はスキップ */ }
+      }
+    }
+
+    // buttonData JSON 内の linkedMocPath
+    const buttonDataStr = props["buttonData"];
+    if (typeof buttonDataStr === "string" && buttonDataStr) {
+      try {
+        const btns = JSON.parse(buttonDataStr) as Array<{ linkedMocPath?: string }>;
+        for (const btn of btns) {
+          if (btn.linkedMocPath) {
+            const absPath = path.resolve(bDir, btn.linkedMocPath);
+            try {
+              const content = new TextDecoder().decode(
+                await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+              );
+              const doc = parseMocFile(content);
+              if (doc.editorData?.craftState) {
+                snapshots[absPath] = JSON.stringify(doc.editorData.craftState);
+              }
+            } catch { /* ファイル不在はスキップ */ }
+          }
+        }
+      } catch { /* JSON パースエラーはスキップ */ }
+    }
+  }
+
+  return snapshots;
+}
+
 export class MocEditorProvider implements vscode.CustomTextEditorProvider {
   public static readonly viewType = "momoc.mocEditor";
 
@@ -510,6 +584,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           }
 
           const fileName = path.basename(selectedUri.fsPath, ".moc");
+          const linkedSnapshots = await collectLinkedSnapshots(selectedUri.fsPath, craftState);
           const entry: CustomComponentEntry = {
             id: crypto.randomUUID(),
             name: fileName,
@@ -517,6 +592,7 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
             craftState: JSON.stringify(craftState),
             layoutMode: mocDoc.metadata.layout,
             importedAt: Date.now(),
+            linkedSnapshots,
           };
 
           const entries = this.context.workspaceState.get<CustomComponentEntry[]>("customComponents", []);
@@ -554,7 +630,8 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           const mocDoc = parseMocFile(content);
           const craftState = mocDoc.editorData?.craftState;
           if (craftState) {
-            entries[idx] = { ...entries[idx], craftState: JSON.stringify(craftState) };
+            const linkedSnapshots = await collectLinkedSnapshots(entries[idx].path, craftState);
+            entries[idx] = { ...entries[idx], craftState: JSON.stringify(craftState), linkedSnapshots };
             await this.context.workspaceState.update("customComponents", entries);
           }
           webviewPanel.webview.postMessage({
@@ -626,12 +703,14 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           }
 
           const fileName = path.basename(selectedUri.fsPath, ".moc");
+          const linkedSnapshots = await collectLinkedSnapshots(selectedUri.fsPath, craftState);
           entries[idx] = {
             ...entries[idx],
             name: fileName,
             path: selectedUri.fsPath,
             craftState: JSON.stringify(craftState),
             layoutMode: mocDoc.metadata.layout,
+            linkedSnapshots,
           };
           await this.context.workspaceState.update("customComponents", entries);
 
