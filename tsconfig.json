@@ -13,7 +13,8 @@
     "resolveJsonModule": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "noImplicitAny": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "out", "dist", "webview-ui", "test"]
