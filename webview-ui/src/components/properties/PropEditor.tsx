@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useEditor } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
+import type en from "../../i18n/en.json";
 import { getVsCodeApi } from "../../utils/vscodeApi";
 import { IconCombobox } from "./IconCombobox";
 import { TableMetaEditor } from "./TableMetaEditor";
@@ -279,25 +280,27 @@ function findColorInfo(value: string): { family: string; shade: string } | null 
   return null;
 }
 
-/** overlayClassName presets */
-const OVERLAY_CLASS_PRESETS: { label: string; value: string }[] = [
-  { label: "(custom)", value: "" },
-  { label: "Default", value: "rounded-lg border p-6 shadow-lg" },
-  { label: "Minimal", value: "border-0 shadow-none p-4" },
-  { label: "Compact", value: "p-2 rounded-sm" },
-  { label: "Spacious", value: "p-8 rounded-xl shadow-xl" },
-  { label: "Borderless", value: "border-0 shadow-lg rounded-xl p-6" },
+/** overlayClassName presets (labels are i18n keys) */
+type I18nKey = keyof typeof en;
+
+const OVERLAY_CLASS_PRESET_KEYS: { labelKey: I18nKey; value: string }[] = [
+  { labelKey: "properties.presetCustom", value: "" },
+  { labelKey: "properties.presetDefault", value: "rounded-lg border p-6 shadow-lg" },
+  { labelKey: "properties.presetMinimal", value: "border-0 shadow-none p-4" },
+  { labelKey: "properties.presetCompact", value: "p-2 rounded-sm" },
+  { labelKey: "properties.presetSpacious", value: "p-8 rounded-xl shadow-xl" },
+  { labelKey: "properties.presetBorderless", value: "border-0 shadow-lg rounded-xl p-6" },
 ];
 
 // --- Property grouping ---
 
 type PropGroup = "common" | "flow" | "absolute" | "component";
 
-const GROUP_LABELS: Record<PropGroup, string> = {
-  common: "共通",
-  flow: "ページ配置",
-  absolute: "コンポーネント配置",
-  component: "コンポーネント",
+const GROUP_I18N_KEYS: Record<PropGroup, I18nKey> = {
+  common: "properties.group.general",
+  flow: "properties.group.pageLayout",
+  absolute: "properties.group.componentPlacement",
+  component: "properties.group.component",
 };
 
 const GROUP_ORDER: PropGroup[] = ["common", "flow", "absolute", "component"];
@@ -367,10 +370,8 @@ const ABSOLUTE_DEFAULTS: Record<string, unknown> = {
  * コンポーネント固有の非表示プロパティ。
  * 共通グループ・コンポーネントグループの両方から除外される。
  */
-/** プロパティキーの表示ラベル上書き */
-const PROP_DISPLAY_LABELS: Record<string, string> = {
-  clickThrough: "クリック透過",
-};
+/** プロパティキーの表示ラベル上書き（i18nキー） */
+const PROP_DISPLAY_LABEL_KEYS: Record<string, I18nKey> = {};
 
 const COMPONENT_EXCLUDED_PROPS: Record<string, Set<string>> = {
   // AspectRatio: keepAspectRatio は RenderNode 内部用、ユーザーには非表示
@@ -402,6 +403,7 @@ function SizeInput({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const { t } = useTranslation();
   const parsed = parseSizeValue(value);
   const [isAuto, setIsAuto] = useState(parsed.isAuto);
   const [num, setNum] = useState(parsed.num);
@@ -436,7 +438,7 @@ function SizeInput({
               : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
           }`}
         >
-          auto
+          {t("properties.auto")}
         </button>
         <button
           type="button"
@@ -448,7 +450,7 @@ function SizeInput({
           }}
           className="rounded px-2 py-0.5 text-[10px] transition-colors bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
         >
-          100%
+          {t("properties.full")}
         </button>
       </div>
       <div className={`flex gap-1 ${isAuto ? "pointer-events-none opacity-40" : ""}`}>
@@ -576,7 +578,7 @@ export function PropEditor() {
   if (!isMultiSelected && componentName === "ResizablePanelSlot") {
     return (
       <div className="px-3 py-2 text-xs text-[var(--vscode-descriptionForeground,#777)] italic">
-        サイズは親の Resizable コンポーネントで管理されます
+        {t("properties.resizableManagedByParent")}
       </div>
     );
   }
@@ -956,7 +958,7 @@ export function PropEditor() {
     // Custom UI for overlayClassName (preset select + text input)
     if (key === "overlayClassName") {
       const currentValue = String(value ?? "");
-      const matchesPreset = OVERLAY_CLASS_PRESETS.some((p) => p.value === currentValue);
+      const matchesPreset = OVERLAY_CLASS_PRESET_KEYS.some((p) => p.value === currentValue);
       return (
         <div key={key} className="flex flex-col gap-1">
           <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
@@ -967,9 +969,9 @@ export function PropEditor() {
             onChange={(e) => handlePropChange(key, e.target.value)}
             className={`${INPUT_CLASS} w-full`}
           >
-            {OVERLAY_CLASS_PRESETS.map((preset) => (
-              <option key={preset.label} value={preset.value}>
-                {preset.label}
+            {OVERLAY_CLASS_PRESET_KEYS.map((preset) => (
+              <option key={preset.labelKey} value={preset.value}>
+                {t(preset.labelKey)}
               </option>
             ))}
           </select>
@@ -978,7 +980,7 @@ export function PropEditor() {
             value={currentValue}
             onChange={(e) => handlePropChange(key, e.target.value)}
             className={`${INPUT_CLASS} w-full`}
-            placeholder="Tailwind classes..."
+            placeholder={t("properties.tailwindClassesPlaceholder")}
           />
         </div>
       );
@@ -987,7 +989,7 @@ export function PropEditor() {
     // Custom UI for dateFormat (preset select + free text input)
     if (key === "dateFormat") {
       const DATE_FORMAT_PRESETS: { label: string; value: string }[] = [
-        { label: "(custom)", value: "" },
+        { label: t("properties.presetCustom"), value: "" },
         { label: "yyyy/MM/dd", value: "yyyy/MM/dd" },
         { label: "MM/dd/yyyy", value: "MM/dd/yyyy" },
         { label: "dd/MM/yyyy", value: "dd/MM/yyyy" },
@@ -1016,7 +1018,7 @@ export function PropEditor() {
             value={currentValue}
             onChange={(e) => handlePropChange(key, e.target.value)}
             className={`${INPUT_CLASS} w-full`}
-            placeholder="例: yyyy/MM/dd HH:mm"
+            placeholder={t("properties.dateFormatPlaceholder")}
           />
         </div>
       );
@@ -1046,7 +1048,7 @@ export function PropEditor() {
                   : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
               }`}
             >
-              none
+              {t("properties.none")}
             </button>
             <button
               type="button"
@@ -1143,7 +1145,7 @@ export function PropEditor() {
                   : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
               }`}
             >
-              none
+              {t("properties.none")}
             </button>
             <button
               type="button"
@@ -1238,7 +1240,7 @@ export function PropEditor() {
                   : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
               }`}
             >
-              none
+              {t("properties.none")}
             </button>
             <button
               type="button"
@@ -1333,7 +1335,7 @@ export function PropEditor() {
                   : "bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)]"
               }`}
             >
-              none
+              {t("properties.none")}
             </button>
             <button
               type="button"
@@ -1434,7 +1436,7 @@ export function PropEditor() {
                     handlePropChange(key, next.join(","));
                   }}
                   className="px-1 py-0.5 text-[11px] text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-errorForeground,#f44)]"
-                  title="削除"
+                  title={t("properties.deleteItem")}
                 >
                   ×
                 </button>
@@ -1449,7 +1451,7 @@ export function PropEditor() {
             }}
             className="mt-1 rounded border border-dashed border-[var(--vscode-button-border,transparent)] bg-[var(--vscode-button-secondaryBackground,#3a3d41)] px-2 py-0.5 text-[11px] text-[var(--vscode-button-secondaryForeground,#ccc)] hover:opacity-90"
           >
-            + アイテム追加
+            + {t("properties.addItem")}
           </button>
         </div>
       );
@@ -1470,7 +1472,7 @@ export function PropEditor() {
           </label>
           {labels.length === 0 ? (
             <span className="text-[11px] italic text-[var(--vscode-descriptionForeground,#888)]">
-              items が未設定です
+              {t("properties.noItems")}
             </span>
           ) : (
             <div className="flex flex-col gap-1.5">
@@ -1490,7 +1492,7 @@ export function PropEditor() {
                         newDescs[idx] = e.target.value;
                         handlePropChange(key, newDescs.join(","));
                       }}
-                      placeholder="説明文..."
+                      placeholder={t("properties.descriptionPlaceholder")}
                       className={`${INPUT_CLASS} w-full`}
                     />
                   </div>
@@ -1517,7 +1519,7 @@ export function PropEditor() {
           </label>
           {labels.length === 0 ? (
             <span className="text-[11px] italic text-[var(--vscode-descriptionForeground,#888)]">
-              items が未設定です
+              {t("properties.noItems")}
             </span>
           ) : (
             <div className="flex flex-col gap-1">
@@ -1533,9 +1535,9 @@ export function PropEditor() {
                     </span>
                     <span
                       className="flex-1 truncate text-[11px] text-[var(--vscode-descriptionForeground,#888)]"
-                      title={currentPath || "(未設定)"}
+                      title={currentPath || t("properties.unset")}
                     >
-                      {shortPath || "(未設定)"}
+                      {shortPath || t("properties.unset")}
                     </span>
                     <button
                       type="button"
@@ -1547,7 +1549,7 @@ export function PropEditor() {
                         });
                       }}
                       className="rounded border border-[var(--vscode-button-border,transparent)] bg-[var(--vscode-button-background,#0e639c)] px-1.5 py-0.5 text-[11px] text-[var(--vscode-button-foreground,#fff)] hover:opacity-90"
-                      title="参照..."
+                      title={t("properties.browse")}
                     >
                       ...
                     </button>
@@ -1561,7 +1563,7 @@ export function PropEditor() {
                           handlePropChange(key, newPaths.join(","));
                         }}
                         className="px-1 py-0.5 text-[11px] text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-errorForeground,#f44)]"
-                        title="クリア"
+                        title={t("properties.clear")}
                       >
                         ×
                       </button>
@@ -1588,7 +1590,7 @@ export function PropEditor() {
               value={String(value ?? "")}
               onChange={(e) => handlePropChange(key, e.target.value)}
               className={`${INPUT_CLASS} flex-1`}
-              placeholder="image path"
+              placeholder={t("properties.imagePathPlaceholder")}
             />
             <button
               type="button"
@@ -1620,7 +1622,7 @@ export function PropEditor() {
               value={String(value ?? "")}
               onChange={(e) => handlePropChange(key, e.target.value)}
               className={`${INPUT_CLASS} flex-1`}
-              placeholder=".moc file path"
+              placeholder={t("properties.mocPathPlaceholder")}
             />
             <button
               type="button"
@@ -1674,7 +1676,7 @@ export function PropEditor() {
     return (
       <div key={key} className="flex flex-col gap-1">
         <label className="text-xs text-[var(--vscode-descriptionForeground,#888)]">
-          {PROP_DISPLAY_LABELS[key] ?? key}
+          {PROP_DISPLAY_LABEL_KEYS[key] ? t(PROP_DISPLAY_LABEL_KEYS[key]) : key}
         </label>
         {isBooleanProp ? (
           <label className="flex items-center gap-2 text-xs text-[var(--vscode-foreground,#ccc)]">
@@ -1685,7 +1687,7 @@ export function PropEditor() {
               onChange={(e) => handlePropChange(key, e.target.checked)}
               className="h-4 w-4"
             />
-            {isMixed ? mixedPlaceholder : (value ? "ON" : "OFF")}
+            {isMixed ? mixedPlaceholder : (value ? t("properties.on") : t("properties.off"))}
           </label>
         ) : options ? (
           <select
@@ -1716,7 +1718,7 @@ export function PropEditor() {
               <div className="flex gap-1">
                 <button
                   type="button"
-                  title="<kbd> タグを挿入"
+                  title={t("properties.insertKbd")}
                   className="rounded px-1.5 py-0.5 text-[10px] bg-[var(--vscode-input-background,#3c3c3c)] text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-toolbar-hoverBackground,#444)] border border-[var(--vscode-input-border,#3c3c3c)]"
                   onClick={() => {
                     const ta = document.querySelector<HTMLTextAreaElement>(`textarea[data-prop-key="${key}"]`);
@@ -1790,7 +1792,7 @@ export function PropEditor() {
               className="flex w-full items-center gap-1 py-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--vscode-descriptionForeground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
             >
               <span className="text-[10px]">{isCollapsed ? "\u25b6" : "\u25bc"}</span>
-              {GROUP_LABELS[group]}
+              {t(GROUP_I18N_KEYS[group])}
               <span className="ml-auto text-[10px] font-normal opacity-60">{entries.filter(([k]) => k !== "__sep__").length}</span>
             </button>
             {!isCollapsed && (
