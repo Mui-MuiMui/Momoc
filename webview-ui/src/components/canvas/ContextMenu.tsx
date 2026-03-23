@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useEditorStore } from "../../stores/editorStore";
 import { Trash2, Copy, Scissors, ClipboardPaste, CopyPlus } from "lucide-react";
 import { resolvers } from "../../crafts/resolvers";
+import { cloneTreeWithFreshIds } from "../../utils/customComponentUtils";
 
 interface MenuPosition {
   x: number;
@@ -75,61 +76,6 @@ function deserializeTree(text: string): NodeTree | null {
   }
 }
 
-/** Generate a short random ID similar to Craft.js's internal getRandomId */
-function freshId(): string {
-  return Math.random().toString(36).slice(2, 12);
-}
-
-/**
- * Clone a NodeTree with fresh IDs so that addNodeTree doesn't overwrite
- * existing nodes. Craft.js's addNodeTree reuses the original IDs if present.
- *
- * Uses shallow cloning to preserve non-serializable references like
- * React component types (node.data.type).
- */
-function cloneTreeWithFreshIds(tree: NodeTree): NodeTree {
-  const idMap = new Map<string, string>();
-
-  for (const oldId of Object.keys(tree.nodes)) {
-    idMap.set(oldId, freshId());
-  }
-
-  const remapId = (id: string) => idMap.get(id) || id;
-
-  const newNodes: Record<string, Node> = {};
-
-  for (const [oldId, node] of Object.entries(tree.nodes)) {
-    const newId = idMap.get(oldId)!;
-
-    // Shallow clone data, preserving type reference (React component)
-    const newData = {
-      ...node.data,
-      props: { ...node.data.props },
-      custom: { ...(node.data.custom || {}) },
-      parent: node.data.parent ? remapId(node.data.parent) : node.data.parent,
-      nodes: (node.data.nodes || []).map(remapId),
-      linkedNodes: Object.fromEntries(
-        Object.entries(node.data.linkedNodes || {}).map(([k, v]) => [k, remapId(v as string)]),
-      ),
-    };
-
-    newNodes[newId] = {
-      id: newId,
-      data: newData,
-      info: { ...(node.info || {}) },
-      related: { ...(node.related || {}) },
-      events: { selected: false, dragged: false, hovered: false },
-      rules: node.rules,
-      dom: null,
-      _hydrationTimestamp: Date.now(),
-    } as unknown as Node;
-  }
-
-  return {
-    rootNodeId: idMap.get(tree.rootNodeId)!,
-    nodes: newNodes,
-  };
-}
 
 export function ContextMenu() {
   const { t } = useTranslation();

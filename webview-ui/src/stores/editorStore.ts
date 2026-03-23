@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { CustomComponentEntry } from "../shared/messages";
 
 export type LayoutMode = "flow" | "absolute";
 export type ThemeMode = "light" | "dark";
@@ -66,6 +67,8 @@ interface EditorState {
   toggleProperties: () => void;
   setFileLoading: (loading: boolean) => void;
   setHistoryLimit: (limit: number) => void;
+  customComponents: CustomComponentEntry[];
+  setCustomComponents: (entries: CustomComponentEntry[]) => void;
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -89,6 +92,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   isPropertiesOpen: true,
   isFileLoading: true,
   historyLimit: 50,
+  customComponents: [],
 
   setLayoutMode: (mode) => set({ layoutMode: mode }),
   setThemeMode: (mode) => set({ themeMode: mode }),
@@ -118,4 +122,5 @@ export const useEditorStore = create<EditorState>((set) => ({
   toggleProperties: () => set((state) => ({ isPropertiesOpen: !state.isPropertiesOpen })),
   setFileLoading: (loading) => set({ isFileLoading: loading }),
   setHistoryLimit: (limit) => set({ historyLimit: limit }),
+  setCustomComponents: (entries) => set({ customComponents: entries }),
 }));

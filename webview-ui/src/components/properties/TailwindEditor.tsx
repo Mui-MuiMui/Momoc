@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useEditor } from "@craftjs/core";
+import { useTranslation } from "react-i18next";
 import { cn } from "../../utils/cn";
 
 const SPACING_SCALE = [
@@ -151,6 +152,7 @@ function parsePaletteClass(cls: string): { prefix: string; family: string; shade
 }
 
 export function TailwindEditor() {
+  const { t } = useTranslation();
   const { selectedNodeId, selectedNodeIds, currentClassName, hasClassName, actions } = useEditor((state) => {
     const ids = state.events.selected ? Array.from(state.events.selected) : [];
     const nodeId = ids[0];
@@ -368,7 +370,7 @@ export function TailwindEditor() {
     <div className="flex flex-col gap-3">
       <div>
         <label className="mb-1 block text-xs text-[var(--vscode-descriptionForeground,#888)]">
-          Classes
+          {t("tailwind.classes")}
         </label>
         <textarea
           value={rawInput}
@@ -378,8 +380,8 @@ export function TailwindEditor() {
         />
       </div>
 
-      <TailwindCategory title="Layout" collapsed={collapsedCategories.has("layout")} onToggle={() => toggleCategory("layout")}>
-        <TailwindSection title="Flex">
+      <TailwindCategory title={t("tailwind.layout")} collapsed={collapsedCategories.has("layout")} onToggle={() => toggleCategory("layout")}>
+        <TailwindSection title={t("tailwind.flex")}>
           <select
             value={flexMode}
             onChange={(e) => {
@@ -469,7 +471,7 @@ export function TailwindEditor() {
         </TailwindSection>
 
         <SpacingSlider
-          title="Padding"
+          title={t("tailwind.padding")}
           directions={PADDING_DIRS}
           dirIndex={paddingDir}
           onDirChange={setPaddingDir}
@@ -478,7 +480,7 @@ export function TailwindEditor() {
         />
 
         <SpacingSlider
-          title="Margin"
+          title={t("tailwind.margin")}
           directions={MARGIN_DIRS}
           dirIndex={marginDir}
           onDirChange={setMarginDir}
@@ -486,7 +488,7 @@ export function TailwindEditor() {
           onChange={(idx) => setSpacingValue(currentMarginPrefix, idx)}
         />
 
-        <TailwindSection title="Content Align">
+        <TailwindSection title={t("tailwind.contentAlign")}>
           <div className="grid grid-cols-3 gap-0.5 w-[72px]">
             {CONTENT_ALIGN_GRID.map((cell, i) => {
               const isActive = activeSet.has(cell.justify) && activeSet.has(cell.items);
@@ -527,7 +529,7 @@ export function TailwindEditor() {
           </div>
         </TailwindSection>
 
-        <TailwindSection title="Flex Wrap">
+        <TailwindSection title={t("tailwind.flexWrap")}>
           <div className="flex flex-wrap gap-1">
             {FLEX_WRAP_OPTIONS.map((o) => (
               <ClassButton
@@ -540,7 +542,7 @@ export function TailwindEditor() {
           </div>
         </TailwindSection>
 
-        <TailwindSection title="Align Self">
+        <TailwindSection title={t("tailwind.alignSelf")}>
           <div className="flex flex-wrap gap-1">
             {ALIGN_SELF_OPTIONS.map((o) => (
               <ClassButton
@@ -557,7 +559,7 @@ export function TailwindEditor() {
 
         <div className="flex items-center gap-2">
           <ClassButton
-            label="Fixed Header"
+            label={t("tailwind.fixedHeader")}
             active={FIXED_HEADER_CLASSES.every((c) => activeSet.has(c))}
             onClick={() => {
               const isActive = FIXED_HEADER_CLASSES.every((c) => activeSet.has(c));
@@ -572,8 +574,8 @@ export function TailwindEditor() {
         </div>
       </TailwindCategory>
 
-      <TailwindCategory title="Font" collapsed={collapsedCategories.has("font")} onToggle={() => toggleCategory("font")}>
-        <TailwindSection title="Font Family">
+      <TailwindCategory title={t("tailwind.font")} collapsed={collapsedCategories.has("font")} onToggle={() => toggleCategory("font")}>
+        <TailwindSection title={t("tailwind.fontFamily")}>
           <div className="flex flex-wrap gap-1">
             {FONT_FAMILY_OPTIONS.map((f) => (
               <ClassButton key={f} label={f} active={activeSet.has(`font-${f}`)} onClick={() => setGroupClass(`font-${f}`, fontFamilyGroup)} />
@@ -581,10 +583,10 @@ export function TailwindEditor() {
           </div>
         </TailwindSection>
 
-        <TailwindSection title="Font Size">
+        <TailwindSection title={t("tailwind.fontSize")}>
           <div className="mb-1 flex gap-1">
-            <ModeToggle label="Preset" active={fontSizeMode === "preset"} onClick={() => setFontSizeMode("preset")} />
-            <ModeToggle label="Slider" active={fontSizeMode === "slider"} onClick={() => setFontSizeMode("slider")} />
+            <ModeToggle label={t("tailwind.preset")} active={fontSizeMode === "preset"} onClick={() => setFontSizeMode("preset")} />
+            <ModeToggle label={t("tailwind.slider")} active={fontSizeMode === "slider"} onClick={() => setFontSizeMode("slider")} />
           </div>
           {fontSizeMode === "preset" ? (
             <div className="flex flex-wrap gap-1">
@@ -622,7 +624,7 @@ export function TailwindEditor() {
           )}
         </TailwindSection>
 
-        <TailwindSection title="Font Weight">
+        <TailwindSection title={t("tailwind.fontWeight")}>
           <div className="flex flex-wrap gap-1">
             {FONT_WEIGHT_OPTIONS.map((w) => (
               <ClassButton key={w} label={w} active={activeSet.has(`font-${w}`)} onClick={() => setGroupClass(`font-${w}`, fontWeightGroup)} />
@@ -631,9 +633,9 @@ export function TailwindEditor() {
         </TailwindSection>
       </TailwindCategory>
 
-      <TailwindCategory title="Color" collapsed={collapsedCategories.has("color")} onToggle={() => toggleCategory("color")}>
+      <TailwindCategory title={t("tailwind.color")} collapsed={collapsedCategories.has("color")} onToggle={() => toggleCategory("color")}>
         <ColorSection
-          title="Text Color"
+          title={t("tailwind.textColor")}
           prefix="text"
           activeSet={activeSet}
           paletteFamily={textPaletteFamily}
@@ -643,7 +645,7 @@ export function TailwindEditor() {
         />
 
         <ColorSection
-          title="Background"
+          title={t("tailwind.background")}
           prefix="bg"
           activeSet={activeSet}
           paletteFamily={bgPaletteFamily}
@@ -653,7 +655,7 @@ export function TailwindEditor() {
         />
 
         <ColorSection
-          title="Hover BG"
+          title={t("tailwind.hoverBg")}
           prefix="bg"
           activeSet={activeSet}
           paletteFamily={hoverBgPaletteFamily}
@@ -665,7 +667,7 @@ export function TailwindEditor() {
         />
 
         <ColorSection
-          title="Border Color"
+          title={t("tailwind.borderColor")}
           prefix="border"
           activeSet={activeSet}
           paletteFamily={borderPaletteFamily}
@@ -675,8 +677,8 @@ export function TailwindEditor() {
         />
       </TailwindCategory>
 
-      <TailwindCategory title="Border" collapsed={collapsedCategories.has("border")} onToggle={() => toggleCategory("border")}>
-        <TailwindSection title="Border Width">
+      <TailwindCategory title={t("tailwind.border")} collapsed={collapsedCategories.has("border")} onToggle={() => toggleCategory("border")}>
+        <TailwindSection title={t("tailwind.borderWidth")}>
           <div className="flex flex-wrap gap-1">
             {BORDER_WIDTH_SIZES.map((s) => {
               const cls = s === "1" ? "border" : `border-${s}`;
@@ -686,7 +688,7 @@ export function TailwindEditor() {
             })}
           </div>
         </TailwindSection>
-        <TailwindSection title="Border Radius">
+        <TailwindSection title={t("tailwind.borderRadius")}>
           <div className="flex flex-wrap gap-1">
             {BORDER_RADIUS_OPTIONS.map((r) => (
               <ClassButton key={r} label={r} active={activeSet.has(`rounded-${r}`)} onClick={() => setGroupClass(`rounded-${r}`, borderRadiusGroup)} />
@@ -695,11 +697,11 @@ export function TailwindEditor() {
         </TailwindSection>
       </TailwindCategory>
 
-      <TailwindCategory title="Effects" collapsed={collapsedCategories.has("effects")} onToggle={() => toggleCategory("effects")}>
-        <TailwindSection title="Shadow">
+      <TailwindCategory title={t("tailwind.effects")} collapsed={collapsedCategories.has("effects")} onToggle={() => toggleCategory("effects")}>
+        <TailwindSection title={t("tailwind.shadow")}>
           <div className="mb-1 flex gap-1">
-            <ModeToggle label="Preset" active={shadowMode === "preset"} onClick={() => setShadowMode("preset")} />
-            <ModeToggle label="Slider" active={shadowMode === "slider"} onClick={() => setShadowMode("slider")} />
+            <ModeToggle label={t("tailwind.preset")} active={shadowMode === "preset"} onClick={() => setShadowMode("preset")} />
+            <ModeToggle label={t("tailwind.slider")} active={shadowMode === "slider"} onClick={() => setShadowMode("slider")} />
           </div>
           {shadowMode === "preset" ? (
             <div className="flex flex-wrap gap-1">
@@ -747,10 +749,10 @@ export function TailwindEditor() {
           )}
         </TailwindSection>
 
-        <TailwindSection title="Drop Shadow">
+        <TailwindSection title={t("tailwind.dropShadow")}>
           <div className="mb-1 flex gap-1">
-            <ModeToggle label="Preset" active={dropShadowMode === "preset"} onClick={() => setDropShadowMode("preset")} />
-            <ModeToggle label="Slider" active={dropShadowMode === "slider"} onClick={() => setDropShadowMode("slider")} />
+            <ModeToggle label={t("tailwind.preset")} active={dropShadowMode === "preset"} onClick={() => setDropShadowMode("preset")} />
+            <ModeToggle label={t("tailwind.slider")} active={dropShadowMode === "slider"} onClick={() => setDropShadowMode("slider")} />
           </div>
           {dropShadowMode === "preset" ? (
             <div className="flex flex-wrap gap-1">
@@ -799,7 +801,7 @@ export function TailwindEditor() {
         </TailwindSection>
 
         <ColorSection
-          title="Drop Shadow Color"
+          title={t("tailwind.dropShadowColor")}
           prefix="drop-shadow"
           activeSet={activeSet}
           paletteFamily={dropShadowColorFamily}
@@ -838,6 +840,7 @@ function ColorSection({
   showToggle?: boolean;
   showThemeColors?: boolean;
 }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"normal" | "hover">(initialMode);
   const effectivePrefix = mode === "hover" ? `hover:${prefix}` : prefix;
   const activePalette = findPaletteColor(effectivePrefix);
@@ -857,8 +860,8 @@ function ColorSection({
       {/* Normal / Hover toggle */}
       {showToggle && (
         <div className="mb-1.5 flex gap-1">
-          <ModeToggle label="Normal" active={mode === "normal"} onClick={() => setMode("normal")} />
-          <ModeToggle label="Hover" active={mode === "hover"} onClick={() => setMode("hover")} />
+          <ModeToggle label={t("tailwind.normal")} active={mode === "normal"} onClick={() => setMode("normal")} />
+          <ModeToggle label={t("tailwind.hover")} active={mode === "hover"} onClick={() => setMode("hover")} />
         </div>
       )}
       {/* Theme colors */}

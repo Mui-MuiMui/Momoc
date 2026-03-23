@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useEditor, Element, type NodeTree, type Node as CraftNode } from "@craftjs/core";
+import { useEditor, Element, type NodeTree } from "@craftjs/core";
 import { useTranslation } from "react-i18next";
 import { paletteItems, resolvers, type ResolverKey } from "../../crafts/resolvers";
-import { Search, ChevronLeft, ChevronRight, Upload, RotateCcw, Pencil, Trash2 } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Upload, Pencil, Trash2, RefreshCw } from "lucide-react";
 import * as Icons from "lucide-react";
 import { useEditorStore } from "../../stores/editorStore";
 import { useVscodeMessage, useSendMessage } from "../../hooks/useVscodeMessage";
 import type { CustomComponentEntry } from "../../shared/messages";
-import { CraftGroup } from "../../crafts/layout/CraftGroup";
+import { buildGroupTreeFromCraftState } from "../../utils/customComponentUtils";
 
 type SortMode = "category" | "alpha-asc" | "alpha-desc";
 type PaletteTab = "standard" | "custom";
@@ -28,243 +28,12 @@ const SUB_CATEGORIES = ["action", "display", "form", "layout", "navigation", "ov
 type SubCategory = (typeof SUB_CATEGORIES)[number];
 
 // ---------------------------------------------------------------------------
-// Phase 4: craftState 展開ユーティリティ
-// ---------------------------------------------------------------------------
-
-function freshId(): string {
-  return Math.random().toString(36).slice(2, 12);
-}
-
-function cloneTreeWithFreshIds(tree: NodeTree): NodeTree {
-  const idMap = new Map<string, string>();
-  for (const oldId of Object.keys(tree.nodes)) {
-    idMap.set(oldId, freshId());
-  }
-  const remapId = (id: string) => idMap.get(id) || id;
-  const newNodes: Record<string, CraftNode> = {};
-  for (const [oldId, node] of Object.entries(tree.nodes)) {
-    const newId = idMap.get(oldId)!;
-    const newData = {
-      ...node.data,
-      props: { ...node.data.props },
-      custom: { ...(node.data.custom || {}) },
-      parent: node.data.parent ? remapId(node.data.parent) : node.data.parent,
-      nodes: (node.data.nodes || []).map(remapId),
-      linkedNodes: Object.fromEntries(
-        Object.entries(node.data.linkedNodes || {}).map(([k, v]) => [k, remapId(v as string)]),
-      ),
-    };
-    newNodes[newId] = {
-      id: newId,
-      data: newData,
-      info: { ...(node.info || {}) },
-      related: { ...(node.related || {}) },
-      events: { selected: false, dragged: false, hovered: false },
-      rules: node.rules,
-      dom: null,
-      _hydrationTimestamp: Date.now(),
-    } as unknown as CraftNode;
-  }
-  return { rootNodeId: idMap.get(tree.rootNodeId)!, nodes: newNodes };
-}
-
-/** craftState JSON → NodeTree に変換し、ROOT の子ノードを CraftGroup で包む */
-function buildGroupTreeFromCraftState(
-  craftStateJson: string,
-): NodeTree | null {
-  try {
-    const craftState = JSON.parse(craftStateJson) as Record<
-      string,
-      {
-        type: { resolvedName: string } | string;
-        props: Record<string, unknown>;
-        nodes: string[];
-        linkedNodes: Record<string, string>;
-        parent: string | null;
-        isCanvas?: boolean;
-        displayName?: string;
-        custom?: Record<string, unknown>;
-      }
-    >;
-
-    const rootNode = craftState["ROOT"];
-    if (!rootNode) return null;
-    const childIds = rootNode.nodes || [];
-    if (childIds.length === 0) return null;
-
-    // 外接矩形の計算
-    let minTop = Infinity;
-    let minLeft = Infinity;
-    let maxBottom = -Infinity;
-    let maxRight = -Infinity;
-
-    for (const childId of childIds) {
-      const child = craftState[childId];
-      if (!child) continue;
-      const top = parseInt(String(child.props?.top || "0"), 10);
-      const left = parseInt(String(child.props?.left || "0"), 10);
-      const width = parseInt(String(child.props?.width || "100"), 10);
-      const height = parseInt(String(child.props?.height || "40"), 10);
-      if (top < minTop) minTop = top;
-      if (left < minLeft) minLeft = left;
-      if (top + height > maxBottom) maxBottom = top + height;
-      if (left + width > maxRight) maxRight = left + width;
-    }
-    if (minTop === Infinity) { minTop = 0; minLeft = 0; maxBottom = 200; maxRight = 200; }
-
-    const groupWidth = Math.max(maxRight - minLeft, 40);
-    const groupHeight = Math.max(maxBottom - minTop, 40);
-
-    // CraftGroup ノードの ID
-    const groupId = freshId();
-
-    const nodes: Record<string, CraftNode> = {};
-
-    // CraftGroup ルートノード
-    const craftRules = CraftGroup.craft?.rules;
-    nodes[groupId] = {
-      id: groupId,
-      data: {
-        type: CraftGroup,
-        name: "CraftGroup",
-        displayName: "Group",
-        isCanvas: true,
-        props: { width: `${groupWidth}px`, height: `${groupHeight}px`, className: "" },
-        nodes: [],
-        linkedNodes: {},
-        parent: "ROOT",
-        custom: {},
-        hidden: false,
-      },
-      info: {},
-      related: {},
-      events: { selected: false, dragged: false, hovered: false },
-      rules: {
-        canDrag: craftRules?.canDrag ?? (() => true),
-        canDrop: craftRules?.canDrop ?? (() => true),
-        canMoveIn: craftRules?.canMoveIn ?? (() => true),
-        canMoveOut: craftRules?.canMoveOut ?? (() => true),
-      },
-      dom: null,
-      _hydrationTimestamp: Date.now(),
-    } as unknown as CraftNode;
-
-    // 子ノードを CraftGroup に追加
-    const childNodeIds: string[] = [];
-    for (const childId of childIds) {
-      const child = craftState[childId];
-      if (!child) continue;
-
-      const resolvedName = typeof child.type === "string" ? child.type : child.type?.resolvedName || "CraftDiv";
-      const typeFn = resolvers[resolvedName as keyof typeof resolvers];
-      if (!typeFn) continue;
-
-      const childRules = (typeFn as { craft?: { rules?: { canDrag?: () => boolean; canDrop?: () => boolean; canMoveIn?: (...args: unknown[]) => boolean; canMoveOut?: () => boolean } } }).craft?.rules;
-
-      // 座標を CraftGroup 相対に変換
-      const origTop = parseInt(String(child.props?.top || "0"), 10);
-      const origLeft = parseInt(String(child.props?.left || "0"), 10);
-      const adjustedProps = {
-        ...child.props,
-        top: `${origTop - minTop}px`,
-        left: `${origLeft - minLeft}px`,
-      };
-
-      nodes[childId] = {
-        id: childId,
-        data: {
-          type: typeFn,
-          name: resolvedName,
-          displayName: child.displayName || resolvedName,
-          isCanvas: child.isCanvas ?? false,
-          props: adjustedProps,
-          nodes: child.nodes || [],
-          linkedNodes: child.linkedNodes || {},
-          parent: groupId,
-          custom: child.custom || {},
-          hidden: false,
-        },
-        info: {},
-        related: {},
-        events: { selected: false, dragged: false, hovered: false },
-        rules: {
-          canDrag: childRules?.canDrag ?? (() => true),
-          canDrop: childRules?.canDrop ?? (() => true),
-          canMoveIn: childRules?.canMoveIn ?? (() => true),
-          canMoveOut: childRules?.canMoveOut ?? (() => true),
-        },
-        dom: null,
-        _hydrationTimestamp: Date.now(),
-      } as unknown as CraftNode;
-      childNodeIds.push(childId);
-
-      // 子ノードの子孫も追加
-      function addDescendants(nodeId: string, parentId: string): void {
-        const n = craftState[nodeId];
-        if (!n) return;
-        const nResolvedName = typeof n.type === "string" ? n.type : n.type?.resolvedName || "CraftDiv";
-        const nTypeFn = resolvers[nResolvedName as keyof typeof resolvers];
-        if (!nTypeFn) return;
-        const nRules = (nTypeFn as { craft?: { rules?: { canDrag?: () => boolean; canDrop?: () => boolean; canMoveIn?: (...args: unknown[]) => boolean; canMoveOut?: () => boolean } } }).craft?.rules;
-        nodes[nodeId] = {
-          id: nodeId,
-          data: {
-            type: nTypeFn,
-            name: nResolvedName,
-            displayName: n.displayName || nResolvedName,
-            isCanvas: n.isCanvas ?? false,
-            props: { ...n.props },
-            nodes: n.nodes || [],
-            linkedNodes: n.linkedNodes || {},
-            parent: parentId,
-            custom: n.custom || {},
-            hidden: false,
-          },
-          info: {},
-          related: {},
-          events: { selected: false, dragged: false, hovered: false },
-          rules: {
-            canDrag: nRules?.canDrag ?? (() => true),
-            canDrop: nRules?.canDrop ?? (() => true),
-            canMoveIn: nRules?.canMoveIn ?? (() => true),
-            canMoveOut: nRules?.canMoveOut ?? (() => true),
-          },
-          dom: null,
-          _hydrationTimestamp: Date.now(),
-        } as unknown as CraftNode;
-        for (const childId of n.nodes || []) {
-          addDescendants(childId, nodeId);
-        }
-        for (const linkedId of Object.values(n.linkedNodes || {})) {
-          addDescendants(linkedId as string, nodeId);
-        }
-      }
-
-      for (const grandChildId of child.nodes || []) {
-        addDescendants(grandChildId, childId);
-      }
-      for (const linkedId of Object.values(child.linkedNodes || {})) {
-        addDescendants(linkedId as string, childId);
-      }
-    }
-
-    // CraftGroup の nodes を設定
-    (nodes[groupId].data as unknown as { nodes: string[] }).nodes = childNodeIds;
-
-    const tree: NodeTree = { rootNodeId: groupId, nodes };
-    return cloneTreeWithFreshIds(tree);
-  } catch {
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
 export function ComponentPalette() {
   const { t } = useTranslation();
-  const { connectors } = useEditor();
+  const { connectors, actions, query } = useEditor();
   const isPaletteOpen = useEditorStore((s) => s.isPaletteOpen);
   const togglePalette = useEditorStore((s) => s.togglePalette);
   const [search, setSearch] = useState("");
@@ -290,6 +59,52 @@ export function ComponentPalette() {
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const sendMessage = useSendMessage();
 
+  const actionsRef = useRef(actions);
+  const queryRef = useRef(query);
+  actionsRef.current = actions;
+  queryRef.current = query;
+
+  const pageFilePath = useEditorStore((s) => s.fileName);
+  const pageFilePathRef = useRef(pageFilePath);
+  pageFilePathRef.current = pageFilePath;
+
+  // 一括「再読み込みして差し替え」で待機中のコンポーネントID集合
+  const pendingReloadAllIdsRef = useRef<Set<string>>(new Set());
+
+  // 1ノードをエントリで差し替える（ref パターン・stale closure 回避）
+  const replaceGroupInPlaceRef = useRef<(nodeId: string, entry: CustomComponentEntry) => void>(() => {});
+  replaceGroupInPlaceRef.current = (nodeId: string, entry: CustomComponentEntry) => {
+    try {
+      const node = queryRef.current.node(nodeId).get();
+      if (!node) return;
+      const { top, left, className } = node.data.props as Record<string, string>;
+      const parentId = node.data.parent;
+      if (!parentId) return;
+      const tree = buildGroupTreeFromCraftState(entry.craftState, entry.path, pageFilePathRef.current, entry.id);
+      if (!tree) return;
+      const root = tree.nodes[tree.rootNodeId];
+      if (top) root.data.props.top = top;
+      if (left) root.data.props.left = left;
+      if (className) root.data.props.className = className;
+      actionsRef.current.delete(nodeId);
+      actionsRef.current.addNodeTree(tree, parentId);
+    } catch {
+      // Node may have been removed
+    }
+  };
+
+  // 指定コンポーネントIDの全インスタンスを差し替える
+  const replaceAllInstancesRef = useRef<(componentId: string, entry: CustomComponentEntry) => void>(() => {});
+  replaceAllInstancesRef.current = (componentId: string, entry: CustomComponentEntry) => {
+    const state = queryRef.current.getState();
+    const matchingIds = Object.keys(state.nodes).filter(
+      (id) => state.nodes[id]?.data?.custom?.customComponentId === componentId,
+    );
+    for (const nodeId of matchingIds) {
+      replaceGroupInPlaceRef.current(nodeId, entry);
+    }
+  };
+
   // 初回マウント時にカスタムコンポーネント一覧を取得
   useEffect(() => {
     sendMessage({ type: "customComponent:getAll" });
@@ -300,24 +115,46 @@ export function ComponentPalette() {
     useCallback((message) => {
       if (message.type === "customComponent:all") {
         setCustomComponents(message.payload);
+        useEditorStore.getState().setCustomComponents(message.payload);
       } else if (message.type === "customComponent:importResult") {
         if ("error" in message.payload) {
           // エラーは警告表示
           console.warn("[CustomComponent] import error:", message.payload.error);
         } else {
-          setCustomComponents((prev) => [...prev, message.payload as CustomComponentEntry]);
+          setCustomComponents((prev) => {
+            const updated = [...prev, message.payload as CustomComponentEntry];
+            useEditorStore.getState().setCustomComponents(updated);
+            return updated;
+          });
         }
       } else if (message.type === "customComponent:reloadResult") {
         const { id, entry } = message.payload;
         if (entry) {
-          setCustomComponents((prev) => prev.map((c) => (c.id === id ? entry : c)));
+          setCustomComponents((prev) => {
+            const updated = prev.map((c) => (c.id === id ? entry : c));
+            useEditorStore.getState().setCustomComponents(updated);
+            return updated;
+          });
+          // 一括「再読み込みして差し替え」の待機中なら全インスタンスを置換
+          if (pendingReloadAllIdsRef.current.has(id)) {
+            pendingReloadAllIdsRef.current.delete(id);
+            replaceAllInstancesRef.current(id, entry);
+          }
         }
       } else if (message.type === "customComponent:removeResult") {
-        setCustomComponents((prev) => prev.filter((c) => c.id !== message.payload.id));
+        setCustomComponents((prev) => {
+          const updated = prev.filter((c) => c.id !== message.payload.id);
+          useEditorStore.getState().setCustomComponents(updated);
+          return updated;
+        });
       } else if (message.type === "customComponent:updatePathResult") {
         const { id, entry } = message.payload;
         if (entry) {
-          setCustomComponents((prev) => prev.map((c) => (c.id === id ? entry : c)));
+          setCustomComponents((prev) => {
+            const updated = prev.map((c) => (c.id === id ? entry : c));
+            useEditorStore.getState().setCustomComponents(updated);
+            return updated;
+          });
         }
       }
     }, []),
@@ -443,7 +280,7 @@ export function ComponentPalette() {
                 : "text-[var(--vscode-foreground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
             }`}
           >
-            コンポーネント
+            {t("palette.tab.standard")}
           </button>
           <button
             type="button"
@@ -454,7 +291,7 @@ export function ComponentPalette() {
                 : "text-[var(--vscode-foreground,#888)] hover:text-[var(--vscode-foreground,#ccc)]"
             }`}
           >
-            カスタム
+            {t("palette.tab.custom")}
           </button>
         </div>
 
@@ -485,11 +322,29 @@ export function ComponentPalette() {
               className="flex items-center justify-center gap-1.5 rounded border border-[var(--vscode-button-background,#0e639c)] px-2 py-1.5 text-xs text-[var(--vscode-button-background,#0e639c)] hover:bg-[var(--vscode-button-background,#0e639c)] hover:text-[var(--vscode-button-foreground,#fff)] transition-colors"
             >
               <Upload size={12} />
-              .moc をインポート
+              {t("palette.importMoc")}
             </button>
+            {customComponents.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  for (const entry of customComponents) {
+                    pendingReloadAllIdsRef.current.add(entry.id);
+                    sendMessage({ type: "customComponent:reload", payload: { id: entry.id } });
+                  }
+                  // 15秒でタイムアウトし、未受信のIDを破棄する
+                  setTimeout(() => { pendingReloadAllIdsRef.current.clear(); }, 15_000);
+                }}
+                title={t("palette.reloadReplaceAll")}
+                className="flex items-center justify-center gap-1.5 rounded border border-[var(--vscode-panel-border,#333)] px-2 py-1.5 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)] transition-colors"
+              >
+                <RefreshCw size={12} />
+                {t("palette.reloadReplaceAll")}
+              </button>
+            )}
             {customComponents.length === 0 ? (
               <p className="mt-4 text-center text-[10px] text-[var(--vscode-foreground,#666)]">
-                インポートした .moc がここに表示されます
+                {t("palette.emptyCustom")}
               </p>
             ) : (
               <div className="flex flex-col gap-1">
@@ -610,13 +465,15 @@ export function ComponentPalette() {
           <button
             type="button"
             onClick={() => {
+              pendingReloadAllIdsRef.current.add(contextMenu.id);
               sendMessage({ type: "customComponent:reload", payload: { id: contextMenu.id } });
+              setTimeout(() => { pendingReloadAllIdsRef.current.delete(contextMenu.id); }, 15_000);
               setContextMenu(null);
             }}
             className="flex w-full items-center gap-2 px-3 py-1 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
           >
-            <RotateCcw size={12} />
-            再読み込み
+            <RefreshCw size={12} />
+            {t("palette.reloadReplace")}
           </button>
           <button
             type="button"
@@ -627,7 +484,7 @@ export function ComponentPalette() {
             className="flex w-full items-center gap-2 px-3 py-1 text-xs text-[var(--vscode-foreground,#ccc)] hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
           >
             <Pencil size={12} />
-            パスを変更
+            {t("palette.changePath")}
           </button>
           <hr className="my-1 border-[var(--vscode-panel-border,#333)]" />
           <button
@@ -639,7 +496,7 @@ export function ComponentPalette() {
             className="flex w-full items-center gap-2 px-3 py-1 text-xs text-red-400 hover:bg-[var(--vscode-list-hoverBackground,#2a2d2e)]"
           >
             <Trash2 size={12} />
-            削除
+            {t("palette.delete")}
           </button>
         </div>
       )}
@@ -760,9 +617,10 @@ function CustomComponentCard({
   const { query, actions } = useEditor();
   const layoutMode = useEditorStore((s) => s.layoutMode);
   const zoom = useEditorStore((s) => s.zoom);
+  const pageFilePath = useEditorStore((s) => s.fileName);
 
-  const stateRef = useRef({ layoutMode, zoom, query, actions, entry });
-  stateRef.current = { layoutMode, zoom, query, actions, entry };
+  const stateRef = useRef({ layoutMode, zoom, query, actions, entry, pageFilePath });
+  stateRef.current = { layoutMode, zoom, query, actions, entry, pageFilePath };
   const elementRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -772,8 +630,8 @@ function CustomComponentCard({
       if (stateRef.current.layoutMode !== "absolute") return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      const { zoom, query, actions, entry } = stateRef.current;
-      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState), zoom, actions, query);
+      const { zoom, query, actions, entry, pageFilePath } = stateRef.current;
+      startAbsoluteDrag(e, entry.name, () => buildGroupTreeFromCraftState(entry.craftState, entry.path, pageFilePath, entry.id), zoom, actions, query);
     };
     el.addEventListener("mousedown", onMouseDown, true);
     return () => el.removeEventListener("mousedown", onMouseDown, true);
@@ -790,7 +648,7 @@ function CustomComponentCard({
           return;
         }
         connectors.create(ref, () => {
-          const tree = buildGroupTreeFromCraftState(entry.craftState);
+          const tree = buildGroupTreeFromCraftState(entry.craftState, entry.path, pageFilePath, entry.id);
           if (!tree) return <div />;
           return tree;
         });

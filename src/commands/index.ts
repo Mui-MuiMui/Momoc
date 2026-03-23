@@ -4,6 +4,7 @@ import { generateFlatTsx } from "../services/flatExportService.js";
 import { MocEditorProvider } from "../editors/mocEditorProvider.js";
 import { startPreviewServer, getActiveSession } from "../services/previewServer.js";
 import { parseMocFile } from "../services/mocParser.js";
+import type { CustomComponentEntry } from "../shared/types.js";
 import { captureScreenshot } from "../services/screenshotService.js";
 
 export function registerCommands(context: vscode.ExtensionContext): void {
@@ -109,6 +110,10 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         mocFilePath,
         workspaceRoot,
         theme,
+        () => Object.fromEntries(
+          context.workspaceState.get<CustomComponentEntry[]>("customComponents", [])
+            .flatMap((c) => Object.entries(c.linkedSnapshots ?? {})),
+        ),
       );
       context.subscriptions.push({ dispose });
 

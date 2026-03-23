@@ -128,7 +128,7 @@ function MemoSticker({
           (typeof node.data.type === "string"
             ? node.data.type
             : node.data.type?.name) ||
-          "Element";
+          t("memo.element");
         return { id: nodeId, label: `${String(displayName)}[${nodeId}]` };
       } catch {
         return { id: nodeId, label: `[${nodeId}]` };

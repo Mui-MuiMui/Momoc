@@ -73,6 +73,8 @@ export interface CustomComponentEntry {
   craftState: string;
   layoutMode: string;
   importedAt: number;
+  /** linkedMocPath 先ファイルの craftState スナップショット（絶対パス → craftState JSON 文字列） */
+  linkedSnapshots?: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------

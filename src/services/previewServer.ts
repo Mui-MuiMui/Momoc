@@ -11,6 +11,8 @@ interface PreviewSession {
   url: string;
   mocFilePath: string;
   dispose: () => void;
+  /** スナップショットゲッターを更新する（既存セッション再利用時） */
+  updateSnapshotMap: (getter: () => Record<string, string>) => void;
 }
 
 const activeSessions = new Map<string, PreviewSession>();
@@ -33,14 +35,17 @@ export async function startPreviewServer(
   mocFilePath: string,
   workspaceRoot: string,
   theme: "light" | "dark",
+  getSnapshotMap: () => Record<string, string> = () => ({}),
 ): Promise<{ url: string; dispose: () => void }> {
-  // If a session already exists for this file, return it
+  // If a session already exists for this file, update snapshot map and return it
   const existing = activeSessions.get(mocFilePath);
   if (existing) {
+    existing.updateSnapshotMap(getSnapshotMap);
     return { url: existing.url, dispose: existing.dispose };
   }
 
   // State
+  let currentGetSnapshotMap = getSnapshotMap;
   let currentTheme = theme;
   let cachedComponentJs = "";
   let cachedError = "";
@@ -168,6 +173,8 @@ export async function startPreviewServer(
     const visited = new Set<string>();
     const queue: [string, string][] = collectLinkedPaths(craftState, mocDir);
 
+    const snapshotMap = currentGetSnapshotMap();
+
     while (queue.length > 0) {
       const [relPath, absPath] = queue.shift()!;
       if (visited.has(absPath)) continue;
@@ -175,11 +182,16 @@ export async function startPreviewServer(
       toProcess.set(relPath, absPath);
 
       try {
-        const content = new TextDecoder().decode(
-          await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
-        );
-        const doc = parseMocFile(content);
-        const cs = doc.editorData?.craftState as Record<string, unknown> | undefined;
+        let cs: Record<string, unknown> | undefined;
+        if (snapshotMap[absPath]) {
+          cs = JSON.parse(snapshotMap[absPath]) as Record<string, unknown>;
+        } else {
+          const content = new TextDecoder().decode(
+            await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+          );
+          const doc = parseMocFile(content);
+          cs = doc.editorData?.craftState as Record<string, unknown> | undefined;
+        }
         if (cs) {
           for (const pair of collectLinkedPaths(cs, path.dirname(absPath))) {
             if (!visited.has(pair[1])) queue.push(pair);
@@ -197,36 +209,52 @@ export async function startPreviewServer(
 
     for (const [relPath, absPath] of toProcess) {
       try {
-        linkedAbsPaths.add(absPath);
-        const linkedContent = new TextDecoder().decode(
-          await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
-        );
-        const linkedDoc = parseMocFile(linkedContent);
-        // Re-generate TSX from craftState (SSOT) so linked .moc always reflects
-        // the latest renderContextMenu / renderMenubar output, not stale stored TSX.
+        // スナップショットがあるファイルはウォッチ対象から外す
+        // → C.moc を保存してもプレビューが自動更新されない（明示的な再読み込みが必要）
+        if (!snapshotMap[absPath]) {
+          linkedAbsPaths.add(absPath);
+        }
         let linkedTsx: string;
-        const linkedCraftState = linkedDoc.editorData?.craftState as Record<string, Record<string, unknown>> | undefined;
-        if (linkedCraftState) {
-          const linkedComponentName = extractComponentName(linkedDoc.tsxSource) || "LinkedComponent";
-          const linkedMemos = linkedDoc.editorData?.memos;
-          const linkedGenerated = craftStateToTsx(linkedCraftState, linkedComponentName, linkedMemos);
+        if (snapshotMap[absPath]) {
+          // スナップショット優先: ディスク読み込みをスキップ
+          const linkedCraftState = JSON.parse(snapshotMap[absPath]) as Record<string, Record<string, unknown>>;
+          const linkedComponentName = path.basename(absPath, ".moc") || "LinkedComponent";
+          const linkedGenerated = craftStateToTsx(linkedCraftState, linkedComponentName, undefined);
           const linkedTsxSource = linkedGenerated.tsxSource.replace(/\bmin-h-screen\b/g, "");
           linkedTsx = linkedGenerated.imports
             ? `${linkedGenerated.imports}\n${linkedTsxSource}`
             : linkedTsxSource;
         } else {
-          // Fallback: use stored TSX if no craftState available
-          const linkedTsxSource = linkedDoc.tsxSource.replace(/\bmin-h-screen\b/g, "");
-          linkedTsx = linkedDoc.imports
-            ? `${linkedDoc.imports}\n${linkedTsxSource}`
-            : linkedTsxSource;
+          const linkedContent = new TextDecoder().decode(
+            await vscode.workspace.fs.readFile(vscode.Uri.file(absPath)),
+          );
+          const linkedDoc = parseMocFile(linkedContent);
+          // Re-generate TSX from craftState (SSOT) so linked .moc always reflects
+          // the latest renderContextMenu / renderMenubar output, not stale stored TSX.
+          const linkedCraftState = linkedDoc.editorData?.craftState as Record<string, Record<string, unknown>> | undefined;
+          if (linkedCraftState) {
+            const linkedComponentName = extractComponentName(linkedDoc.tsxSource) || "LinkedComponent";
+            const linkedMemos = linkedDoc.editorData?.memos;
+            const linkedGenerated = craftStateToTsx(linkedCraftState, linkedComponentName, linkedMemos);
+            const linkedTsxSource = linkedGenerated.tsxSource.replace(/\bmin-h-screen\b/g, "");
+            linkedTsx = linkedGenerated.imports
+              ? `${linkedGenerated.imports}\n${linkedTsxSource}`
+              : linkedTsxSource;
+          } else {
+            // Fallback: use stored TSX if no craftState available
+            const linkedTsxSource = linkedDoc.tsxSource.replace(/\bmin-h-screen\b/g, "");
+            linkedTsx = linkedDoc.imports
+              ? `${linkedDoc.imports}\n${linkedTsxSource}`
+              : linkedTsxSource;
+          }
         }
         // Skip empty .moc files entirely (no hash registration = no import map entry)
         if (!linkedTsx.trim()) {
           console.warn(`[Momoc] Skipping empty linked .moc: ${relPath}`);
           continue;
         }
-        const hash = crypto.createHash("md5").update(relPath).digest("hex").slice(0, 8);
+        // コンテンツベースのハッシュ: TSX内容が変われば異なるURLになりブラウザキャッシュが無効化される
+        const hash = crypto.createHash("md5").update(linkedTsx).digest("hex").slice(0, 8);
         linkedHashes.set(relPath, hash);
         parsedDocs.set(relPath, { tsx: linkedTsx });
       } catch (err) {
@@ -239,8 +267,10 @@ export async function startPreviewServer(
     for (const [relPath, { tsx }] of parsedDocs) {
       const hash = linkedHashes.get(relPath);
       if (!hash) continue;
+      const absPath = toProcess.get(relPath);
+      const fileDir = absPath ? path.dirname(absPath) : undefined;
       try {
-        const injected = injectLinkedComponents(tsx);
+        const injected = injectLinkedComponents(tsx, fileDir);
         const linkedResult = await compileTsx(injected, workspaceRoot, [
           previewExternalPlugin(),
         ]);
@@ -257,11 +287,12 @@ export async function startPreviewServer(
    * Replace `{/* linked: PATH * /}` comment placeholders in TSX source
    * with actual import + component reference so they render in preview.
    */
-  function injectLinkedComponents(tsx: string): string {
+  function injectLinkedComponents(tsx: string, fileDir?: string): string {
     if (linkedHashes.size === 0) return tsx;
 
     const importLines: string[] = [];
     const usedHashes = new Set<string>();
+    const mocDir = path.dirname(mocFilePath);
 
     const processed = tsx.replace(
       /\{\/\* linked: (.+?) \*\/\}/g,
@@ -273,7 +304,14 @@ export async function startPreviewServer(
           .replace(/&gt;/g, ">")
           .replace(/&#123;/g, "{")
           .replace(/&#125;/g, "}");
-        const hash = linkedHashes.get(linkedPath);
+        // If processing a nested file, linkedPath is relative to fileDir.
+        // Convert to mocDir-relative path so it matches linkedHashes keys.
+        let lookupPath = linkedPath;
+        if (fileDir && !path.isAbsolute(linkedPath)) {
+          const abs = path.resolve(fileDir, linkedPath);
+          lookupPath = path.relative(mocDir, abs).replace(/\\/g, "/");
+        }
+        const hash = linkedHashes.get(lookupPath);
         if (!hash) return `{/* linked: ${rawPath} (not compiled) */}`;
         const componentName = `Linked_${hash}`;
         if (!usedHashes.has(hash)) {
@@ -604,12 +642,12 @@ export async function startPreviewServer(
   const watcher = vscode.workspace.onDidSaveTextDocument(async (doc) => {
     const isLinkedFile = linkedAbsPaths.has(doc.uri.fsPath);
     if (doc.uri.fsPath === mocFilePath || isLinkedFile) {
-      const prevLinkedKeys = new Set(linkedHashes.keys());
+      const prevLinkedMap = new Map(linkedHashes); // relPath → hash (コンテンツベース)
       await compileCurrentFile();
-      // Full reload if linked set changed (import map in HTML needs update)
+      // Full reload if linked set or content changed (import map in HTML needs update)
       const linkedSetChanged =
-        prevLinkedKeys.size !== linkedHashes.size ||
-        [...linkedHashes.keys()].some((k) => !prevLinkedKeys.has(k));
+        prevLinkedMap.size !== linkedHashes.size ||
+        [...linkedHashes.entries()].some(([k, v]) => prevLinkedMap.get(k) !== v);
       sendReload(isLinkedFile || linkedSetChanged);
     }
   });
@@ -629,6 +667,7 @@ export async function startPreviewServer(
     url: serverUrl,
     mocFilePath,
     dispose,
+    updateSnapshotMap: (getter) => { currentGetSnapshotMap = getter; },
   };
   activeSessions.set(mocFilePath, session);
 
@@ -1887,12 +1926,12 @@ export function PopoverTrigger(props: any) {
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
   const comboCtx = useContext(ComboboxCtx);
-  const [pos, setPos] = useState<{top:number;left:number;width:number;triggerTop:number} | null>(null);
+  const [pos, setPos] = useState<{top:number;left:number;triggerTop:number} | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, width: r.width, triggerTop: r.top });
+    setPos({ top: r.bottom + 4, left: r.left, triggerTop: r.top });
   }, [ctx?.open]);
   useLayoutEffect(() => {
     if (!pos || !contentRef.current) return;
@@ -1906,9 +1945,8 @@ export function PopoverContent(props: any) {
     el.style.left = left + "px";
   }, [pos]);
   if (!ctx?.open || !pos) return null;
-  const effectiveWidth = props.style?.width ?? \`\${pos.width}px\`;
   const cls = cn("fixed z-[9999] rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
 }`,
 
   "dropdown-menu": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
