@@ -1833,8 +1833,8 @@ export function DialogTrigger(props: any) {
 export function DialogContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  const cls = ("relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
-  return <div className="fixed inset-0 z-50 flex items-center justify-center"><div className="fixed inset-0 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></div>;
+  const cls = ("relative z-[10000] w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
+  return <div className="fixed inset-0 z-[10000] flex items-center justify-center"><div className="fixed inset-0 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></div>;
 }`,
 
   "alert-dialog": `import { createContext, useContext, useState } from "react";
@@ -1850,8 +1850,8 @@ export function AlertDialogTrigger(props: any) {
 export function AlertDialogContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  const cls = ("relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
-  return <div className="fixed inset-0 z-50 flex items-center justify-center"><div className="fixed inset-0 bg-black/80" /><div className={cls} style={props.style}>{props.children}</div></div>;
+  const cls = ("relative z-[10000] w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
+  return <div className="fixed inset-0 z-[10000] flex items-center justify-center"><div className="fixed inset-0 bg-black/80" /><div className={cls} style={props.style}>{props.children}</div></div>;
 }
 export function AlertDialogAction(props: any) {
   const ctx = useContext(Ctx);
@@ -1883,8 +1883,8 @@ export function SheetContent(props: any) {
     bottom: "inset-x-0 bottom-0 border-t",
   };
   const pos = posMap[side] || posMap.right;
-  const cls = ("fixed z-50 bg-background p-6 shadow-lg " + pos + " " + (props.className || "")).trim();
-  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
+  const cls = ("fixed z-[10000] bg-background p-6 shadow-lg " + pos + " " + (props.className || "")).trim();
+  return <><div className="fixed inset-0 z-[10000] bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
   drawer: `import { createContext, useContext, useState } from "react";
@@ -1900,8 +1900,8 @@ export function DrawerTrigger(props: any) {
 export function DrawerContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  const cls = ("fixed inset-x-0 bottom-0 z-50 rounded-t-xl border-t bg-background p-6 shadow-lg " + (props.className || "")).trim();
-  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
+  const cls = ("fixed inset-x-0 bottom-0 z-[10000] rounded-t-xl border-t bg-background p-6 shadow-lg " + (props.className || "")).trim();
+  return <><div className="fixed inset-0 z-[10000] bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
   popover: `import { cn } from "@/components/ui/_cn";
