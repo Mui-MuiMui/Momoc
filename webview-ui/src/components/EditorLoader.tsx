@@ -7,6 +7,7 @@ interface EditorLoaderProps {
   loadingRef: MutableRefObject<boolean>;
   lastSavedRef: MutableRefObject<string>;
   lastCraftStateRef: MutableRefObject<string>;
+  buildSaveContent: (craftStateStr: string) => string;
 }
 
 /**
@@ -18,6 +19,7 @@ export function EditorLoader({
   loadingRef,
   lastSavedRef,
   lastCraftStateRef,
+  buildSaveContent,
 }: EditorLoaderProps) {
   const { actions, query } = useEditor();
   const documentContent = useEditorStore((s) => s.documentContent);
@@ -106,7 +108,11 @@ export function EditorLoader({
       actionsRef.current.deserialize(craftStateStr);
       setMemos(memos);
       lastCraftStateRef.current = craftStateStr;
-      lastSavedRef.current = documentContent;
+      // Use buildSaveContent so the format matches what scheduleSave produces.
+      // Previously documentContent was used directly, causing format mismatches
+      // (missing memosVisible/memoLineMode keys) that defeated the no-change check
+      // and triggered unnecessary saves.
+      lastSavedRef.current = buildSaveContent(craftStateStr);
       lastDeserializedRef.current = documentContent;
 
       // Allow saves again after a tick (deserialize triggers sync events)
@@ -128,17 +134,18 @@ export function EditorLoader({
             // Selection restore failed – not critical
           }
         }
-        loadingRef.current = false;
-
-        // Wait for React to finish rendering all components before hiding spinner.
-        // deserialize() updates Craft.js state synchronously, but React renders
-        // child components over multiple frames. Nest rAF calls to let the
-        // browser paint incrementally before removing the overlay.
+        // Wait for React to finish rendering all components before allowing
+        // saves and hiding spinner. deserialize() updates Craft.js state
+        // synchronously, but React renders child components over multiple
+        // frames. Keep loadingRef true until rendering settles to prevent
+        // post-deserialize onNodesChange from triggering unnecessary saves
+        // (especially on slow machines where rendering takes longer).
         let remaining = 5;
         const waitForRender = () => {
           if (--remaining > 0) {
             requestAnimationFrame(waitForRender);
           } else {
+            loadingRef.current = false;
             setFileLoading(false);
           }
         };
@@ -151,7 +158,7 @@ export function EditorLoader({
     }
     // Only re-run when documentContent changes (actions is accessed via ref)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading, setMemosVisible, setMemoLineMode]);
+  }, [documentContent, loadingRef, lastSavedRef, lastCraftStateRef, buildSaveContent, setMemos, setViewportMode, setCustomViewportSize, setIntent, setLayoutMode, setFileLoading, setMemosVisible, setMemoLineMode]);
 
   return null;
 }

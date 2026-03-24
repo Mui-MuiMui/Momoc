@@ -231,6 +231,7 @@ export default function App() {
         loadingRef={loadingRef}
         lastSavedRef={lastSavedRef}
         lastCraftStateRef={lastCraftStateRef}
+        buildSaveContent={buildSaveContent}
       />
       {isFileLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--vscode-editor-background,#1e1e1e)]">

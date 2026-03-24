@@ -155,6 +155,11 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     // Track contents we have applied to detect save echoes (multiple saves may overlap)
     const pendingSaveContents = new Set<string>();
 
+    // Serialize save operations to prevent concurrent applyEdit race conditions.
+    // On slow machines, overlapping applyEdit calls use stale document ranges,
+    // causing partial writes that are detected as external changes → rollback.
+    let saveQueue = Promise.resolve();
+
     const changeDocumentSubscription =
       vscode.workspace.onDidChangeTextDocument((e) => {
         if (e.document.uri.toString() !== document.uri.toString()) return;
@@ -201,6 +206,15 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
           type: "settings:update",
           payload: { historyLimit },
         });
+        return;
+      }
+
+      // Serialize doc:save through a queue so applyEdit calls never overlap
+      if (message.type === "doc:save") {
+        const payload = message.payload;
+        saveQueue = saveQueue.then(() =>
+          this.applySave(payload, document, pendingSaveContents),
+        );
         return;
       }
 
@@ -352,6 +366,46 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     return serializeMocFile(mocDoc);
   }
 
+  /**
+   * Apply a single save operation. Called from the serialized save queue
+   * so that applyEdit calls never overlap (prevents stale-range corruption).
+   */
+  private async applySave(
+    payload: { content: string },
+    document: vscode.TextDocument,
+    pendingSaveContents: Set<string>,
+  ): Promise<void> {
+    try {
+      if (!payload?.content) {
+        console.error("[Momoc] doc:save received empty content");
+        return;
+      }
+
+      // Convert webview JSON → .moc TSX format
+      const mocContent = this.webviewJsonToFile(payload.content, document.fileName);
+
+      pendingSaveContents.add(mocContent);
+
+      // fullRange is computed HERE, after any previous save has completed,
+      // so the document line count is always up-to-date.
+      const edit = new vscode.WorkspaceEdit();
+      const fullRange = new vscode.Range(
+        0,
+        0,
+        document.lineCount,
+        document.lineAt(Math.max(0, document.lineCount - 1)).text.length,
+      );
+      edit.replace(document.uri, fullRange, mocContent);
+      const success = await vscode.workspace.applyEdit(edit);
+      if (!success) {
+        console.error("[Momoc] WorkspaceEdit.applyEdit returned false");
+        pendingSaveContents.delete(mocContent);
+      }
+    } catch (err) {
+      console.error("[Momoc] doc:save error:", err);
+    }
+  }
+
   private async handleWebviewMessage(
     message: WebviewToExtensionMessage,
     document: vscode.TextDocument,
@@ -359,38 +413,6 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
     pendingSaveContents: Set<string>,
   ): Promise<void> {
     switch (message.type) {
-      case "doc:save": {
-        try {
-          if (!message.payload?.content) {
-            console.error("[Momoc] doc:save received empty content");
-            break;
-          }
-
-          // Convert webview JSON → .moc TSX format
-          const mocContent = this.webviewJsonToFile(message.payload.content, document.fileName);
-
-          // Register content before async applyEdit so concurrent saves are all tracked
-          pendingSaveContents.add(mocContent);
-
-          const edit = new vscode.WorkspaceEdit();
-          const fullRange = new vscode.Range(
-            0,
-            0,
-            document.lineCount,
-            document.lineAt(Math.max(0, document.lineCount - 1)).text.length,
-          );
-          edit.replace(document.uri, fullRange, mocContent);
-          const success = await vscode.workspace.applyEdit(edit);
-          if (!success) {
-            console.error("[Momoc] WorkspaceEdit.applyEdit returned false");
-            pendingSaveContents.delete(mocContent);
-          }
-        } catch (err) {
-          console.error("[Momoc] doc:save error:", err);
-        }
-        break;
-      }
-
       case "doc:requestBuild": {
         const workspaceRoot = this.getWorkspaceRoot();
         if (!workspaceRoot) break;

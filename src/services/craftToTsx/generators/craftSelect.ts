@@ -27,7 +27,7 @@ registerGenerator("CraftSelect", {
     const props = node.props;
 
     const items = ((props?.items as string) || "Option 1,Option 2,Option 3").split(",").map((s) => s.trim());
-    const placeholder = (props?.placeholder as string) || "Select an option";
+    const placeholder = (props?.placeholder as string) ?? "Select an option";
     const tooltipText = props?.tooltipText as string | undefined;
     const tooltipSide = props?.tooltipSide as string | undefined;
     const sideAttr = tooltipSide ? ` side="${tooltipSide}"` : "";

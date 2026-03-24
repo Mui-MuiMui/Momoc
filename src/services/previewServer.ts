@@ -765,7 +765,8 @@ export function Button(props: any) {
   };
   if (role === "combobox" && comboCtx) {
     const childArray = Array.isArray(children) ? children : [children];
-    const placeholder = String(childArray.find((c: any) => typeof c === "string") || "Select...");
+    const foundText = childArray.find((c: any) => typeof c === "string");
+    const placeholder = foundText != null ? String(foundText).trim() : "";
     const icons = childArray.filter((c: any) => c !== null && c !== undefined && typeof c !== "string");
     const inputCls = cn("flex w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring", !style?.height && "h-9", className);
     return <div className="relative flex items-center z-[51] w-full" style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
@@ -1558,7 +1559,7 @@ export function CommandItem({ children, value = "", className = "", onSelect, ..
     onSelect?.(value);
     if (comboCtx) { comboCtx.setValue(value); comboCtx.setSearch(value); comboCtx.setOpen(false); }
   };
-  return <div className={cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground", isSelected && "bg-accent text-accent-foreground", className)} onClick={handleClick} {...rest}>{children}</div>;
+  return <div className={cn("relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground", isSelected && "bg-accent text-accent-foreground", className)} onClick={handleClick} {...rest}>{children}{isSelected && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-2 h-4 w-4"><path d="M20 6 9 17l-5-5"/></svg>}</div>;
 }
 export function CommandSeparator({ className = "", ...rest }: any) {
   return <div className={cn("-mx-1 h-px bg-border", className)} {...rest} />;
@@ -1833,8 +1834,8 @@ export function DialogTrigger(props: any) {
 export function DialogContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  const cls = ("relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
-  return <div className="fixed inset-0 z-50 flex items-center justify-center"><div className="fixed inset-0 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></div>;
+  const cls = ("relative z-[10000] w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
+  return <div className="fixed inset-0 z-[10000] flex items-center justify-center"><div className="fixed inset-0 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></div>;
 }`,
 
   "alert-dialog": `import { createContext, useContext, useState } from "react";
@@ -1850,8 +1851,8 @@ export function AlertDialogTrigger(props: any) {
 export function AlertDialogContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  const cls = ("relative z-50 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
-  return <div className="fixed inset-0 z-50 flex items-center justify-center"><div className="fixed inset-0 bg-black/80" /><div className={cls} style={props.style}>{props.children}</div></div>;
+  const cls = ("relative z-[10000] w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg " + (props.className || "")).trim();
+  return <div className="fixed inset-0 z-[10000] flex items-center justify-center"><div className="fixed inset-0 bg-black/80" /><div className={cls} style={props.style}>{props.children}</div></div>;
 }
 export function AlertDialogAction(props: any) {
   const ctx = useContext(Ctx);
@@ -1883,8 +1884,8 @@ export function SheetContent(props: any) {
     bottom: "inset-x-0 bottom-0 border-t",
   };
   const pos = posMap[side] || posMap.right;
-  const cls = ("fixed z-50 bg-background p-6 shadow-lg " + pos + " " + (props.className || "")).trim();
-  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
+  const cls = ("fixed z-[10000] bg-background p-6 shadow-lg " + pos + " " + (props.className || "")).trim();
+  return <><div className="fixed inset-0 z-[10000] bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
   drawer: `import { createContext, useContext, useState } from "react";
@@ -1900,13 +1901,12 @@ export function DrawerTrigger(props: any) {
 export function DrawerContent(props: any) {
   const ctx = useContext(Ctx);
   if (!ctx?.open) return null;
-  const cls = ("fixed inset-x-0 bottom-0 z-50 rounded-t-xl border-t bg-background p-6 shadow-lg " + (props.className || "")).trim();
-  return <><div className="fixed inset-0 z-50 bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
+  const cls = ("fixed inset-x-0 bottom-0 z-[10000] rounded-t-xl border-t bg-background p-6 shadow-lg " + (props.className || "")).trim();
+  return <><div className="fixed inset-0 z-[10000] bg-black/80" onClick={() => ctx?.setOpen(false)} /><div className={cls} style={props.style}>{props.children}<button type="button" onClick={() => ctx?.setOpen(false)} className="absolute right-4 top-4 rounded-sm opacity-70 hover:opacity-100">\u2715</button></div></>;
 }`,
 
   popover: `import { cn } from "@/components/ui/_cn";
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { createContext, useContext, useState } from "react";
 import { ComboboxCtx } from "@/components/ui/_combobox";
 const Ctx = createContext<any>(null);
 export function Popover(props: any) {
@@ -1914,39 +1914,17 @@ export function Popover(props: any) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
-  const triggerRef = useRef<HTMLElement | null>(null);
-  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className={cn("inline-grid", className)} style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
+  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen }}><div className={cn("relative inline-block", className)} style={style}>{open && <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setOpen(false)} />}{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
-  const ref = useRef<HTMLSpanElement>(null);
-  useEffect(() => { if (ref.current) { const child = ref.current.firstElementChild as HTMLElement | null; ctx.triggerRef.current = child ?? ref.current; } }, []);
-  return <span ref={ref} onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer", display: "block", ...props.style }}>{props.children}</span>;
+  return <div onClick={() => ctx?.setOpen(!ctx?.open)} style={{ cursor: "pointer" }}>{props.children}</div>;
 }
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
-  const comboCtx = useContext(ComboboxCtx);
-  const [pos, setPos] = useState<{top:number;left:number;triggerTop:number} | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    if (!ctx?.open || !ctx.triggerRef.current) return;
-    const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, triggerTop: r.top });
-  }, [ctx?.open]);
-  useLayoutEffect(() => {
-    if (!pos || !contentRef.current) return;
-    const el = contentRef.current;
-    const h = el.offsetHeight, w = el.offsetWidth;
-    let { top, left } = pos;
-    if (top + h > window.innerHeight) top = pos.triggerTop - h - 4;
-    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
-    if (top < 0) top = 4;
-    el.style.top = top + "px";
-    el.style.left = left + "px";
-  }, [pos]);
-  if (!ctx?.open || !pos) return null;
-  const cls = cn("fixed z-[9999] rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
+  if (!ctx?.open) return null;
+  const cls = cn("absolute left-0 z-[9999] min-w-full rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
+  return <div className={cls} style={{ top: "calc(100% + 4px)", ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div>;
 }`,
 
   "dropdown-menu": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
