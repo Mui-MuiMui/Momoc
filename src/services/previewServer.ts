@@ -766,7 +766,7 @@ export function Button(props: any) {
   if (role === "combobox" && comboCtx) {
     const childArray = Array.isArray(children) ? children : [children];
     const foundText = childArray.find((c: any) => typeof c === "string");
-    const placeholder = foundText != null ? String(foundText).trim() : "Select...";
+    const placeholder = foundText != null ? String(foundText).trim() : "";
     const icons = childArray.filter((c: any) => c !== null && c !== undefined && typeof c !== "string");
     const inputCls = cn("flex w-full rounded-md border border-input bg-transparent py-2 pl-3 pr-8 text-sm shadow-sm placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring", !style?.height && "h-9", className);
     return <div className="relative flex items-center z-[51] w-full" style={style} onClick={(e: any) => { e.stopPropagation(); inputRef.current?.focus(); }}>
