@@ -1915,7 +1915,7 @@ export function Popover(props: any) {
   const [value, setValue] = useState("");
   const [search, setSearch] = useState("");
   const triggerRef = useRef<HTMLElement | null>(null);
-  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className={cn("inline-grid", className)} style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
+  return <ComboboxCtx.Provider value={{ open, setOpen, value, setValue, search, setSearch }}><Ctx.Provider value={{ open, setOpen, triggerRef }}><div className={cn("block", className)} style={style}>{children}</div></Ctx.Provider></ComboboxCtx.Provider>;
 }
 export function PopoverTrigger(props: any) {
   const ctx = useContext(Ctx);
@@ -1925,27 +1925,28 @@ export function PopoverTrigger(props: any) {
 }
 export function PopoverContent(props: any) {
   const ctx = useContext(Ctx);
-  const [pos, setPos] = useState<{top:number;left:number;triggerTop:number} | null>(null);
+  const [pos, setPos] = useState<{top:number;left:number;triggerTop:number;triggerWidth:number} | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (!ctx?.open || !ctx.triggerRef.current) return;
     const r = ctx.triggerRef.current.getBoundingClientRect();
-    setPos({ top: r.bottom + 4, left: r.left, triggerTop: r.top });
+    setPos({ top: r.bottom + 4, left: r.left, triggerTop: r.top, triggerWidth: r.width });
   }, [ctx?.open]);
   useLayoutEffect(() => {
     if (!pos || !contentRef.current) return;
     const el = contentRef.current;
-    const h = el.offsetHeight;
-    let { top } = pos;
+    const h = el.offsetHeight, w = el.offsetWidth;
+    let { top, left } = pos;
     if (top + h > window.innerHeight) top = pos.triggerTop - h - 4;
+    if (left + w > window.innerWidth) left = Math.max(4, window.innerWidth - w - 4);
     if (top < 0) top = 4;
     el.style.top = top + "px";
-    el.style.left = pos.left + "px";
-    el.style.maxWidth = (window.innerWidth - pos.left - 4) + "px";
+    el.style.left = left + "px";
   }, [pos]);
   if (!ctx?.open || !pos) return null;
+  const effectiveWidth = props.style?.width ?? \`\${pos.triggerWidth}px\`;
   const cls = cn("fixed z-[9999] rounded-md border border-gray-300 bg-popover p-4 text-popover-foreground shadow-md", props.className);
-  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
+  return createPortal(<><div className="fixed inset-0 z-[9998]" onClick={() => ctx.setOpen(false)} /><div ref={contentRef} className={cls} style={{ top: pos.top, left: pos.left, width: effectiveWidth, ...props.style }} onClick={(e: any) => e.stopPropagation()}>{props.children}</div></>, document.body);
 }`,
 
   "dropdown-menu": `import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
