@@ -25,7 +25,6 @@ registerGenerator("CraftCombobox", {
     ctx.addImport("@/components/ui/command", "CommandInput");
     ctx.addImport("@/components/ui/command", "CommandItem");
     ctx.addImport("@/components/ui/command", "CommandList");
-    ctx.addImport("lucide-react", "Check");
     ctx.addImport("lucide-react", "ChevronsUpDown");
   },
   render: (nodeId, node, indent, ctx) => {
@@ -69,10 +68,7 @@ registerGenerator("CraftCombobox", {
       lines.push(`${pad}          {/* linked: ${ctx.escapeJsx(linkedMocPath)} */}`);
     } else {
       for (const item of items) {
-        lines.push(`${pad}          <CommandItem value="${ctx.escapeAttr(item)}">`);
-        lines.push(`${pad}            <Check className="mr-2 h-4 w-4 opacity-0" />`);
-        lines.push(`${pad}            ${ctx.escapeJsx(item)}`);
-        lines.push(`${pad}          </CommandItem>`);
+        lines.push(`${pad}          <CommandItem value="${ctx.escapeAttr(item)}">${ctx.escapeJsx(item)}</CommandItem>`);
       }
     }
     lines.push(`${pad}        </CommandGroup>`);

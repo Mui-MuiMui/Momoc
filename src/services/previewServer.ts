@@ -1558,7 +1558,7 @@ export function CommandItem({ children, value = "", className = "", onSelect, ..
     onSelect?.(value);
     if (comboCtx) { comboCtx.setValue(value); comboCtx.setSearch(value); comboCtx.setOpen(false); }
   };
-  return <div className={cn("relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground", isSelected && "bg-accent text-accent-foreground", className)} onClick={handleClick} {...rest}>{children}</div>;
+  return <div className={cn("relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none hover:bg-accent hover:text-accent-foreground", isSelected && "bg-accent text-accent-foreground", className)} onClick={handleClick} {...rest}>{children}{isSelected && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-2 h-4 w-4"><path d="M20 6 9 17l-5-5"/></svg>}</div>;
 }
 export function CommandSeparator({ className = "", ...rest }: any) {
   return <div className={cn("-mx-1 h-px bg-border", className)} {...rest} />;
