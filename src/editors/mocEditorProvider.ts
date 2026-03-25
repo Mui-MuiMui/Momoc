@@ -212,9 +212,9 @@ export class MocEditorProvider implements vscode.CustomTextEditorProvider {
       // Serialize doc:save through a queue so applyEdit calls never overlap
       if (message.type === "doc:save") {
         const payload = message.payload;
-        saveQueue = saveQueue.then(() =>
-          this.applySave(payload, document, pendingSaveContents),
-        );
+        saveQueue = saveQueue
+          .then(() => this.applySave(payload, document, pendingSaveContents))
+          .catch((err) => console.error("[Momoc] saveQueue error:", err));
         return;
       }
 

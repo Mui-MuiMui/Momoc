@@ -70,13 +70,8 @@ export function defaultRender(
     let imgStyleAttr = styleAttr;
     if (resolvedName === "CraftImage") {
       const clickThrough = node.props?.clickThrough;
-      const isClickThrough = clickThrough !== false && clickThrough !== "false";
-      if (isClickThrough) {
-        if (imgStyleAttr) {
-          imgStyleAttr = imgStyleAttr.replace(/\s*}}$/, `, pointerEvents: "none" }}`);
-        } else {
-          imgStyleAttr = ` style={{ pointerEvents: "none" }}`;
-        }
+      if (clickThrough === true || clickThrough === "true") {
+        imgStyleAttr = ctx.buildStyleAttr(node.props, { pointerEvents: "none" });
       }
     }
     return `${mocComments}\n${pad}<${tag}${propsStr}${classNameAttr}${imgStyleAttr} />`;
@@ -129,14 +124,9 @@ export function defaultRender(
     const icon = (node.props?.icon as string) || "Heart";
     const iconSize = (node.props?.iconSize as string) || "6";
     const clickThrough = node.props?.clickThrough;
-    const isClickThrough = clickThrough !== false && clickThrough !== "false";
     let iconStyleAttr = styleAttr;
-    if (isClickThrough) {
-      if (iconStyleAttr) {
-        iconStyleAttr = iconStyleAttr.replace(/\s*}}$/, `, pointerEvents: "none" }}`);
-      } else {
-        iconStyleAttr = ` style={{ pointerEvents: "none" }}`;
-      }
+    if (clickThrough === true || clickThrough === "true") {
+      iconStyleAttr = ctx.buildStyleAttr(node.props, { pointerEvents: "none" });
     }
     rendered = `${mocComments}\n${pad}<span${classNameAttr}${iconStyleAttr}>\n${pad}  <${icon} className="h-${iconSize} w-${iconSize}" />\n${pad}</span>`;
     return rendered;

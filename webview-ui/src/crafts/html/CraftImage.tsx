@@ -21,7 +21,7 @@ export const CraftImage: UserComponent<CraftImageProps> = ({
   height = "200px",
   objectFit = "cover",
   keepAspectRatio = false,
-  clickThrough = true,
+  clickThrough = false,
   className = "",
 }) => {
   const {
@@ -79,7 +79,7 @@ CraftImage.craft = {
     height: "200px",
     objectFit: "cover",
     keepAspectRatio: false,
-    clickThrough: true,
+    clickThrough: false,
     className: "",
   },
   rules: {

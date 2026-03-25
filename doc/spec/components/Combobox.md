@@ -40,7 +40,7 @@
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup>
-          <CommandItem value="Apple"><Check className="mr-2 h-4 w-4 opacity-0" />Apple</CommandItem>
+          <CommandItem value="Apple">Apple</CommandItem>
           ...
         </CommandGroup>
       </CommandList>
@@ -57,9 +57,9 @@
 Combobox は以下のコンポーネントが連携して動作する:
 
 **`Popover` フォールバック**
-- `ComboboxCtx`（`open/setOpen/value/setValue/search/setSearch`）を提供
+- `ComboboxCtx`（`open/setOpen/value/setValue/search/setSearch`）を提供。Combobox input は z-10
 - `PopoverTrigger`: クリックで `setOpen(!open)` トグル
-- `PopoverContent`: `createPortal` で body に portal（fixed, z-9999）、triggerRef からドロップダウン位置を計算
+- `PopoverContent`: `createPortal` で body に portal（fixed, z-[52]）、triggerRef からドロップダウン位置を計算。backdrop は z-[51]
 
 **`Button` フォールバック（`role="combobox"` 分岐）**
 - `ComboboxCtx` が存在する場合、通常のボタンではなく **検索入力フィールドに変化する**
