@@ -24,7 +24,7 @@ describe("mocSerializer", () => {
 
       const content = serializeMocFile(doc);
 
-      expect(content).toContain("@moc-version 1.2.0");
+      expect(content).toContain("@moc-version 1.2.1");
       expect(content).toContain("@moc-intent Test component");
       expect(content).toContain("@moc-theme light");
       expect(content).toContain("@moc-layout flow");
@@ -135,7 +135,7 @@ export default function RoundTrip() {
       const reparsed = parseMocFile(serialized);
 
       // serialize 時に常に MOC_VERSION へ更新されるため、元ファイルのバージョンとは異なる場合がある
-      expect(reparsed.metadata.version).toBe("1.2.0");
+      expect(reparsed.metadata.version).toBe("1.2.1");
       expect(reparsed.metadata.intent).toBe(parsed.metadata.intent);
       expect(reparsed.metadata.theme).toBe(parsed.metadata.theme);
       expect(reparsed.metadata.layout).toBe(parsed.metadata.layout);
@@ -226,6 +226,141 @@ const __mocEditorData = \`
       const content = serializeMocFile(doc);
       // Should not contain actual @moc-memo tags (with #targetId "text" format)
       expect(content).not.toMatch(/ \* @moc-memo #\S+ "/);
+      // Should not contain @moc-memos block when no memos
+      expect(content).not.toMatch(/ \* @moc-memos\n/);
+    });
+
+    it("should output @moc-memos block when editorData has memos", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.0.0",
+          intent: "Memo test",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+        editorData: {
+          craftState: {
+            ROOT: {
+              type: { resolvedName: "CraftContainer" },
+              props: {},
+              nodes: [],
+              linkedNodes: {},
+              parent: null,
+            },
+          },
+          memos: [
+            {
+              id: "m1",
+              title: "ダイアログ仕様",
+              body: "担当者フィールドは検索ダイアログを開く仕様",
+              color: "#ff0",
+              collapsed: false,
+              x: 0,
+              y: 0,
+              targetNodeIds: ["node1"],
+            },
+            {
+              id: "m2",
+              title: "承認後のボタン動作",
+              body: "承認後はボタンを非活性にする",
+              color: "#0ff",
+              collapsed: false,
+              x: 100,
+              y: 100,
+              targetNodeIds: ["node2"],
+            },
+          ],
+        },
+      };
+
+      const content = serializeMocFile(doc);
+
+      expect(content).toContain("@moc-memos");
+      expect(content).toContain("[node1] Title:ダイアログ仕様 Message:担当者フィールドは検索ダイアログを開く仕様");
+      expect(content).toContain("[node2] Title:承認後のボタン動作 Message:承認後はボタンを非活性にする");
+    });
+
+    it("should output @moc-memos with title only when body is empty", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.0.0",
+          intent: "Title only",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+        editorData: {
+          craftState: { ROOT: { type: { resolvedName: "CraftContainer" }, props: {}, nodes: [], linkedNodes: {}, parent: null } },
+          memos: [
+            { id: "m1", title: "タイトルのみ", body: "", color: "#fff", collapsed: false, x: 0, y: 0, targetNodeIds: ["n1"] },
+          ],
+        },
+      };
+
+      const content = serializeMocFile(doc);
+      expect(content).toContain("[n1] Title:タイトルのみ");
+      expect(content).not.toContain("Message:");
+    });
+
+    it("should output @moc-memos with message only when title is empty", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.0.0",
+          intent: "Message only",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+        editorData: {
+          craftState: { ROOT: { type: { resolvedName: "CraftContainer" }, props: {}, nodes: [], linkedNodes: {}, parent: null } },
+          memos: [
+            { id: "m1", title: "", body: "メッセージのみ", color: "#fff", collapsed: false, x: 0, y: 0, targetNodeIds: ["n1"] },
+          ],
+        },
+      };
+
+      const content = serializeMocFile(doc);
+      expect(content).toContain("[n1] Message:メッセージのみ");
+      expect(content).not.toContain("Title:");
+    });
+
+    it("should output multiple lines for memo with multiple targetNodeIds", () => {
+      const doc: MocDocument = {
+        metadata: {
+          version: "1.0.0",
+          intent: "Multi target",
+          theme: "light",
+          layout: "flow",
+          viewport: "desktop",
+          memos: [],
+        },
+        imports: "",
+        tsxSource: "export default function Test() { return <div />; }",
+        rawContent: "",
+        editorData: {
+          craftState: { ROOT: { type: { resolvedName: "CraftContainer" }, props: {}, nodes: [], linkedNodes: {}, parent: null } },
+          memos: [
+            { id: "m1", title: "共通メモ", body: "複数ノード対象", color: "#fff", collapsed: false, x: 0, y: 0, targetNodeIds: ["n1", "n2"] },
+          ],
+        },
+      };
+
+      const content = serializeMocFile(doc);
+      expect(content).toContain("[n1] Title:共通メモ Message:複数ノード対象");
+      expect(content).toContain("[n2] Title:共通メモ Message:複数ノード対象");
     });
   });
 
@@ -351,7 +486,7 @@ const __mocEditorData = \`
       };
 
       const content = serializeMocFile(doc);
-      expect(content).toContain("@moc-version 1.2.0");
+      expect(content).toContain("@moc-version 1.2.1");
     });
 
     it("should output @moc-component as valid JSON", () => {

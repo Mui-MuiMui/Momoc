@@ -8,6 +8,7 @@ const MOC_COMMENT_REGEX = /\/\*\*[\s\S]*?\*\//;
 // `[^\S\n]*` allows optional non-newline whitespace, `(.*)` allows empty values.
 const MOC_TAG_REGEX = /\* @moc-(\w[\w-]*)[^\S\n]*(.*)/g;
 const MOC_MEMO_REGEX = /@moc-memo\s+#(\S+)\s+"([^"]+)"/g;
+const MOC_MEMOS_ENTRY_REGEX = /^\[(\S+?)\]\s*(.*)/;
 const EDITOR_DATA_REGEX = /const\s+__mocEditorData\s*=\s*`([\s\S]*?)`;/;
 
 export function parseMocFile(content: string): MocDocument {
@@ -64,12 +65,20 @@ function parseMetadata(content: string): MocMetadata {
   }
 
   const memos: MocMemo[] = [];
+
+  // Parse @moc-memo (singular) tags
   const memoRegex = new RegExp(MOC_MEMO_REGEX.source, "g");
   while ((match = memoRegex.exec(comment)) !== null) {
     memos.push({
       targetId: match[1],
       text: match[2],
     });
+  }
+
+  // Parse @moc-memos (plural) block (v1.2.1)
+  const memosBlockMemos = parseMemosBlock(comment);
+  for (const m of memosBlockMemos) {
+    memos.push(m);
   }
 
   const theme = tags["theme"] === "dark" ? "dark" : DEFAULT_METADATA.theme;
@@ -90,6 +99,59 @@ function parseMetadata(content: string): MocMetadata {
     selection: undefined,
     componentSchemas,
   };
+}
+
+function parseMemosBlock(comment: string): MocMemo[] {
+  const memos: MocMemo[] = [];
+  const lines = comment.split("\n");
+  let inBlock = false;
+
+  for (const line of lines) {
+    // Strip leading ` * ` or ` *`
+    const stripped = line.replace(/^\s*\*\s?/, "");
+
+    if (/^\s*@moc-memos\s*$/.test(stripped)) {
+      inBlock = true;
+      continue;
+    }
+
+    if (inBlock) {
+      const trimmed = stripped.trim();
+      // Block ends when we hit another @moc- tag, empty line, or end of comment
+      if (!trimmed || trimmed.startsWith("@moc-") || trimmed === "/") {
+        inBlock = false;
+        continue;
+      }
+
+      const entryMatch = trimmed.match(MOC_MEMOS_ENTRY_REGEX);
+      if (entryMatch) {
+        const nodeId = entryMatch[1];
+        const rest = entryMatch[2].trim();
+        let title = "";
+        let body = "";
+
+        // Extract Title: and Message: fields
+        const msgIdx = rest.indexOf(" Message:");
+        if (rest.startsWith("Title:")) {
+          if (msgIdx !== -1) {
+            title = rest.slice("Title:".length, msgIdx).trim();
+            body = rest.slice(msgIdx + " Message:".length).trim();
+          } else {
+            title = rest.slice("Title:".length).trim();
+          }
+        } else if (rest.startsWith("Message:")) {
+          body = rest.slice("Message:".length).trim();
+        }
+
+        const text = title ? (body ? `${title}: ${body}` : title) : body;
+        if (text) {
+          memos.push({ targetId: nodeId, text });
+        }
+      }
+    }
+  }
+
+  return memos;
 }
 
 function parseEditorData(content: string): MocEditorData | undefined {

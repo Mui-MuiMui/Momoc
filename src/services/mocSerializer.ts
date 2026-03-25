@@ -1,12 +1,13 @@
 import { brotliCompressSync } from "zlib";
-import type { MocDocument, MocMetadata, MocEditorData } from "../shared/types.js";
+import type { MocDocument, MocMetadata, MocEditorData, MocEditorMemo } from "../shared/types.js";
 import { COMPONENT_SCHEMAS, SLOT_COMPONENT_NAMES } from "../shared/componentSchemas.js";
 import { MOC_VERSION } from "../shared/constants.js";
 
 export function serializeMocFile(doc: MocDocument): string {
   const usedComponents = extractUsedComponents(doc.editorData?.craftState);
   const usesIcons = doc.imports.includes("lucide-react");
-  const metadataBlock = serializeMetadata(doc.metadata, usedComponents, usesIcons);
+  const editorMemos = doc.editorData?.memos ?? [];
+  const metadataBlock = serializeMetadata(doc.metadata, usedComponents, usesIcons, editorMemos);
   const parts = [metadataBlock];
 
   if (doc.imports.trim()) {
@@ -38,7 +39,7 @@ function extractUsedComponents(craftState: Record<string, unknown> | undefined):
   return [...names].sort();
 }
 
-function serializeMetadata(metadata: MocMetadata, usedComponents: string[], usesIcons: boolean): string {
+function serializeMetadata(metadata: MocMetadata, usedComponents: string[], usesIcons: boolean, editorMemos: MocEditorMemo[]): string {
   const lines: string[] = ["/**"];
 
   // Data structure description prompt for AI agents
@@ -87,7 +88,8 @@ function serializeMetadata(metadata: MocMetadata, usedComponents: string[], uses
   lines.push(" *");
   lines.push(" * AI指示メモ:");
   lines.push(" *   ユーザーがキャンバス上に配置した、AIエージェントへの指示付箋です。");
-  lines.push(" *   各メモは @moc-memo タグで記述され、対象要素IDと指示テキストのペアです。");
+  lines.push(" *   @moc-memos ブロックにメモ一覧が記載されます（Title/Message形式）。");
+  lines.push(" *   TSX内にも @moc-memo コメントとして各要素付近に記載されます。");
   lines.push(" *   AIはこのメモを読み取り、該当要素に対する修正・提案を行ってください。");
   lines.push(" *");
   lines.push(" * コンポーネントスキーマ（v1.1.0）:");
@@ -108,6 +110,16 @@ function serializeMetadata(metadata: MocMetadata, usedComponents: string[], uses
   lines.push(` * @moc-layout ${metadata.layout}`);
   lines.push(` * @moc-viewport ${metadata.viewport}`);
 
+  // @moc-memos block (v1.2.1)
+  const memoLines = buildMemoLines(editorMemos);
+  if (memoLines.length > 0) {
+    lines.push(" *");
+    lines.push(" * @moc-memos");
+    for (const line of memoLines) {
+      lines.push(` *   ${line}`);
+    }
+  }
+
   for (const name of usedComponents) {
     const schema = COMPONENT_SCHEMAS[name];
     if (schema) {
@@ -118,6 +130,23 @@ function serializeMetadata(metadata: MocMetadata, usedComponents: string[], uses
   lines.push(" */");
 
   return lines.join("\n");
+}
+
+function buildMemoLines(memos: MocEditorMemo[]): string[] {
+  const lines: string[] = [];
+  for (const memo of memos) {
+    if (!memo.title && !memo.body) continue;
+    const nodeIds = memo.targetNodeIds ?? [];
+    // メモがノードに紐づいていない場合もタイトルで出力
+    const ids = nodeIds.length > 0 ? nodeIds : ["_"];
+    for (const nid of ids) {
+      let entry = `[${nid}]`;
+      if (memo.title) entry += ` Title:${memo.title}`;
+      if (memo.body) entry += ` Message:${memo.body}`;
+      lines.push(entry);
+    }
+  }
+  return lines;
 }
 
 function serializeEditorData(data: MocEditorData): string {
