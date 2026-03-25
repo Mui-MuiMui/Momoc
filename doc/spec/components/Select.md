@@ -41,7 +41,7 @@
 ### フォールバック実装（previewServer.ts `select`）
 - `SelectCtx`（`value/open/triggerRef`）で状態管理
 - `SelectTrigger`: useEffect でマウント時に幅を計測し `triggerRef` に格納
-- `SelectContent`: `createPortal` で body に portal（fixed, z-9999）、triggerRef からドロップダウン位置を計算。`contentWidth` 未指定時は triggerRef の幅を使用
+- `SelectContent`: `createPortal` で body に portal（fixed, z-[52]）、triggerRef からドロップダウン位置を計算。backdrop は z-[51]。`contentWidth` 未指定時は triggerRef の幅を使用
 - `SelectItem`: クリックで `setValue(value)`・`setOpen(false)`
 
 ---

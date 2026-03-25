@@ -174,7 +174,7 @@ describe("mocParser", () => {
 `;
       const doc = parseMocFile(content);
 
-      expect(doc.metadata.version).toBe("1.2.0");
+      expect(doc.metadata.version).toBe("1.2.1");
       expect(doc.metadata.memos).toHaveLength(0);
       expect(doc.tsxSource).toContain("export default function Test()");
     });
@@ -247,6 +247,110 @@ describe("mocParser", () => {
       expect(doc.editorData).toBeDefined();
       const root = doc.editorData!.craftState.ROOT as { props: Record<string, unknown> };
       expect(root.props.className).toBe("test with ` backtick and ${expr}");
+    });
+  });
+
+  describe("@moc-memos block (v1.2.1)", () => {
+    it("should parse @moc-memos block with Title and Message", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.1",
+        " * @moc-intent Memo block test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " *",
+        " * @moc-memos",
+        " *   [node1] Title:ダイアログ仕様 Message:担当者フィールドは検索ダイアログを開く仕様",
+        " *   [node2] Title:承認後のボタン動作 Message:承認後はボタンを非活性にする",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+
+      expect(doc.metadata.memos).toHaveLength(2);
+      expect(doc.metadata.memos[0]).toEqual({
+        targetId: "node1",
+        text: "ダイアログ仕様: 担当者フィールドは検索ダイアログを開く仕様",
+      });
+      expect(doc.metadata.memos[1]).toEqual({
+        targetId: "node2",
+        text: "承認後のボタン動作: 承認後はボタンを非活性にする",
+      });
+    });
+
+    it("should parse @moc-memos with title only", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.1",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " *",
+        " * @moc-memos",
+        " *   [node1] Title:タイトルのみ",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.metadata.memos).toHaveLength(1);
+      expect(doc.metadata.memos[0]).toEqual({
+        targetId: "node1",
+        text: "タイトルのみ",
+      });
+    });
+
+    it("should parse @moc-memos with message only", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.1",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " *",
+        " * @moc-memos",
+        " *   [node1] Message:メッセージのみ",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.metadata.memos).toHaveLength(1);
+      expect(doc.metadata.memos[0]).toEqual({
+        targetId: "node1",
+        text: "メッセージのみ",
+      });
+    });
+
+    it("should merge @moc-memos and @moc-memo tags", () => {
+      const content = [
+        "/**",
+        " * @moc-version 1.2.1",
+        " * @moc-intent Test",
+        " * @moc-theme light",
+        " * @moc-layout flow",
+        " * @moc-viewport desktop",
+        " *",
+        " * @moc-memo #btn1 \"ボタンメモ\"",
+        " *",
+        " * @moc-memos",
+        " *   [node1] Title:ブロックメモ",
+        " */",
+        "",
+        "export default function Test() { return <div />; }",
+      ].join("\n");
+
+      const doc = parseMocFile(content);
+      expect(doc.metadata.memos).toHaveLength(2);
+      expect(doc.metadata.memos[0].targetId).toBe("btn1");
+      expect(doc.metadata.memos[1].targetId).toBe("node1");
     });
   });
 
@@ -408,7 +512,7 @@ describe("mocParser", () => {
     it("空文字列でデフォルトメタデータが返る", () => {
       const doc = parseMocFile("");
 
-      expect(doc.metadata.version).toBe("1.2.0");
+      expect(doc.metadata.version).toBe("1.2.1");
       expect(doc.metadata.theme).toBe("light");
       expect(doc.metadata.layout).toBe("flow");
       expect(doc.metadata.viewport).toBe("desktop");
@@ -419,7 +523,7 @@ describe("mocParser", () => {
     it("空白のみの入力でクラッシュしない", () => {
       const doc = parseMocFile("   \n\n  ");
 
-      expect(doc.metadata.version).toBe("1.2.0");
+      expect(doc.metadata.version).toBe("1.2.1");
       expect(doc.metadata.memos).toHaveLength(0);
       expect(doc.tsxSource).toBe("");
     });
@@ -431,7 +535,7 @@ describe("mocParser", () => {
       const doc = parseMocFile(content);
 
       // MOC_COMMENT_REGEX は `*/` まで必要なのでマッチしない
-      expect(doc.metadata.version).toBe("1.2.0");
+      expect(doc.metadata.version).toBe("1.2.1");
       expect(doc.metadata.intent).toBe("");
     });
 

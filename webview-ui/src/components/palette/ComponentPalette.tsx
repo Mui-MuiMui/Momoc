@@ -86,8 +86,10 @@ export function ComponentPalette() {
       if (top) root.data.props.top = top;
       if (left) root.data.props.left = left;
       if (className) root.data.props.className = className;
+      const parentNode = queryRef.current.node(parentId).get();
+      const index = parentNode?.data?.nodes?.indexOf(nodeId) ?? -1;
       actionsRef.current.delete(nodeId);
-      actionsRef.current.addNodeTree(tree, parentId);
+      actionsRef.current.addNodeTree(tree, parentId, index >= 0 ? index : undefined);
     } catch {
       // Node may have been removed
     }

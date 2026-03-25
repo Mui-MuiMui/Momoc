@@ -10,6 +10,7 @@ interface CraftImageProps {
   height?: string;
   objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
   keepAspectRatio?: boolean;
+  clickThrough?: boolean;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export const CraftImage: UserComponent<CraftImageProps> = ({
   height = "200px",
   objectFit = "cover",
   keepAspectRatio = false,
+  clickThrough = false,
   className = "",
 }) => {
   const {
@@ -77,6 +79,7 @@ CraftImage.craft = {
     height: "200px",
     objectFit: "cover",
     keepAspectRatio: false,
+    clickThrough: false,
     className: "",
   },
   rules: {

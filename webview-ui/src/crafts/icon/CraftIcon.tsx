@@ -14,7 +14,7 @@ interface CraftIconProps {
 export const CraftIcon: UserComponent<CraftIconProps> = ({
   icon = "Heart",
   iconSize = "6",
-  clickThrough = true,
+  clickThrough = false,
   width = "auto",
   height = "auto",
   className = "",
@@ -50,7 +50,7 @@ CraftIcon.craft = {
   props: {
     icon: "Heart",
     iconSize: "6",
-    clickThrough: true,
+    clickThrough: false,
     width: "auto",
     height: "auto",
     className: "",

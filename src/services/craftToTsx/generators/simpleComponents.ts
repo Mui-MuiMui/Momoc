@@ -13,7 +13,7 @@ registerGenerator("CraftPlaceholderImage", {
 // CraftImage
 registerGenerator("CraftImage", {
   mapping: { tag: "img", propsMap: ["src", "alt", "className"], isContainer: false },
-  defaultProps: { alt: "", objectFit: "cover", keepAspectRatio: false },
+  defaultProps: { alt: "", objectFit: "cover", keepAspectRatio: false, clickThrough: false },
 });
 
 // CraftInput
